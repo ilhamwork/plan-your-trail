@@ -92,14 +92,22 @@ export function MapView({
         opacity: 0.85,
       }).addTo(map);
 
+      // Helper SVG string for markers
+      const createMarkerSvg = (color: string) => `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin">
+          <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 15.014 4 10a8 8 0 0 1 16 0"/>
+          <circle cx="12" cy="10" r="3" fill="white"/>
+        </svg>
+      `;
+
       // Start marker (green)
       if (points.length > 0) {
         Lf.marker([points[0].lat, points[0].lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
-            html: `<div style="width:14px;height:14px;border-radius:50%;background:#1B4332;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>`,
-            iconSize: [14, 14],
-            iconAnchor: [7, 7],
+            html: `<div style="width:24px;height:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">${createMarkerSvg("#34e02eff")}</div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24],
           }),
         }).addTo(map);
 
@@ -108,9 +116,9 @@ export function MapView({
         Lf.marker([last.lat, last.lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
-            html: `<div style="width:14px;height:14px;border-radius:50%;background:#E76F51;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>`,
-            iconSize: [14, 14],
-            iconAnchor: [7, 7],
+            html: `<div style="width:24px;height:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">${createMarkerSvg("#34e02eff")}</div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24],
           }),
         }).addTo(map);
       }
@@ -120,14 +128,19 @@ export function MapView({
         const marker = Lf.marker([wp.lat, wp.lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
-            html: `<div style="width:12px;height:12px;border-radius:50%;background:#E76F51;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,
-            iconSize: [12, 12],
-            iconAnchor: [6, 6],
+            html: `<div style="width:24px;height:24px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#3B82F6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 15.014 4 10a8 8 0 0 1 16 0"/>
+                <circle cx="12" cy="10" r="3" fill="white"/>
+              </svg>
+            </div>`,
+            iconSize: [24, 24],
+            iconAnchor: [10, 20],
           }),
         }).addTo(map);
         marker.bindTooltip(
           `<strong>${wp.name}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`,
-          { permanent: false, direction: "top", className: "waypoint-tooltip", offset: [0, -8] }
+          { permanent: false, direction: "top", className: "waypoint-tooltip", offset: [0, -18] }
         );
       }
 
@@ -306,13 +319,24 @@ export function MapView({
           paint: { "line-color": "#E76F51", "line-width": 4, "line-opacity": 0.85 },
         });
 
+        // Helper SVG string for 3D markers
+        const createMarkerSvg3D = (color: string, size: number) => `
+          <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">
+            <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 15.014 4 10a8 8 0 0 1 16 0"/>
+            <circle cx="12" cy="10" r="3" fill="white"/>
+          </svg>
+        `;
+
         // Waypoint markers
         for (const wp of waypoints) {
-          const markerColor = "#E76F51";
-          new maplibregl.Marker({ color: markerColor })
+          const el = document.createElement("div");
+          el.style.cursor = "pointer";
+          el.innerHTML = createMarkerSvg3D("#3B82F6", 20);
+            
+          new maplibregl.Marker({ element: el, anchor: "bottom" })
             .setLngLat([wp.lon, wp.lat])
             .setPopup(
-              new maplibregl.Popup({ offset: 25 }).setHTML(
+              new maplibregl.Popup({ offset: [0, -20] }).setHTML(
                 `<strong>${wp.name}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`
               )
             )
@@ -321,12 +345,18 @@ export function MapView({
 
         // Start marker
         if (points.length > 0) {
-          new maplibregl.Marker({ color: "#1B4332" })
+          const startEl = document.createElement("div");
+          startEl.innerHTML = createMarkerSvg3D("#34e02eff", 24);
+            
+          new maplibregl.Marker({ element: startEl, anchor: "bottom" })
             .setLngLat([points[0].lon, points[0].lat])
             .addTo(map);
 
           const last = points[points.length - 1];
-          new maplibregl.Marker({ color: "#E76F51" })
+          const endEl = document.createElement("div");
+          endEl.innerHTML = createMarkerSvg3D("#34e02eff", 24);
+            
+          new maplibregl.Marker({ element: endEl, anchor: "bottom" })
             .setLngLat([last.lon, last.lat])
             .addTo(map);
         }

@@ -11,11 +11,11 @@ function getSegmentType(gradient: number): SegmentType {
 
 // ─── Segment type labels ───────────────────────────────────────────
 const SEGMENT_LABELS: Record<SegmentType, string> = {
-  climb: "Major Climb",
+  climb: "Climb",
   uphill: "Uphill",
-  flat: "Rolling / Flat",
+  flat: "Flat",
   downhill: "Downhill",
-  descent: "Steep Descent",
+  descent: "Descent",
 };
 
 // ─── Minimum segment length based on total distance ────────────────
@@ -116,7 +116,7 @@ export function analyzeSegments(
     const distance = endPt.distance - startPt.distance;
     const elevationChange = endPt.ele - startPt.ele;
     const avgGrad = distance > 0 ? (elevationChange / distance) * 100 : 0;
-    
+
     return {
       type: getSegmentType(avgGrad),
       startIndex: raw.startIndex,
