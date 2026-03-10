@@ -109,8 +109,38 @@ export function analyzeSegments(
     }
   }
 
-  // Step 5: Build final segments with stats
-  return finalMerged.map((raw, idx) => {
+  // Step 5: Recalculate types based on exact start/end elevation
+  const preFinalSegments = finalMerged.map((raw) => {
+    const startPt = points[raw.startIndex];
+    const endPt = points[raw.endIndex];
+    const distance = endPt.distance - startPt.distance;
+    const elevationChange = endPt.ele - startPt.ele;
+    const avgGrad = distance > 0 ? (elevationChange / distance) * 100 : 0;
+    
+    return {
+      type: getSegmentType(avgGrad),
+      startIndex: raw.startIndex,
+      endIndex: raw.endIndex,
+    };
+  });
+
+  // Step 6: Merge adjacent segments of the identical exact type
+  const mergedSameType: { type: SegmentType; startIndex: number; endIndex: number }[] = [];
+  for (const seg of preFinalSegments) {
+    if (mergedSameType.length === 0) {
+      mergedSameType.push(seg);
+    } else {
+      const last = mergedSameType[mergedSameType.length - 1];
+      if (last.type === seg.type) {
+        last.endIndex = seg.endIndex;
+      } else {
+        mergedSameType.push(seg);
+      }
+    }
+  }
+
+  // Step 7: Build final Segment objects with full stats
+  return mergedSameType.map((raw, idx) => {
     const startPt = points[raw.startIndex];
     const endPt = points[raw.endIndex];
     const distance = endPt.distance - startPt.distance;
@@ -126,13 +156,10 @@ export function analyzeSegments(
     const elevationChange = endPt.ele - startPt.ele;
     const avgGrad = distance > 0 ? (elevationChange / distance) * 100 : 0;
 
-    // Recalculate segment type based on actual average gradient
-    const actualType = getSegmentType(avgGrad);
-
     return {
       id: idx,
-      type: actualType,
-      label: SEGMENT_LABELS[actualType],
+      type: raw.type,
+      label: SEGMENT_LABELS[raw.type],
       startKm: startPt.distance / 1000,
       endKm: endPt.distance / 1000,
       distance,
