@@ -1,0 +1,109 @@
+"use client";
+
+import type { RouteStats } from "@/lib/types";
+import {
+  Mountain,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownLeft,
+  MapPin,
+} from "lucide-react";
+import { motion } from "framer-motion";
+
+interface MetricsPanelProps {
+  stats: RouteStats;
+}
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0 },
+};
+
+function formatDistance(meters: number): string {
+  return (meters / 1000).toFixed(2);
+}
+
+export function MetricsPanel({ stats }: MetricsPanelProps) {
+  const cards = [
+    {
+      icon: Mountain,
+      label: "Total Distance",
+      value: `${formatDistance(stats.totalDistance)} km`,
+      color: "text-[#1B4332]",
+      bg: "bg-[#1B4332]/5",
+    },
+    {
+      icon: TrendingUp,
+      label: "Elevation Gain",
+      value: `${stats.elevationGain} m`,
+      color: "text-[#1B4332]",
+      bg: "bg-[#1B4332]/5",
+    },
+    {
+      icon: TrendingDown,
+      label: "Elevation Loss",
+      value: `${stats.elevationLoss} m`,
+      color: "text-red-500",
+      bg: "bg-red-50",
+    },
+    {
+      icon: ArrowUpRight,
+      label: "Highest Point",
+      value: `${stats.highestPoint} m`,
+      color: "text-[#2D3436]",
+      bg: "bg-gray-50",
+    },
+    {
+      icon: ArrowDownLeft,
+      label: "Lowest Point",
+      value: `${stats.lowestPoint} m`,
+      color: "text-[#2D3436]",
+      bg: "bg-gray-50",
+    },
+    {
+      icon: MapPin,
+      label: "Waypoints",
+      value: `${stats.waypointCount}`,
+      color: "text-[#E76F51]",
+      bg: "bg-[#E76F51]/5",
+    },
+  ];
+
+  return (
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="grid grid-cols-2 gap-3"
+    >
+      {cards.map((card) => (
+        <motion.div
+          key={card.label}
+          variants={item}
+          className="flex items-start gap-3 rounded-xl bg-white p-3 shadow-sm border border-gray-100"
+        >
+          <div className={`rounded-lg p-1.5 ${card.bg}`}>
+            <card.icon className={`h-4 w-4 ${card.color}`} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+              {card.label}
+            </p>
+            <p className="text-lg font-bold leading-tight text-[#2D3436]">
+              {card.value}
+            </p>
+          </div>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
