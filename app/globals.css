@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import url("https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -109,7 +110,7 @@
 }
 
 .hover-tooltip {
-    background: #E76F51 !important;
+    background: #3B82F6 !important;
     color: white !important;
     border: none !important;
     border-radius: 8px !important;
@@ -119,7 +120,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
 .hover-tooltip::before {
-    border-top-color: #E76F51 !important;
+    border-top-color: #3B82F6 !important;
 }
 
 /* Leaflet overrides */

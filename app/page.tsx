@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { Map, BarChart3, Layers, CloudSun } from "lucide-react";
 
-import type { ParsedRoute, TrackPoint, Segment } from "@/lib/types";
+import type { ParsedRoute, TrackPoint, Segment, WaypointSegment } from "@/lib/types";
 import { parseGPX } from "@/lib/gpx-parser";
 
 import { Header } from "@/components/trail/Header";
@@ -66,7 +66,7 @@ export default function Home() {
   const [fileName, setFileName] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null);
-  const [activeSegment, setActiveSegment] = useState<Segment | null>(null);
+  const [highlightRange, setHighlightRange] = useState<{ startIndex: number; endIndex: number } | null>(null);
 
   const handleFileLoaded = useCallback((content: string, name: string) => {
     try {
@@ -74,7 +74,7 @@ export default function Home() {
       const parsed = parseGPX(content);
       setRoute(parsed);
       setFileName(name);
-      setActiveSegment(null);
+      setHighlightRange(null);
       setHoveredPoint(null);
     } catch (err) {
       setError(
@@ -87,8 +87,21 @@ export default function Home() {
 
   const handleSegmentClick = useCallback(
     (segment: Segment) => {
-      setActiveSegment((prev) =>
-        prev?.id === segment.id ? null : segment
+      setHighlightRange((prev) =>
+        prev?.startIndex === segment.startIndex && prev?.endIndex === segment.endIndex
+          ? null
+          : { startIndex: segment.startIndex, endIndex: segment.endIndex }
+      );
+    },
+    []
+  );
+
+  const handleWaypointSegmentClick = useCallback(
+    (segment: WaypointSegment) => {
+      setHighlightRange((prev) =>
+        prev?.startIndex === segment.startIndex && prev?.endIndex === segment.endIndex
+          ? null
+          : { startIndex: segment.startIndex, endIndex: segment.endIndex }
       );
     },
     []
@@ -195,7 +208,7 @@ export default function Home() {
                   <MapView
                     {...mapProps}
                     hoveredPoint={hoveredPoint}
-                    activeSegment={activeSegment}
+                    highlightRange={highlightRange}
                   />
                 )}
 
@@ -211,6 +224,7 @@ export default function Home() {
                   segments={route.segments}
                   waypointSegments={route.waypointSegments}
                   onSegmentClick={handleSegmentClick}
+                  onWaypointSegmentClick={handleWaypointSegmentClick}
                 />
 
                 {/* Weather */}

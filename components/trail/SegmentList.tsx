@@ -9,6 +9,7 @@ interface SegmentListProps {
   segments: Segment[];
   waypointSegments: WaypointSegment[];
   onSegmentClick?: (segment: Segment) => void;
+  onWaypointSegmentClick?: (segment: WaypointSegment) => void;
 }
 
 type TabType = "waypoints" | "elevation";
@@ -17,6 +18,7 @@ export function SegmentList({
   segments,
   waypointSegments,
   onSegmentClick,
+  onWaypointSegmentClick,
 }: SegmentListProps) {
   const [tab, setTab] = useState<TabType>("waypoints");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -77,6 +79,7 @@ export function SegmentList({
                 onToggle={() =>
                   setExpandedId(expandedId === seg.id ? null : seg.id)
                 }
+                onClick={() => onWaypointSegmentClick?.(seg)}
               />
             ))
           : segments.map((seg) => (
@@ -100,15 +103,17 @@ function WaypointSegmentRow({
   segment,
   expanded,
   onToggle,
+  onClick,
 }: {
   segment: WaypointSegment;
   expanded: boolean;
   onToggle: () => void;
+  onClick: () => void;
 }) {
   return (
     <div>
       <button
-        onClick={onToggle}
+        onClick={() => { onToggle(); onClick(); }}
         className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors ${
           expanded ? "bg-[#1B4332] text-white" : "hover:bg-gray-50"
         }`}
