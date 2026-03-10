@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import url("https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css");
 
 @custom-variant dark (&:is(.dark *));
 

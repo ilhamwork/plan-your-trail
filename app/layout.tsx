@@ -33,6 +33,10 @@ export default function RootLayout({
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           crossOrigin=""
         />
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"
+        />
       </head>
       <body>{children}</body>
     </html>
