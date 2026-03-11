@@ -138,6 +138,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [history, setHistory] = useState<HistoricalWeather[]>([])
   const [isHistoricalMode, setIsHistoricalMode] = useState(false)
+  const [isPastDateMode, setIsPastDateMode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -243,7 +244,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
     setError(null)
 
     try {
-      // 1. Determine if we are in "Historical Only" mode (>14 days)
+      // 1. Determine date mode: Future (>14 days), Past (<0 days), or Forecast (0-14 days)
       const targetDate = new Date(date)
       const today = new Date()
       today.setHours(0, 0, 0, 0)
@@ -251,11 +252,56 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
       const futureHistoricalOnly = diffDays > 14
-      setIsHistoricalMode(futureHistoricalOnly)
+      const pastDateOnly = diffDays < 0
 
-      // 2. Fetch Forecast if <= 14 days
+      setIsHistoricalMode(futureHistoricalOnly)
+      setIsPastDateMode(pastDateOnly)
+
       let forecastData: WeatherData | null = null
-      if (!futureHistoricalOnly && diffDays >= 0) {
+
+      // 2. Fetch specific weather data (Forecast for future/today, Archive for past)
+      if (pastDateOnly) {
+        // Fetch EXACT historical data for the past date
+        const historyUrl = new URL(
+          "https://archive-api.open-meteo.com/v1/archive"
+        )
+        historyUrl.searchParams.set("latitude", activeLat.toFixed(4))
+        historyUrl.searchParams.set("longitude", activeLon.toFixed(4))
+        historyUrl.searchParams.set(
+          "daily",
+          "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,apparent_temperature_max,apparent_temperature_min"
+        )
+        // No UV or hourly humidity in basic archive sometimes, but we try
+        historyUrl.searchParams.set("start_date", date)
+        historyUrl.searchParams.set("end_date", date)
+        historyUrl.searchParams.set("timezone", "auto")
+
+        const resPast = await fetch(historyUrl.toString())
+        if (resPast.ok) {
+          const rawPast = await resPast.json()
+          if (rawPast.daily && rawPast.daily.time.length > 0) {
+            const d = rawPast.daily
+            forecastData = {
+              date: d.time[0],
+              temperatureMax: d.temperature_2m_max[0],
+              temperatureMin: d.temperature_2m_min[0],
+              weatherCode: d.weather_code[0],
+              weatherDescription: WMO_CODES[d.weather_code[0]] || "Unknown",
+              rainProbability: 0, // Not available in archive
+              precipitation: d.precipitation_sum[0],
+              windSpeed: d.wind_speed_10m_max[0],
+              windDirection: degToDirection(d.wind_direction_10m_dominant[0]),
+              humidity: 0, // Not available in archive
+              uvIndex: 0, // Not available in archive
+              feelsLikeMax: d.apparent_temperature_max[0],
+              feelsLikeMin: d.apparent_temperature_min[0],
+              sunrise: d.sunrise[0]?.split("T")[1] || "",
+              sunset: d.sunset[0]?.split("T")[1] || "",
+            }
+          }
+        }
+      } else if (!futureHistoricalOnly && diffDays >= 0) {
+        // Standard forecast for today up to 14 days
         const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast")
         forecastUrl.searchParams.set("latitude", activeLat.toFixed(4))
         forecastUrl.searchParams.set("longitude", activeLon.toFixed(4))
@@ -389,95 +435,97 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
         </p>
       </div>
 
-      {/* Location input */}
-      <div className="px-4 pt-3 pb-2">
-        <p className="mb-1.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
-          Location
-        </p>
-        <div className="relative">
-          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-all focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332]">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-            <input
-              type="text"
-              value={locationQuery}
-              onChange={(e) => handleLocationInput(e.target.value)}
-              placeholder={`${center[0].toFixed(3)}, ${center[1].toFixed(3)} (route center)`}
-              className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-gray-400"
-            />
-            {geoLoading && (
-              <Search className="h-3.5 w-3.5 shrink-0 animate-pulse text-gray-400" />
-            )}
-            {selectedLocation && !geoLoading && (
-              <button
-                onClick={clearLocation}
-                className="shrink-0 text-gray-400 transition-colors hover:text-gray-600"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+      <div className="grid lg:grid-cols-2">
+        {/* Location input */}
+        <div className="px-4 pt-3 pb-2">
+          <p className="mb-1.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
+            Location
+          </p>
+          <div className="relative">
+            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-all focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332]">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+              <input
+                type="text"
+                value={locationQuery}
+                onChange={(e) => handleLocationInput(e.target.value)}
+                placeholder={`${center[0].toFixed(3)}, ${center[1].toFixed(3)} (route center)`}
+                className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-gray-400"
+              />
+              {geoLoading && (
+                <Search className="h-3.5 w-3.5 shrink-0 animate-pulse text-gray-400" />
+              )}
+              {selectedLocation && !geoLoading && (
+                <button
+                  onClick={clearLocation}
+                  className="shrink-0 text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Dropdown results */}
+            <AnimatePresence>
+              {geoResults.length > 0 && (
+                <motion.ul
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                >
+                  {geoResults.map((r, i) => (
+                    <li key={i}>
+                      <button
+                        onClick={() => handleSelectResult(r)}
+                        className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50"
+                      >
+                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#E76F51]" />
+                        <span className="line-clamp-2 leading-tight text-[#2D3436]">
+                          {r.display_name}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+
+            {/* Geo error */}
+            {geoError && !geoLoading && locationQuery && (
+              <p className="mt-1 text-xs text-red-400">{geoError}</p>
             )}
           </div>
 
-          {/* Dropdown results */}
-          <AnimatePresence>
-            {geoResults.length > 0 && (
-              <motion.ul
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
-              >
-                {geoResults.map((r, i) => (
-                  <li key={i}>
-                    <button
-                      onClick={() => handleSelectResult(r)}
-                      className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50"
-                    >
-                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#E76F51]" />
-                      <span className="line-clamp-2 leading-tight text-[#2D3436]">
-                        {r.display_name}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </motion.ul>
-            )}
-          </AnimatePresence>
-
-          {/* Geo error */}
-          {geoError && !geoLoading && locationQuery && (
-            <p className="mt-1 text-xs text-red-400">{geoError}</p>
-          )}
-        </div>
-
-        {/* Active location badge */}
-        <div className="mt-2 flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#1B4332]/8 px-2 py-0.5">
-            <MapPin className="h-2.5 w-2.5 text-[#1B4332]" />
-            <span className="text-[10px] font-medium text-[#1B4332]">
-              {activeLocationName}
+          {/* Active location badge */}
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#1B4332]/8 px-2 py-0.5">
+              <MapPin className="h-2.5 w-2.5 text-[#1B4332]" />
+              <span className="text-[10px] font-medium text-[#1B4332]">
+                {activeLocationName}
+              </span>
             </span>
-          </span>
-          <span className="text-[10px] text-gray-400">
-            {activeLat.toFixed(4)}, {activeLon.toFixed(4)}
-          </span>
+            <span className="text-[10px] text-gray-400">
+              {activeLat.toFixed(4)}, {activeLon.toFixed(4)}
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Date input */}
-      <div className="flex items-center gap-2 px-4 py-2">
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-[#2D3436] outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
-        />
-        <button
-          onClick={fetchWeather}
-          disabled={loading || !date}
-          className="rounded-lg bg-[#2D3436] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B4332] disabled:opacity-50"
-        >
-          {loading ? "..." : "Check"}
-        </button>
+        {/* Date input */}
+        <div className="flex items-center gap-2 px-4 py-2">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-[#2D3436] outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
+          />
+          <button
+            onClick={fetchWeather}
+            disabled={loading || !date}
+            className="rounded-lg bg-[#2D3436] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B4332] disabled:opacity-50"
+          >
+            {loading ? "..." : "Check"}
+          </button>
+        </div>
       </div>
 
       {/* Error */}
@@ -499,6 +547,17 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
         </div>
       )}
 
+      {/* Past Date Warning */}
+      {isPastDateMode && !error && weather && (
+        <div className="mx-4 mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
+          <p className="text-xs leading-relaxed text-blue-800">
+            <strong className="font-semibold">Note:</strong> Viewing actual
+            historical weather records for {weather.date}. Some specific metrics
+            like UV Index or Hourly Humidity might not be fully available.
+          </p>
+        </div>
+      )}
+
       {/* Weather results */}
       <AnimatePresence>
         {(weather || history.length > 0) && (
@@ -508,7 +567,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            {/* Main Full Forecast Card (Only if <= 14 days) */}
+            {/* Main Full Forecast/Past Card (Only if <= 14 days or Past Mode) */}
             {weather && !isHistoricalMode && (
               <>
                 <div className="mx-4 mb-3 rounded-xl bg-[#1B4332] p-4 text-white">
