@@ -1,21 +1,36 @@
-"use client";
+"use client"
 
-import { useState, useCallback, useMemo } from "react";
-import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
-import { Map, BarChart3, Layers, CloudSun } from "lucide-react";
+import { useState, useCallback, useMemo } from "react"
+import dynamic from "next/dynamic"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  Map,
+  BarChart3,
+  Layers,
+  CloudSun,
+  Calendar,
+  User,
+  Flag,
+  Check,
+} from "lucide-react"
 
-import type { ParsedRoute, TrackPoint, Segment, WaypointSegment } from "@/lib/types";
-import { parseGPX } from "@/lib/gpx-parser";
+import type {
+  ParsedRoute,
+  TrackPoint,
+  Segment,
+  WaypointSegment,
+} from "@/lib/types"
+import { parseGPX } from "@/lib/gpx-parser"
 
-import { Header } from "@/components/trail/Header";
-import { UploadCard } from "@/components/trail/UploadCard";
-import { MetricsPanel } from "@/components/trail/MetricsPanel";
-import { ElevationChart } from "@/components/trail/ElevationChart";
-import { SegmentList } from "@/components/trail/SegmentList";
-import { WeatherForecast } from "@/components/trail/WeatherForecast";
-import { GradientDistribution } from "@/components/trail/GradientDistribution";
-import { Footer } from "@/components/trail/Footer";
+import { Header } from "@/components/trail/Header"
+import { UploadCard } from "@/components/trail/UploadCard"
+import { MetricsPanel } from "@/components/trail/MetricsPanel"
+import { ElevationChart } from "@/components/trail/ElevationChart"
+import { SegmentList } from "@/components/trail/SegmentList"
+import { WeatherForecast } from "@/components/trail/WeatherForecast"
+import { GradientDistribution } from "@/components/trail/GradientDistribution"
+import { Footer } from "@/components/trail/Footer"
+import { RouteDetailsModal, type RouteDetailsData } from "@/components/trail/RouteDetailsModal"
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
 const MapView = dynamic(
@@ -28,7 +43,7 @@ const MapView = dynamic(
       </div>
     ),
   }
-);
+)
 
 // ─── Feature cards for empty state ─────────────────────────────────
 const FEATURES = [
@@ -60,63 +75,82 @@ const FEATURES = [
     color: "text-[#E76F51]",
     bg: "bg-[#E76F51]/5",
   },
-];
+]
 
 export default function Home() {
-  const [route, setRoute] = useState<ParsedRoute | null>(null);
-  const [fileName, setFileName] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null);
-  const [highlightRange, setHighlightRange] = useState<{ startIndex: number; endIndex: number } | null>(null);
+  const [route, setRoute] = useState<ParsedRoute | null>(null)
+  const [fileName, setFileName] = useState<string>("")
+  const [error, setError] = useState<string>("")
+  const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
+  const [highlightRange, setHighlightRange] = useState<{
+    startIndex: number
+    endIndex: number
+  } | null>(null)
+
+  // Route Details Form State
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [routeDetails, setRouteDetails] = useState<RouteDetailsData>({
+    userName: "",
+    routeName: "",
+    raceDate: new Date().toISOString().split("T")[0],
+  })
+  const [tempRoute, setTempRoute] = useState<ParsedRoute | null>(null)
+  const [tempFileName, setTempFileName] = useState<string>("")
 
   const handleFileLoaded = useCallback((content: string, name: string) => {
     try {
-      setError("");
-      const parsed = parseGPX(content);
-      setRoute(parsed);
-      setFileName(name);
-      setHighlightRange(null);
-      setHoveredPoint(null);
+      setError("")
+      const parsed = parseGPX(content)
+      // Wait to set full route until details are filled
+      setTempRoute(parsed)
+      setTempFileName(name)
+      setShowDetailsModal(true)
+      setHighlightRange(null)
+      setHoveredPoint(null)
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to parse GPX file"
-      );
-      setRoute(null);
-      setFileName("");
+      setError(err instanceof Error ? err.message : "Failed to parse GPX file")
+      setTempRoute(null)
+      setTempFileName("")
     }
-  }, []);
+  }, [])
 
-  const handleSegmentClick = useCallback(
-    (segment: Segment) => {
-      setHighlightRange((prev) =>
-        prev?.startIndex === segment.startIndex && prev?.endIndex === segment.endIndex
-          ? null
-          : { startIndex: segment.startIndex, endIndex: segment.endIndex }
-      );
-    },
-    []
-  );
+  const handleDetailsSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (tempRoute) {
+      setRoute(tempRoute)
+      setFileName(tempFileName)
+      setShowDetailsModal(false)
+      setTempRoute(null)
+    }
+  }
 
-  const handleWaypointSegmentClick = useCallback(
-    (segment: WaypointSegment) => {
-      setHighlightRange((prev) =>
-        prev?.startIndex === segment.startIndex && prev?.endIndex === segment.endIndex
-          ? null
-          : { startIndex: segment.startIndex, endIndex: segment.endIndex }
-      );
-    },
-    []
-  );
+  const handleSegmentClick = useCallback((segment: Segment) => {
+    setHighlightRange((prev) =>
+      prev?.startIndex === segment.startIndex &&
+      prev?.endIndex === segment.endIndex
+        ? null
+        : { startIndex: segment.startIndex, endIndex: segment.endIndex }
+    )
+  }, [])
+
+  const handleWaypointSegmentClick = useCallback((segment: WaypointSegment) => {
+    setHighlightRange((prev) =>
+      prev?.startIndex === segment.startIndex &&
+      prev?.endIndex === segment.endIndex
+        ? null
+        : { startIndex: segment.startIndex, endIndex: segment.endIndex }
+    )
+  }, [])
 
   // Memoize to avoid unnecessary re-renders
   const mapProps = useMemo(() => {
-    if (!route) return null;
+    if (!route) return null
     return {
       points: route.points,
       waypoints: route.waypoints,
       bounds: route.bounds,
-    };
-  }, [route]);
+    }
+  }, [route])
 
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
@@ -179,7 +213,7 @@ export default function Home() {
                 {FEATURES.map((f) => (
                   <div
                     key={f.title}
-                    className="rounded-xl bg-white p-4 shadow-sm border border-gray-100"
+                    className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
                   >
                     <div className={`mb-2 inline-flex rounded-lg p-2 ${f.bg}`}>
                       <f.icon className={`h-5 w-5 ${f.color}`} />
@@ -203,7 +237,33 @@ export default function Home() {
               className="grid gap-6 lg:grid-cols-[1fr_420px]"
             >
               {/* Left column (main content) */}
-              <div className="flex flex-col gap-5 order-2 lg:order-1">
+              <div className="order-2 flex flex-col gap-5 lg:order-1">
+                {/* Route Header Info */}
+                <div className="flex flex-col justify-between gap-2 rounded-xl border border-gray-100 bg-white p-5 shadow-sm md:flex-row md:items-center">
+                  <h2 className="flex items-center gap-2 text-xl font-bold text-[#1B4332]">
+                    <Flag className="h-5 w-5 text-[#E76F51]" />
+                    {routeDetails.routeName || "Unnamed Route"}
+                  </h2>
+                  <div className="flex justify-between">
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+                      <User className="h-4 w-4" />
+                      {routeDetails.userName || "Anonymous"}
+                    </p>
+                    <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-[#2D3436]">
+                      <Calendar className="h-4 w-4 text-[#1B4332]" />
+                      {routeDetails.raceDate
+                        ? new Date(routeDetails.raceDate).toLocaleDateString(
+                            "en-US",
+                            { day: "numeric", month: "long", year: "numeric" }
+                          )
+                        : "No Date"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metrics */}
+                <MetricsPanel stats={route.stats} />
+
                 {/* Map */}
                 {mapProps && (
                   <MapView
@@ -222,39 +282,54 @@ export default function Home() {
 
                 {/* Segments */}
                 <SegmentList
+                  key={fileName}
                   segments={route.segments}
                   waypointSegments={route.waypointSegments}
                   onSegmentClick={handleSegmentClick}
                   onWaypointSegmentClick={handleWaypointSegmentClick}
+                  onTabChange={() => setHighlightRange(null)}
                 />
 
                 {/* Gradient Distribution */}
                 <GradientDistribution points={route.points} />
 
                 {/* Weather */}
-                <WeatherForecast center={route.center} />
+                <WeatherForecast
+                  center={route.center}
+                  initialDate={routeDetails.raceDate}
+                />
 
                 <Footer />
               </div>
 
               {/* Right column (sidebar — sticky on desktop) */}
               <div className="order-1 lg:order-2">
-                <div className="lg:sticky lg:top-[60px] flex flex-col gap-5">
+                <div className="flex flex-col gap-5 lg:sticky lg:top-[60px]">
                   {/* Upload card */}
                   <UploadCard
                     onFileLoaded={handleFileLoaded}
                     fileName={fileName}
                     error={error}
                   />
-
-                  {/* Metrics */}
-                  <MetricsPanel stats={route.stats} />
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ── Route Details Modal ────────────────────── */}
+        <RouteDetailsModal
+          isOpen={showDetailsModal}
+          routeDetails={routeDetails}
+          onChange={setRouteDetails}
+          onSubmit={handleDetailsSubmit}
+          onCancel={() => {
+            setShowDetailsModal(false)
+            setTempRoute(null)
+            setTempFileName("")
+          }}
+        />
       </main>
     </div>
-  );
+  )
 }
