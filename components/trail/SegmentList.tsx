@@ -20,7 +20,8 @@ export function SegmentList({
   onSegmentClick,
   onWaypointSegmentClick,
 }: SegmentListProps) {
-  const [tab, setTab] = useState<TabType>("waypoints");
+  const hasWaypoints = waypointSegments.length > 0;
+  const [tab, setTab] = useState<TabType>(hasWaypoints ? "waypoints" : "elevation");
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   return (
@@ -40,19 +41,21 @@ export function SegmentList({
 
       {/* Tabs */}
       <div className="flex border-b border-gray-100">
-        <button
-          onClick={() => {
-            setTab("waypoints");
-            setExpandedId(null);
-          }}
-          className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
-            tab === "waypoints"
-              ? "bg-white text-[#1B4332] border-b-2 border-[#1B4332]"
-              : "bg-gray-50 text-gray-400 hover:text-gray-600"
-          }`}
-        >
-          Waypoints
-        </button>
+        {hasWaypoints && (
+          <button
+            onClick={() => {
+              setTab("waypoints");
+              setExpandedId(null);
+            }}
+            className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
+              tab === "waypoints"
+                ? "bg-white text-[#1B4332] border-b-2 border-[#1B4332]"
+                : "bg-gray-50 text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            Waypoints
+          </button>
+        )}
         <button
           onClick={() => {
             setTab("elevation");
@@ -64,7 +67,7 @@ export function SegmentList({
               : "bg-gray-50 text-gray-400 hover:text-gray-600"
           }`}
         >
-          Elevation
+          Gradient
         </button>
       </div>
 
