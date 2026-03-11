@@ -56,9 +56,8 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
       transition={{ duration: 0.5 }}
     >
       <div
-        className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] p-8 text-center text-white shadow-lg transition-all duration-300 ${
-          isDragging ? "ring-4 ring-[#E76F51] scale-[1.02]" : ""
-        }`}
+        className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] p-8 text-center text-white shadow-lg transition-all duration-300 ${isDragging ? "ring-4 ring-[#E76F51] scale-[1.02]" : ""
+          }`}
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
@@ -113,10 +112,6 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        <p className="mt-4 text-xs text-[#E76F51]/70">
-          Please upload GPX files with waypoint data
-        </p>
       </div>
 
       <AnimatePresence>

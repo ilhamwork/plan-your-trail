@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { CloudSun, Droplets, Wind, Thermometer, Sun, Eye, MapPin, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -104,6 +104,29 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto reverse-geocode the GPX center on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function reverseGeocode() {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${center[0].toFixed(5)}&lon=${center[1].toFixed(5)}`;
+        const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const name = shortName(data.display_name ?? "");
+        setLocationQuery(name);
+        setSelectedLocation({ name, lat: center[0], lon: center[1] });
+      } catch {
+        // silent — fall back to coords
+      }
+    }
+    reverseGeocode();
+    return () => { cancelled = true; };
+  // Only run when the GPX file changes (center changes)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [center[0], center[1]]);
 
   // Active coords: use selected location or fall back to route center
   const activeLat = selectedLocation?.lat ?? center[0];
