@@ -1,36 +1,54 @@
-"use client";
+"use client"
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { CloudSun, Droplets, Wind, Thermometer, Sun, Eye, MapPin, Search, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useRef } from "react"
+import {
+  CloudSun,
+  Droplets,
+  Wind,
+  Thermometer,
+  Sun,
+  Eye,
+  MapPin,
+  Search,
+  X,
+} from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface WeatherForecastProps {
-  center: [number, number]; // [lat, lon] — route default
-  initialDate?: string;
+  center: [number, number] // [lat, lon] — route default
+  initialDate?: string
 }
 
 interface WeatherData {
-  date: string;
-  temperatureMax: number;
-  temperatureMin: number;
-  weatherCode: number;
-  weatherDescription: string;
-  rainProbability: number;
-  precipitation: number;
-  windSpeed: number;
-  windDirection: string;
-  humidity: number;
-  uvIndex: number;
-  feelsLikeMax: number;
-  feelsLikeMin: number;
-  sunrise: string;
-  sunset: string;
+  date: string
+  temperatureMax: number
+  temperatureMin: number
+  weatherCode: number
+  weatherDescription: string
+  rainProbability: number
+  precipitation: number
+  windSpeed: number
+  windDirection: string
+  humidity: number
+  uvIndex: number
+  feelsLikeMax: number
+  feelsLikeMin: number
+  sunrise: string
+  sunset: string
+}
+
+interface HistoricalWeather {
+  year: number
+  temperatureMax: number
+  temperatureMin: number
+  weatherCode: number
+  weatherDescription: string
 }
 
 interface GeoResult {
-  display_name: string;
-  lat: string;
-  lon: string;
+  display_name: string
+  lat: string
+  lon: string
 }
 
 // WMO Weather codes → descriptions
@@ -59,245 +77,312 @@ const WMO_CODES: Record<number, string> = {
   95: "Thunderstorm",
   96: "Thunderstorm with hail",
   99: "Thunderstorm with heavy hail",
-};
+}
 
 // Weather code → emoji
 function getWeatherEmoji(code: number): string {
-  if (code === 0) return "☀️";
-  if (code <= 3) return "⛅";
-  if (code <= 48) return "🌫️";
-  if (code <= 55) return "🌦️";
-  if (code <= 65) return "🌧️";
-  if (code <= 77) return "🌨️";
-  if (code <= 82) return "🌦️";
-  if (code <= 86) return "🌨️";
-  return "⛈️";
+  if (code === 0) return "☀️"
+  if (code <= 3) return "⛅"
+  if (code <= 48) return "🌫️"
+  if (code <= 55) return "🌦️"
+  if (code <= 65) return "🌧️"
+  if (code <= 77) return "🌨️"
+  if (code <= 82) return "🌦️"
+  if (code <= 86) return "🌨️"
+  return "⛈️"
 }
 
 // Wind degree → direction
 function degToDirection(deg: number): string {
-  const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-  return dirs[Math.round(deg / 45) % 8];
+  const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+  return dirs[Math.round(deg / 45) % 8]
 }
 
 // Format a Nominatim display_name to Kecamatan, Kabupaten/Kota, Provinsi
 function shortName(display_name: string): string {
-  const parts = display_name.split(",").map((s) => s.trim());
-  
+  const parts = display_name.split(",").map((s) => s.trim())
+
   // Format target: Kecamatan (suburb/village), Kabupaten/Kota (city/county), Provinsi (state/region)
   // Nominatim display_name format in Indonesia usually:
   // [Village/Neighbourhood], [Kecamatan], [Kabupaten/Kota], [Provinsi], [Postcode], [Negara]
   // We want to extract the 3 parts before the postcode/country if possible.
-  
+
   if (parts.length >= 4) {
     // Usually the last two are Postcode and Country.
     // The three before that are usually Kecamatan, City/Regency, Province
-    const relevantParts = parts.slice(Math.max(0, parts.length - 6), parts.length - 3);
+    const relevantParts = parts.slice(
+      Math.max(0, parts.length - 6),
+      parts.length - 3
+    )
     // If we have at least 2 relevant parts, return them
     if (relevantParts.length >= 2) {
-      return relevantParts.join(", ");
+      return relevantParts.join(", ")
     }
   }
-  
+
   // Fallback to the first 2 parts if it's too short
-  if (parts.length >= 2) return `${parts[0]}, ${parts[1]}`;
-  return parts[0];
+  if (parts.length >= 2) return `${parts[0]}, ${parts[1]}`
+  return parts[0]
 }
 
 export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
-  const [date, setDate] = useState(initialDate || "");
-  
+  const [date, setDate] = useState(initialDate || "")
+
   // Update date if initialDate prop changes
   useEffect(() => {
     if (initialDate) {
-      setDate(initialDate);
+      setDate(initialDate)
     }
-  }, [initialDate]);
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  }, [initialDate])
+
+  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [history, setHistory] = useState<HistoricalWeather[]>([])
+  const [isHistoricalMode, setIsHistoricalMode] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Location state
-  const [locationQuery, setLocationQuery] = useState("");
-  const [geoResults, setGeoResults] = useState<GeoResult[]>([]);
+  const [locationQuery, setLocationQuery] = useState("")
+  const [geoResults, setGeoResults] = useState<GeoResult[]>([])
   const [selectedLocation, setSelectedLocation] = useState<{
-    name: string;
-    lat: number;
-    lon: number;
-  } | null>(null);
-  const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError, setGeoError] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    name: string
+    lat: number
+    lon: number
+  } | null>(null)
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState<string | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Auto reverse-geocode the GPX center on mount
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
     async function reverseGeocode() {
       try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${center[0].toFixed(5)}&lon=${center[1].toFixed(5)}&zoom=13`;
-        const res = await fetch(url, { headers: { "Accept-Language": "en" } });
-        if (!res.ok || cancelled) return;
-        const data = await res.json();
-        if (cancelled) return;
-        const name = shortName(data.display_name ?? "");
-        setLocationQuery(name);
-        setSelectedLocation({ name, lat: center[0], lon: center[1] });
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${center[0].toFixed(5)}&lon=${center[1].toFixed(5)}&zoom=13`
+        const res = await fetch(url, { headers: { "Accept-Language": "en" } })
+        if (!res.ok || cancelled) return
+        const data = await res.json()
+        if (cancelled) return
+        const name = shortName(data.display_name ?? "")
+        setLocationQuery(name)
+        setSelectedLocation({ name, lat: center[0], lon: center[1] })
       } catch {
         // silent — fall back to coords
       }
     }
-    reverseGeocode();
-    return () => { cancelled = true; };
-  // Only run when the GPX file changes (center changes)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [center[0], center[1]]);
+    reverseGeocode()
+    return () => {
+      cancelled = true
+    }
+    // Only run when the GPX file changes (center changes)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [center[0], center[1]])
 
   // Active coords: use selected location or fall back to route center
-  const activeLat = selectedLocation?.lat ?? center[0];
-  const activeLon = selectedLocation?.lon ?? center[1];
-  const activeLocationName = selectedLocation?.name ?? "Route center";
+  const activeLat = selectedLocation?.lat ?? center[0]
+  const activeLon = selectedLocation?.lon ?? center[1]
+  const activeLocationName = selectedLocation?.name ?? "Route center"
 
   const searchLocation = useCallback(async (query: string) => {
     if (!query.trim()) {
-      setGeoResults([]);
-      return;
+      setGeoResults([])
+      return
     }
-    setGeoLoading(true);
-    setGeoError(null);
+    setGeoLoading(true)
+    setGeoError(null)
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
       const res = await fetch(url, {
         headers: { "Accept-Language": "en" },
-      });
-      if (!res.ok) throw new Error("Geocoding failed");
-      const data: GeoResult[] = await res.json();
-      setGeoResults(data);
-      if (data.length === 0) setGeoError("No locations found");
+      })
+      if (!res.ok) throw new Error("Geocoding failed")
+      const data: GeoResult[] = await res.json()
+      setGeoResults(data)
+      if (data.length === 0) setGeoError("No locations found")
     } catch {
-      setGeoError("Could not search location");
+      setGeoError("Could not search location")
     } finally {
-      setGeoLoading(false);
+      setGeoLoading(false)
     }
-  }, []);
+  }, [])
 
   const handleLocationInput = useCallback(
     (value: string) => {
-      setLocationQuery(value);
-      setGeoResults([]);
-      setGeoError(null);
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => searchLocation(value), 500);
+      setLocationQuery(value)
+      setGeoResults([])
+      setGeoError(null)
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      debounceRef.current = setTimeout(() => searchLocation(value), 500)
     },
     [searchLocation]
-  );
+  )
 
   const handleSelectResult = useCallback((result: GeoResult) => {
     setSelectedLocation({
       name: shortName(result.display_name),
       lat: parseFloat(result.lat),
       lon: parseFloat(result.lon),
-    });
-    setLocationQuery(shortName(result.display_name));
-    setGeoResults([]);
-    setWeather(null);
-  }, []);
+    })
+    setLocationQuery(shortName(result.display_name))
+    setGeoResults([])
+    setWeather(null)
+  }, [])
 
   const clearLocation = useCallback(() => {
-    setSelectedLocation(null);
-    setLocationQuery("");
-    setGeoResults([]);
-    setGeoError(null);
-    setWeather(null);
-  }, []);
+    setSelectedLocation(null)
+    setLocationQuery("")
+    setGeoResults([])
+    setGeoError(null)
+    setWeather(null)
+  }, [])
 
   const fetchWeather = useCallback(async () => {
-    if (!date) return;
+    if (!date) return
 
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
-      const url = new URL("https://api.open-meteo.com/v1/forecast");
-      url.searchParams.set("latitude", activeLat.toFixed(4));
-      url.searchParams.set("longitude", activeLon.toFixed(4));
-      url.searchParams.set(
-        "daily",
-        "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,uv_index_max,apparent_temperature_max,apparent_temperature_min"
-      );
-      url.searchParams.set("hourly", "relative_humidity_2m");
-      url.searchParams.set("start_date", date);
-      url.searchParams.set("end_date", date);
-      url.searchParams.set("timezone", "auto");
+      // 1. Determine if we are in "Historical Only" mode (>14 days)
+      const targetDate = new Date(date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const diffTime = targetDate.getTime() - today.getTime()
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-      // Small delay to ensure activeLat/activeLon correctly resolve if they depend on nominatim
-      await new Promise(r => setTimeout(r, 100));
+      const futureHistoricalOnly = diffDays > 14
+      setIsHistoricalMode(futureHistoricalOnly)
 
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error("Failed to fetch weather data");
+      // 2. Fetch Forecast if <= 14 days
+      let forecastData: WeatherData | null = null
+      if (!futureHistoricalOnly && diffDays >= 0) {
+        const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast")
+        forecastUrl.searchParams.set("latitude", activeLat.toFixed(4))
+        forecastUrl.searchParams.set("longitude", activeLon.toFixed(4))
+        forecastUrl.searchParams.set(
+          "daily",
+          "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,uv_index_max,apparent_temperature_max,apparent_temperature_min"
+        )
+        forecastUrl.searchParams.set("hourly", "relative_humidity_2m")
+        forecastUrl.searchParams.set("start_date", date)
+        forecastUrl.searchParams.set("end_date", date)
+        forecastUrl.searchParams.set("timezone", "auto")
 
-      const data = await res.json();
+        const resForecast = await fetch(forecastUrl.toString())
+        if (resForecast.ok) {
+          const rawForecast = await resForecast.json()
+          if (rawForecast.daily && rawForecast.daily.time.length > 0) {
+            const d = rawForecast.daily
+            const avgHumidity = rawForecast.hourly?.relative_humidity_2m
+              ? Math.round(
+                  rawForecast.hourly.relative_humidity_2m.reduce(
+                    (a: number, b: number) => a + b,
+                    0
+                  ) / rawForecast.hourly.relative_humidity_2m.length
+                )
+              : 0
 
-      if (!data.daily || data.daily.time.length === 0) {
-        throw new Error("No weather data available for this date");
+            forecastData = {
+              date: d.time[0],
+              temperatureMax: d.temperature_2m_max[0],
+              temperatureMin: d.temperature_2m_min[0],
+              weatherCode: d.weather_code[0],
+              weatherDescription: WMO_CODES[d.weather_code[0]] || "Unknown",
+              rainProbability: d.precipitation_probability_max?.[0] ?? 0,
+              precipitation: d.precipitation_sum[0],
+              windSpeed: d.wind_speed_10m_max[0],
+              windDirection: degToDirection(d.wind_direction_10m_dominant[0]),
+              humidity: avgHumidity,
+              uvIndex: d.uv_index_max?.[0] ?? 0,
+              feelsLikeMax: d.apparent_temperature_max[0],
+              feelsLikeMin: d.apparent_temperature_min[0],
+              sunrise: d.sunrise[0]?.split("T")[1] || "",
+              sunset: d.sunset[0]?.split("T")[1] || "",
+            }
+          }
+        }
       }
 
-      const d = data.daily;
-      const avgHumidity = data.hourly?.relative_humidity_2m
-        ? Math.round(
-            data.hourly.relative_humidity_2m.reduce(
-              (a: number, b: number) => a + b,
-              0
-            ) / data.hourly.relative_humidity_2m.length
-          )
-        : 0;
+      // 3. Fetch Historical Data (Last 2 years)
+      const pastYearsData: HistoricalWeather[] = []
+      const currentYear = targetDate.getFullYear()
 
-      setWeather({
-        date: d.time[0],
-        temperatureMax: d.temperature_2m_max[0],
-        temperatureMin: d.temperature_2m_min[0],
-        weatherCode: d.weather_code[0],
-        weatherDescription: WMO_CODES[d.weather_code[0]] || "Unknown",
-        rainProbability: d.precipitation_probability_max[0],
-        precipitation: d.precipitation_sum[0],
-        windSpeed: d.wind_speed_10m_max[0],
-        windDirection: degToDirection(d.wind_direction_10m_dominant[0]),
-        humidity: avgHumidity,
-        uvIndex: d.uv_index_max[0],
-        feelsLikeMax: d.apparent_temperature_max[0],
-        feelsLikeMin: d.apparent_temperature_min[0],
-        sunrise: d.sunrise[0]?.split("T")[1] || "",
-        sunset: d.sunset[0]?.split("T")[1] || "",
-      });
+      for (let i = 1; i <= 2; i++) {
+        const pastDate = new Date(targetDate)
+        pastDate.setFullYear(currentYear - i)
+        const pastDateStr = pastDate.toISOString().split("T")[0]
+
+        const historyUrl = new URL(
+          "https://archive-api.open-meteo.com/v1/archive"
+        )
+        historyUrl.searchParams.set("latitude", activeLat.toFixed(4))
+        historyUrl.searchParams.set("longitude", activeLon.toFixed(4))
+        historyUrl.searchParams.set(
+          "daily",
+          "weather_code,temperature_2m_max,temperature_2m_min"
+        )
+        historyUrl.searchParams.set("start_date", pastDateStr)
+        historyUrl.searchParams.set("end_date", pastDateStr)
+        historyUrl.searchParams.set("timezone", "auto")
+
+        try {
+          const resHistory = await fetch(historyUrl.toString())
+          if (resHistory.ok) {
+            const rawHistory = await resHistory.json()
+            if (rawHistory.daily && rawHistory.daily.time.length > 0) {
+              const dh = rawHistory.daily
+              pastYearsData.push({
+                year: currentYear - i,
+                temperatureMax: dh.temperature_2m_max[0],
+                temperatureMin: dh.temperature_2m_min[0],
+                weatherCode: dh.weather_code[0],
+                weatherDescription: WMO_CODES[dh.weather_code[0]] || "Unknown",
+              })
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch historical data for", pastDateStr)
+        }
+      }
+
+      setWeather(forecastData)
+      setHistory(pastYearsData)
+
+      if (futureHistoricalOnly && pastYearsData.length === 0) {
+        throw new Error("No historical weather data available for this date")
+      } else if (
+        !futureHistoricalOnly &&
+        !forecastData &&
+        pastYearsData.length === 0
+      ) {
+        throw new Error("No weather data available for this date")
+      }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch weather"
-      );
+      setError(err instanceof Error ? err.message : "Failed to fetch weather")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [date, activeLat, activeLon]);
+  }, [date, activeLat, activeLon])
 
   // Auto fetch weather strictly once when initialDate is injected via form submission.
   useEffect(() => {
     if (initialDate && activeLat && activeLon) {
       // Small timeout to allow state to settle
       const t = setTimeout(() => {
-        fetchWeather();
-      }, 300);
-      return () => clearTimeout(t);
+        fetchWeather()
+      }, 300)
+      return () => clearTimeout(t)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDate, activeLat, activeLon]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDate, activeLat, activeLon])
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
+    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100">
+      <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <CloudSun className="h-4 w-4 text-[#E76F51]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">
-            Weather Forecast
-          </h3>
+          <h3 className="text-sm font-bold text-[#2D3436]">Weather Forecast</h3>
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
           Check the weather prediction for your race day
@@ -306,11 +391,11 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
 
       {/* Location input */}
       <div className="px-4 pt-3 pb-2">
-        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+        <p className="mb-1.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
           Location
         </p>
         <div className="relative">
-          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332] transition-all">
+          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-all focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332]">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
             <input
               type="text"
@@ -325,7 +410,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
             {selectedLocation && !geoLoading && (
               <button
                 onClick={clearLocation}
-                className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+                className="shrink-0 text-gray-400 transition-colors hover:text-gray-600"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -345,10 +430,10 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
                   <li key={i}>
                     <button
                       onClick={() => handleSelectResult(r)}
-                      className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors"
+                      className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50"
                     >
                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#E76F51]" />
-                      <span className="text-[#2D3436] line-clamp-2 leading-tight">
+                      <span className="line-clamp-2 leading-tight text-[#2D3436]">
                         {r.display_name}
                       </span>
                     </button>
@@ -402,95 +487,146 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
         </div>
       )}
 
+      {/* Historical Warning (Only if > 14 days) */}
+      {isHistoricalMode && !error && history.length > 0 && (
+        <div className="mx-4 mb-3 rounded-lg border border-orange-100 bg-orange-50 p-3">
+          <p className="text-xs leading-relaxed text-orange-800">
+            <strong className="font-semibold">Note:</strong> Forecasts are only
+            available up to 14 days in advance. The data shown below is based on{" "}
+            <strong>historical weather averages</strong> from this exact date in
+            previous years.
+          </p>
+        </div>
+      )}
+
       {/* Weather results */}
       <AnimatePresence>
-        {weather && (
+        {(weather || history.length > 0) && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            {/* Main weather card */}
-            <div className="mx-4 mb-3 rounded-xl bg-[#1B4332] p-4 text-white">
-              <p className="text-xs text-white/60">{weather.date}</p>
-              <div className="mt-2 flex items-center justify-between">
-                <div>
-                  <span className="text-3xl">
-                    {getWeatherEmoji(weather.weatherCode)}
-                  </span>
-                  <p className="mt-1 text-sm font-medium">
-                    {weather.weatherDescription}
-                  </p>
-                  <p className="text-xs text-white/60">
-                    Feels like {weather.feelsLikeMax}° / {weather.feelsLikeMin}°C
-                  </p>
+            {/* Main Full Forecast Card (Only if <= 14 days) */}
+            {weather && !isHistoricalMode && (
+              <>
+                <div className="mx-4 mb-3 rounded-xl bg-[#1B4332] p-4 text-white">
+                  <p className="text-xs text-white/60">{weather.date}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl">
+                        {getWeatherEmoji(weather.weatherCode)}
+                      </span>
+                      <p className="mt-1 text-sm font-medium">
+                        {weather.weatherDescription}
+                      </p>
+                      <p className="text-xs text-white/60">
+                        Feels like {weather.feelsLikeMax}° /{" "}
+                        {weather.feelsLikeMin}°C
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold">
+                        {Math.round(weather.temperatureMax)}°
+                      </p>
+                      <p className="text-sm text-white/60">
+                        / {Math.round(weather.temperatureMin)}°C
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold">
-                    {Math.round(weather.temperatureMax)}°
-                  </p>
-                  <p className="text-sm text-white/60">
-                    / {Math.round(weather.temperatureMin)}°C
-                  </p>
+
+                {/* Detail grid */}
+                <div className="grid grid-cols-2 gap-2 px-4 pb-3 lg:grid-cols-3">
+                  <WeatherDetailCard
+                    icon={<Droplets className="h-3.5 w-3.5 text-blue-400" />}
+                    label="RAIN PROBABILITY"
+                    value={`${weather.rainProbability}%`}
+                  />
+                  <WeatherDetailCard
+                    icon={<Droplets className="h-3.5 w-3.5 text-blue-500" />}
+                    label="PRECIPITATION"
+                    value={`${weather.precipitation} mm`}
+                  />
+                  <WeatherDetailCard
+                    icon={<Wind className="h-3.5 w-3.5 text-teal-500" />}
+                    label="WIND"
+                    value={`${weather.windSpeed} km/h ${weather.windDirection}`}
+                  />
+                  <WeatherDetailCard
+                    icon={<Eye className="h-3.5 w-3.5 text-blue-400" />}
+                    label="HUMIDITY"
+                    value={`${weather.humidity}%`}
+                  />
+                  <WeatherDetailCard
+                    icon={<Sun className="h-3.5 w-3.5 text-yellow-500" />}
+                    label="UV INDEX"
+                    value={`${weather.uvIndex}`}
+                  />
+                  <WeatherDetailCard
+                    icon={<Thermometer className="h-3.5 w-3.5 text-red-400" />}
+                    label="FEELS LIKE"
+                    value={`${weather.feelsLikeMax}°C`}
+                  />
+                </div>
+
+                {/* Sunrise / Sunset */}
+                <div className="mb-3 flex items-center justify-between border-t border-gray-100 px-4 pt-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🌅</span>
+                    <span className="text-xs font-medium text-[#2D3436]">
+                      {weather.sunrise}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🌇</span>
+                    <span className="text-xs font-medium text-[#2D3436]">
+                      {weather.sunset}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Historical 2-Year Summary */}
+            {history.length > 0 && (
+              <div className="mx-4 mb-4 border-t border-gray-100 pt-3">
+                <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
+                  Historical Records for {date.split("-").slice(1).join("-")}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {history.map((h) => (
+                    <div
+                      key={h.year}
+                      className="rounded-lg border border-gray-100 bg-gray-50 p-3"
+                    >
+                      <p className="mb-1 text-xs font-bold text-gray-500">
+                        {h.year}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl" title={h.weatherDescription}>
+                          {getWeatherEmoji(h.weatherCode)}
+                        </span>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-[#2D3436]">
+                            {Math.round(h.temperatureMax)}°
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            / {Math.round(h.temperatureMin)}°C
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* Detail grid */}
-            <div className="grid grid-cols-2 gap-2 px-4 pb-3">
-              <WeatherDetailCard
-                icon={<Droplets className="h-3.5 w-3.5 text-blue-400" />}
-                label="RAIN PROBABILITY"
-                value={`${weather.rainProbability}%`}
-              />
-              <WeatherDetailCard
-                icon={<Droplets className="h-3.5 w-3.5 text-blue-500" />}
-                label="PRECIPITATION"
-                value={`${weather.precipitation} mm`}
-              />
-              <WeatherDetailCard
-                icon={<Wind className="h-3.5 w-3.5 text-teal-500" />}
-                label="WIND"
-                value={`${weather.windSpeed} km/h ${weather.windDirection}`}
-              />
-              <WeatherDetailCard
-                icon={<Eye className="h-3.5 w-3.5 text-blue-400" />}
-                label="HUMIDITY"
-                value={`${weather.humidity}%`}
-              />
-              <WeatherDetailCard
-                icon={<Sun className="h-3.5 w-3.5 text-yellow-500" />}
-                label="UV INDEX"
-                value={`${weather.uvIndex}`}
-              />
-              <WeatherDetailCard
-                icon={<Thermometer className="h-3.5 w-3.5 text-red-400" />}
-                label="FEELS LIKE"
-                value={`${weather.feelsLikeMax}°C`}
-              />
-            </div>
-
-            {/* Sunrise / Sunset */}
-            <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">🌅</span>
-                <span className="text-xs font-medium text-[#2D3436]">
-                  {weather.sunrise}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">🌇</span>
-                <span className="text-xs font-medium text-[#2D3436]">
-                  {weather.sunset}
-                </span>
-              </div>
-            </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }
 
 function WeatherDetailCard({
@@ -498,19 +634,19 @@ function WeatherDetailCard({
   label,
   value,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
+  icon: React.ReactNode
+  label: string
+  value: string
 }) {
   return (
     <div className="rounded-lg border border-gray-100 p-2.5">
       <div className="flex items-center gap-1.5">
         {icon}
-        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+        <span className="text-[10px] font-medium tracking-wider text-gray-400 uppercase">
           {label}
         </span>
       </div>
       <p className="mt-1 text-sm font-bold text-[#2D3436]">{value}</p>
     </div>
-  );
+  )
 }
