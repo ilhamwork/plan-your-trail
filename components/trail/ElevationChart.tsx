@@ -104,7 +104,7 @@ export function ElevationChart({
       </div>
 
       <div className="p-3">
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={100}>
           <ComposedChart
             data={chartData}
             onMouseMove={handleMouseMove}

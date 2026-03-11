@@ -110,7 +110,7 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
     let cancelled = false;
     async function reverseGeocode() {
       try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${center[0].toFixed(5)}&lon=${center[1].toFixed(5)}`;
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${center[0].toFixed(5)}&lon=${center[1].toFixed(5)}&zoom=13`;
         const res = await fetch(url, { headers: { "Accept-Language": "en" } });
         if (!res.ok || cancelled) return;
         const data = await res.json();

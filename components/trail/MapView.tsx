@@ -491,7 +491,7 @@ export function MapView({
       </div>
       <div
         ref={mapContainerRef}
-        className="h-[350px] w-full lg:h-[450px]"
+        className="h-[350px] w-full lg:h-[350px]"
         style={{ position: "relative" }}
       />
     </div>

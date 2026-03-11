@@ -53,7 +53,7 @@ export function SegmentList({
                 : "bg-gray-50 text-gray-400 hover:text-gray-600"
             }`}
           >
-            Waypoints
+            Water Station
           </button>
         )}
         <button
