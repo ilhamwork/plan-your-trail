@@ -15,6 +15,7 @@ interface RouteDetailsModalProps {
   onChange: (details: RouteDetailsData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
 export function RouteDetailsModal({
@@ -23,6 +24,7 @@ export function RouteDetailsModal({
   onChange,
   onSubmit,
   onCancel,
+  isSubmitting = false,
 }: RouteDetailsModalProps) {
   return (
     <AnimatePresence>
@@ -122,12 +124,21 @@ export function RouteDetailsModal({
                   disabled={
                     !routeDetails.userName ||
                     !routeDetails.routeName ||
-                    !routeDetails.raceDate
+                    !routeDetails.raceDate ||
+                    isSubmitting
                   }
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#E76F51] py-2.5 text-sm font-bold text-white transition-all hover:bg-[#D55A3C] disabled:opacity-50"
                 >
-                  <Check className="h-4 w-4" />
-                  Continue
+                  {isSubmitting ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      className="h-4 w-4 rounded-full border-2 border-white/20 border-t-white"
+                    />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                  {isSubmitting ? "Saving..." : "Continue"}
                 </button>
               </div>
             </form>

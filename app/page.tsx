@@ -21,6 +21,7 @@ import type {
   WaypointSegment,
 } from "@/lib/types"
 import { parseGPX } from "@/lib/gpx-parser"
+import { supabase } from "@/lib/supabase"
 
 import { Header } from "@/components/trail/Header"
 import { UploadCard } from "@/components/trail/UploadCard"
@@ -96,6 +97,7 @@ export default function Home() {
   })
   const [tempRoute, setTempRoute] = useState<ParsedRoute | null>(null)
   const [tempFileName, setTempFileName] = useState<string>("")
+  const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
 
   const handleFileLoaded = useCallback((content: string, name: string) => {
     try {
@@ -114,13 +116,39 @@ export default function Home() {
     }
   }, [])
 
-  const handleDetailsSubmit = (e: React.FormEvent) => {
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (tempRoute) {
-      setRoute(tempRoute)
-      setFileName(tempFileName)
-      setShowDetailsModal(false)
-      setTempRoute(null)
+      setIsSubmittingDetails(true)
+
+      try {
+        // Save to Supabase telemetry table
+        const { error: dbError } = await supabase
+          .from("user_routes")
+          .insert([
+            {
+              user_name: routeDetails.userName,
+              route_name: routeDetails.routeName,
+              race_date: routeDetails.raceDate,
+              file_name: tempFileName,
+              distance: parseFloat((tempRoute.stats.totalDistance / 1000).toFixed(2)),
+              elevation_gain: tempRoute.stats.elevationGain,
+            },
+          ]);
+          
+        if (dbError) {
+          console.error("Failed to save route telemetry:", dbError);
+          // We can silently fail or show a toast message here
+        }
+      } catch (err) {
+        console.error("Error saving to supabase:", err);
+      } finally {
+        setRoute(tempRoute)
+        setFileName(tempFileName)
+        setShowDetailsModal(false)
+        setTempRoute(null)
+        setIsSubmittingDetails(false)
+      }
     }
   }
 
@@ -323,6 +351,7 @@ export default function Home() {
           routeDetails={routeDetails}
           onChange={setRouteDetails}
           onSubmit={handleDetailsSubmit}
+          isSubmitting={isSubmittingDetails}
           onCancel={() => {
             setShowDetailsModal(false)
             setTempRoute(null)
