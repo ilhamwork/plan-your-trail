@@ -14,6 +14,7 @@ import { MetricsPanel } from "@/components/trail/MetricsPanel";
 import { ElevationChart } from "@/components/trail/ElevationChart";
 import { SegmentList } from "@/components/trail/SegmentList";
 import { WeatherForecast } from "@/components/trail/WeatherForecast";
+import { GradientDistribution } from "@/components/trail/GradientDistribution";
 import { Footer } from "@/components/trail/Footer";
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
@@ -226,6 +227,9 @@ export default function Home() {
                   onSegmentClick={handleSegmentClick}
                   onWaypointSegmentClick={handleWaypointSegmentClick}
                 />
+
+                {/* Gradient Distribution */}
+                <GradientDistribution points={route.points} />
 
                 {/* Weather */}
                 <WeatherForecast center={route.center} />
