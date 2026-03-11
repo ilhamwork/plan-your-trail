@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface WeatherForecastProps {
   center: [number, number]; // [lat, lon] — route default
+  initialDate?: string;
 }
 
 interface WeatherData {
@@ -79,16 +80,39 @@ function degToDirection(deg: number): string {
   return dirs[Math.round(deg / 45) % 8];
 }
 
-// Truncate a Nominatim display_name to city + country
+// Format a Nominatim display_name to Kecamatan, Kabupaten/Kota, Provinsi
 function shortName(display_name: string): string {
   const parts = display_name.split(",").map((s) => s.trim());
-  // Usually: place, city/county, ..., country
-  if (parts.length >= 2) return `${parts[0]}, ${parts[parts.length - 1]}`;
+  
+  // Format target: Kecamatan (suburb/village), Kabupaten/Kota (city/county), Provinsi (state/region)
+  // Nominatim display_name format in Indonesia usually:
+  // [Village/Neighbourhood], [Kecamatan], [Kabupaten/Kota], [Provinsi], [Postcode], [Negara]
+  // We want to extract the 3 parts before the postcode/country if possible.
+  
+  if (parts.length >= 4) {
+    // Usually the last two are Postcode and Country.
+    // The three before that are usually Kecamatan, City/Regency, Province
+    const relevantParts = parts.slice(Math.max(0, parts.length - 6), parts.length - 3);
+    // If we have at least 2 relevant parts, return them
+    if (relevantParts.length >= 2) {
+      return relevantParts.join(", ");
+    }
+  }
+  
+  // Fallback to the first 2 parts if it's too short
+  if (parts.length >= 2) return `${parts[0]}, ${parts[1]}`;
   return parts[0];
 }
 
-export function WeatherForecast({ center }: WeatherForecastProps) {
-  const [date, setDate] = useState("");
+export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
+  const [date, setDate] = useState(initialDate || "");
+  
+  // Update date if initialDate prop changes
+  useEffect(() => {
+    if (initialDate) {
+      setDate(initialDate);
+    }
+  }, [initialDate]);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -205,6 +229,9 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
       url.searchParams.set("end_date", date);
       url.searchParams.set("timezone", "auto");
 
+      // Small delay to ensure activeLat/activeLon correctly resolve if they depend on nominatim
+      await new Promise(r => setTimeout(r, 100));
+
       const res = await fetch(url.toString());
       if (!res.ok) throw new Error("Failed to fetch weather data");
 
@@ -249,6 +276,18 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
       setLoading(false);
     }
   }, [date, activeLat, activeLon]);
+
+  // Auto fetch weather strictly once when initialDate is injected via form submission.
+  useEffect(() => {
+    if (initialDate && activeLat && activeLon) {
+      // Small timeout to allow state to settle
+      const t = setTimeout(() => {
+        fetchWeather();
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDate, activeLat, activeLon]);
 
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
