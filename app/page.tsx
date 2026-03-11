@@ -3,16 +3,7 @@
 import { useState, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-  Map,
-  BarChart3,
-  Layers,
-  CloudSun,
-  Calendar,
-  User,
-  Flag,
-  Check,
-} from "lucide-react"
+import { Map, BarChart3, Layers, CloudSun } from "lucide-react"
 
 import type {
   ParsedRoute,
@@ -25,13 +16,17 @@ import { supabase } from "@/lib/supabase"
 
 import { Header } from "@/components/trail/Header"
 import { UploadCard } from "@/components/trail/UploadCard"
+import { RouteHeaderInfo } from "@/components/trail/RouteHeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
 import { ElevationChart } from "@/components/trail/ElevationChart"
 import { SegmentList } from "@/components/trail/SegmentList"
 import { WeatherForecast } from "@/components/trail/WeatherForecast"
 import { GradientDistribution } from "@/components/trail/GradientDistribution"
 import { Footer } from "@/components/trail/Footer"
-import { RouteDetailsModal, type RouteDetailsData } from "@/components/trail/RouteDetailsModal"
+import {
+  RouteDetailsModal,
+  type RouteDetailsData,
+} from "@/components/trail/RouteDetailsModal"
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
 const MapView = dynamic(
@@ -123,25 +118,25 @@ export default function Home() {
 
       try {
         // Save to Supabase telemetry table
-        const { error: dbError } = await supabase
-          .from("user_routes")
-          .insert([
-            {
-              user_name: routeDetails.userName,
-              route_name: routeDetails.routeName,
-              race_date: routeDetails.raceDate,
-              file_name: tempFileName,
-              distance: parseFloat((tempRoute.stats.totalDistance / 1000).toFixed(2)),
-              elevation_gain: tempRoute.stats.elevationGain,
-            },
-          ]);
-          
+        const { error: dbError } = await supabase.from("user_routes").insert([
+          {
+            user_name: routeDetails.userName,
+            route_name: routeDetails.routeName,
+            race_date: routeDetails.raceDate,
+            file_name: tempFileName,
+            distance: parseFloat(
+              (tempRoute.stats.totalDistance / 1000).toFixed(2)
+            ),
+            elevation_gain: tempRoute.stats.elevationGain,
+          },
+        ])
+
         if (dbError) {
-          console.error("Failed to save route telemetry:", dbError);
+          console.error("Failed to save route telemetry:", dbError)
           // We can silently fail or show a toast message here
         }
       } catch (err) {
-        console.error("Error saving to supabase:", err);
+        console.error("Error saving to supabase:", err)
       } finally {
         setRoute(tempRoute)
         setFileName(tempFileName)
@@ -267,30 +262,18 @@ export default function Home() {
               {/* Left column (main content) */}
               <div className="order-2 flex flex-col gap-5 lg:order-1">
                 {/* Route Header Info */}
-                <div className="flex flex-col justify-between gap-2 rounded-xl border border-gray-100 bg-white p-5 shadow-sm md:flex-row md:items-center">
-                  <h2 className="flex items-center gap-2 text-xl font-bold text-[#1B4332]">
-                    <Flag className="h-5 w-5 text-[#E76F51]" />
-                    {routeDetails.routeName || "Unnamed Route"}
-                  </h2>
-                  <div className="flex justify-between">
-                    <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
-                      <User className="h-4 w-4" />
-                      {routeDetails.userName || "Anonymous"}
-                    </p>
-                    <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-[#2D3436]">
-                      <Calendar className="h-4 w-4 text-[#1B4332]" />
-                      {routeDetails.raceDate
-                        ? new Date(routeDetails.raceDate).toLocaleDateString(
-                            "en-US",
-                            { day: "numeric", month: "long", year: "numeric" }
-                          )
-                        : "No Date"}
-                    </div>
-                  </div>
+                <div className="block lg:hidden">
+                  <RouteHeaderInfo
+                    routeName={routeDetails.routeName}
+                    userName={routeDetails.userName}
+                    raceDate={routeDetails.raceDate}
+                  />
                 </div>
 
                 {/* Metrics */}
-                <MetricsPanel stats={route.stats} />
+                <div className="block lg:hidden">
+                  <MetricsPanel stats={route.stats} />
+                </div>
 
                 {/* Map */}
                 {mapProps && (
@@ -339,6 +322,20 @@ export default function Home() {
                     fileName={fileName}
                     error={error}
                   />
+
+                  {/* Route Header Info */}
+                  <div className="hidden lg:block">
+                    <RouteHeaderInfo
+                      routeName={routeDetails.routeName}
+                      userName={routeDetails.userName}
+                      raceDate={routeDetails.raceDate}
+                    />
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="hidden lg:block">
+                    <MetricsPanel stats={route.stats} />
+                  </div>
                 </div>
               </div>
             </motion.div>
