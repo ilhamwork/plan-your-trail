@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Zap,
+  HelpCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -47,6 +48,7 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
       value: `${((stats.totalDistance / 1000) + (stats.elevationGain * 0.01)).toFixed(1)} km`,
       color: "text-[#E76F51]",
       bg: "bg-[#E76F51]/5",
+      tooltip: "Distance (km) + (Elevation Gain (m) / 100)",
     },
     {
       icon: TrendingUp,
@@ -54,6 +56,7 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
       value: `${stats.elevationGain} m`,
       color: "text-[#1B4332]",
       bg: "bg-[#1B4332]/5",
+      tooltip: "Total sum of all uphill sections",
     },
     {
       icon: TrendingDown,
@@ -61,6 +64,7 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
       value: `${stats.elevationLoss} m`,
       color: "text-red-500",
       bg: "bg-red-50",
+      tooltip: "Total sum of all downhill sections",
     },
     {
       icon: ArrowUpRight,
@@ -95,9 +99,20 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
             <card.icon className={`h-4 w-4 ${card.color}`} />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
-              {card.label}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                {card.label}
+              </p>
+              {card.tooltip && (
+                <div className="group relative flex items-center">
+                  <HelpCircle className="h-3 w-3 text-gray-400 cursor-help" />
+                  <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                    {card.tooltip}
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
+                  </div>
+                </div>
+              )}
+            </div>
             <p className="text-lg font-bold leading-tight text-[#2D3436]">
               {card.value}
             </p>

@@ -129,18 +129,18 @@ function WaypointSegmentRow({
           expanded ? "bg-[#1B4332] text-white" : "hover:bg-gray-50"
         }`}
       >
-        <div>
+        <div className="flex flex-1 items-center gap-2">
           <p className={`text-sm font-semibold ${expanded ? "text-white" : "text-[#2D3436]"}`}>
             {segment.name}
           </p>
-          <p className={`text-xs ${expanded ? "text-white/70" : "text-gray-400"}`}>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${expanded ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"}`}>
             {(segment.distance / 1000).toFixed(2)} km
-          </p>
+          </span>
         </div>
         {expanded ? (
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4 shrink-0" />
         ) : (
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 shrink-0" />
         )}
       </button>
 

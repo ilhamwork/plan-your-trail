@@ -20,16 +20,7 @@ const SEGMENT_LABELS: Record<SegmentType, string> = {
 
 // ─── Minimum segment length based on total distance ────────────────
 function getMinSegmentLength(totalDistance: number): number {
-  // Scale minimum segment length with total route distance
-  // Short routes (< 10km): min 300m
-  // Medium routes (10-30km): min 500-1000m
-  // Long routes (> 30km): min 1000-2000m
-  const distKm = totalDistance / 1000;
-  if (distKm < 10) return 300;
-  if (distKm < 20) return 500;
-  if (distKm < 30) return 800;
-  if (distKm < 50) return 1000;
-  return 1500;
+  return 1000; // Strictly enforce 1km minimum
 }
 
 // ─── Analyze segments ──────────────────────────────────────────────
@@ -128,19 +119,53 @@ export function analyzeSegments(
   const mergedSameType: { type: SegmentType; startIndex: number; endIndex: number }[] = [];
   for (const seg of preFinalSegments) {
     if (mergedSameType.length === 0) {
-      mergedSameType.push(seg);
+      mergedSameType.push({ ...seg });
     } else {
       const last = mergedSameType[mergedSameType.length - 1];
-      if (last.type === seg.type) {
+      const combinedDistance = points[seg.endIndex].distance - points[last.startIndex].distance;
+      if (last.type === seg.type && combinedDistance <= 10000) {
         last.endIndex = seg.endIndex;
       } else {
-        mergedSameType.push(seg);
+        mergedSameType.push({ ...seg });
       }
     }
   }
 
+  // Step 6b: Split any individual segments that remain > 10km
+  const finalSplitSegments: { type: SegmentType; startIndex: number; endIndex: number }[] = [];
+  const MAX_LENGTH = 10000;
+  
+  for (const seg of mergedSameType) {
+    let currentStart = seg.startIndex;
+    
+    while (true) {
+      const remainingDist = points[seg.endIndex].distance - points[currentStart].distance;
+      if (remainingDist <= MAX_LENGTH) {
+        finalSplitSegments.push({
+          type: seg.type,
+          startIndex: currentStart,
+          endIndex: seg.endIndex
+        });
+        break;
+      }
+      
+      let splitIdx = currentStart;
+      while (splitIdx < seg.endIndex && points[splitIdx].distance - points[currentStart].distance <= MAX_LENGTH) {
+        splitIdx++;
+      }
+      splitIdx = Math.max(currentStart + 1, splitIdx - 1);
+      
+      finalSplitSegments.push({
+        type: seg.type,
+        startIndex: currentStart,
+        endIndex: splitIdx
+      });
+      currentStart = splitIdx;
+    }
+  }
+
   // Step 7: Build final Segment objects with full stats
-  return mergedSameType.map((raw, idx) => {
+  return finalSplitSegments.map((raw, idx) => {
     const startPt = points[raw.startIndex];
     const endPt = points[raw.endIndex];
     const distance = endPt.distance - startPt.distance;
@@ -204,6 +229,7 @@ export function buildWaypointSegments(
 
   const segments: WaypointSegment[] = [];
   let prevIndex = 0;
+  let prevName = "Start";
 
   for (let i = 0; i < boundaries.length; i++) {
     const b = boundaries[i];
@@ -221,7 +247,7 @@ export function buildWaypointSegments(
 
     segments.push({
       id: i,
-      name: b.name,
+      name: `${prevName} - ${b.name}`,
       distance,
       startElevation: Math.round(startPt.ele),
       endElevation: Math.round(endPt.ele),
@@ -232,6 +258,7 @@ export function buildWaypointSegments(
     });
 
     prevIndex = b.index;
+    prevName = b.name;
   }
 
   return segments;
