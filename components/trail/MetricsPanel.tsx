@@ -7,7 +7,7 @@ import {
   TrendingDown,
   ArrowUpRight,
   ArrowDownLeft,
-  MapPin,
+  Zap,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -42,6 +42,13 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
       bg: "bg-[#1B4332]/5",
     },
     {
+      icon: Zap,
+      label: "Total Effort",
+      value: `${((stats.totalDistance / 1000) + (stats.elevationGain * 0.01)).toFixed(1)} km`,
+      color: "text-[#E76F51]",
+      bg: "bg-[#E76F51]/5",
+    },
+    {
       icon: TrendingUp,
       label: "Elevation Gain",
       value: `${stats.elevationGain} m`,
@@ -68,13 +75,6 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
       value: `${stats.lowestPoint} m`,
       color: "text-[#2D3436]",
       bg: "bg-gray-50",
-    },
-    {
-      icon: MapPin,
-      label: "Waypoints",
-      value: `${stats.waypointCount}`,
-      color: "text-[#E76F51]",
-      bg: "bg-[#E76F51]/5",
     },
   ];
 
