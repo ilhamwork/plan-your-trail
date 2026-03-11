@@ -10,6 +10,7 @@ interface SegmentListProps {
   waypointSegments: WaypointSegment[];
   onSegmentClick?: (segment: Segment) => void;
   onWaypointSegmentClick?: (segment: WaypointSegment) => void;
+  onTabChange?: () => void;
 }
 
 type TabType = "waypoints" | "elevation";
@@ -19,6 +20,7 @@ export function SegmentList({
   waypointSegments,
   onSegmentClick,
   onWaypointSegmentClick,
+  onTabChange,
 }: SegmentListProps) {
   const hasWaypoints = waypointSegments.length > 0;
   const [tab, setTab] = useState<TabType>(hasWaypoints ? "waypoints" : "elevation");
@@ -44,8 +46,11 @@ export function SegmentList({
         {hasWaypoints && (
           <button
             onClick={() => {
-              setTab("waypoints");
-              setExpandedId(null);
+              if (tab !== "waypoints") {
+                setTab("waypoints");
+                setExpandedId(null);
+                onTabChange?.();
+              }
             }}
             className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
               tab === "waypoints"
@@ -58,8 +63,11 @@ export function SegmentList({
         )}
         <button
           onClick={() => {
-            setTab("elevation");
-            setExpandedId(null);
+            if (tab !== "elevation") {
+              setTab("elevation");
+              setExpandedId(null);
+              onTabChange?.();
+            }
           }}
           className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
             tab === "elevation"

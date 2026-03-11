@@ -167,7 +167,7 @@ export function MapView({
       setMapReady(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [is3D]);
+  }, [is3D, points, waypoints, bounds]);
 
   // ── Toggle satellite layer (2D layer) ─────────────────────────────
   useEffect(() => {
