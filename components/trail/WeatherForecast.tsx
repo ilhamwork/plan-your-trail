@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { CloudSun, Droplets, Wind, Thermometer, Sun, Eye } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { CloudSun, Droplets, Wind, Thermometer, Sun, Eye, MapPin, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface WeatherForecastProps {
-  center: [number, number]; // [lat, lon]
+  center: [number, number]; // [lat, lon] — route default
 }
 
 interface WeatherData {
@@ -24,6 +24,12 @@ interface WeatherData {
   feelsLikeMin: number;
   sunrise: string;
   sunset: string;
+}
+
+interface GeoResult {
+  display_name: string;
+  lat: string;
+  lon: string;
 }
 
 // WMO Weather codes → descriptions
@@ -73,11 +79,89 @@ function degToDirection(deg: number): string {
   return dirs[Math.round(deg / 45) % 8];
 }
 
+// Truncate a Nominatim display_name to city + country
+function shortName(display_name: string): string {
+  const parts = display_name.split(",").map((s) => s.trim());
+  // Usually: place, city/county, ..., country
+  if (parts.length >= 2) return `${parts[0]}, ${parts[parts.length - 1]}`;
+  return parts[0];
+}
+
 export function WeatherForecast({ center }: WeatherForecastProps) {
   const [date, setDate] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Location state
+  const [locationQuery, setLocationQuery] = useState("");
+  const [geoResults, setGeoResults] = useState<GeoResult[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    name: string;
+    lat: number;
+    lon: number;
+  } | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Active coords: use selected location or fall back to route center
+  const activeLat = selectedLocation?.lat ?? center[0];
+  const activeLon = selectedLocation?.lon ?? center[1];
+  const activeLocationName = selectedLocation?.name ?? "Route center";
+
+  const searchLocation = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setGeoResults([]);
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+      const res = await fetch(url, {
+        headers: { "Accept-Language": "en" },
+      });
+      if (!res.ok) throw new Error("Geocoding failed");
+      const data: GeoResult[] = await res.json();
+      setGeoResults(data);
+      if (data.length === 0) setGeoError("No locations found");
+    } catch {
+      setGeoError("Could not search location");
+    } finally {
+      setGeoLoading(false);
+    }
+  }, []);
+
+  const handleLocationInput = useCallback(
+    (value: string) => {
+      setLocationQuery(value);
+      setGeoResults([]);
+      setGeoError(null);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => searchLocation(value), 500);
+    },
+    [searchLocation]
+  );
+
+  const handleSelectResult = useCallback((result: GeoResult) => {
+    setSelectedLocation({
+      name: shortName(result.display_name),
+      lat: parseFloat(result.lat),
+      lon: parseFloat(result.lon),
+    });
+    setLocationQuery(shortName(result.display_name));
+    setGeoResults([]);
+    setWeather(null);
+  }, []);
+
+  const clearLocation = useCallback(() => {
+    setSelectedLocation(null);
+    setLocationQuery("");
+    setGeoResults([]);
+    setGeoError(null);
+    setWeather(null);
+  }, []);
 
   const fetchWeather = useCallback(async () => {
     if (!date) return;
@@ -87,8 +171,8 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
 
     try {
       const url = new URL("https://api.open-meteo.com/v1/forecast");
-      url.searchParams.set("latitude", center[0].toFixed(4));
-      url.searchParams.set("longitude", center[1].toFixed(4));
+      url.searchParams.set("latitude", activeLat.toFixed(4));
+      url.searchParams.set("longitude", activeLon.toFixed(4));
       url.searchParams.set(
         "daily",
         "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,uv_index_max,apparent_temperature_max,apparent_temperature_min"
@@ -122,8 +206,7 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
         temperatureMax: d.temperature_2m_max[0],
         temperatureMin: d.temperature_2m_min[0],
         weatherCode: d.weather_code[0],
-        weatherDescription:
-          WMO_CODES[d.weather_code[0]] || "Unknown",
+        weatherDescription: WMO_CODES[d.weather_code[0]] || "Unknown",
         rainProbability: d.precipitation_probability_max[0],
         precipitation: d.precipitation_sum[0],
         windSpeed: d.wind_speed_10m_max[0],
@@ -142,7 +225,7 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
     } finally {
       setLoading(false);
     }
-  }, [date, center]);
+  }, [date, activeLat, activeLon]);
 
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
@@ -159,8 +242,82 @@ export function WeatherForecast({ center }: WeatherForecastProps) {
         </p>
       </div>
 
+      {/* Location input */}
+      <div className="px-4 pt-3 pb-2">
+        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          Location
+        </p>
+        <div className="relative">
+          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332] transition-all">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+            <input
+              type="text"
+              value={locationQuery}
+              onChange={(e) => handleLocationInput(e.target.value)}
+              placeholder={`${center[0].toFixed(3)}, ${center[1].toFixed(3)} (route center)`}
+              className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-gray-400"
+            />
+            {geoLoading && (
+              <Search className="h-3.5 w-3.5 shrink-0 animate-pulse text-gray-400" />
+            )}
+            {selectedLocation && !geoLoading && (
+              <button
+                onClick={clearLocation}
+                className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Dropdown results */}
+          <AnimatePresence>
+            {geoResults.length > 0 && (
+              <motion.ul
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+              >
+                {geoResults.map((r, i) => (
+                  <li key={i}>
+                    <button
+                      onClick={() => handleSelectResult(r)}
+                      className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#E76F51]" />
+                      <span className="text-[#2D3436] line-clamp-2 leading-tight">
+                        {r.display_name}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </motion.ul>
+            )}
+          </AnimatePresence>
+
+          {/* Geo error */}
+          {geoError && !geoLoading && locationQuery && (
+            <p className="mt-1 text-xs text-red-400">{geoError}</p>
+          )}
+        </div>
+
+        {/* Active location badge */}
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#1B4332]/8 px-2 py-0.5">
+            <MapPin className="h-2.5 w-2.5 text-[#1B4332]" />
+            <span className="text-[10px] font-medium text-[#1B4332]">
+              {activeLocationName}
+            </span>
+          </span>
+          <span className="text-[10px] text-gray-400">
+            {activeLat.toFixed(4)}, {activeLon.toFixed(4)}
+          </span>
+        </div>
+      </div>
+
       {/* Date input */}
-      <div className="flex items-center gap-2 px-4 py-3">
+      <div className="flex items-center gap-2 px-4 py-2">
         <input
           type="date"
           value={date}
