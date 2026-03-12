@@ -1,6 +1,7 @@
-"use client";
+"use client"
 
-import type { RouteStats } from "@/lib/types";
+import { useState } from "react"
+import type { RouteStats } from "@/lib/types"
 import {
   Mountain,
   TrendingUp,
@@ -9,11 +10,11 @@ import {
   ArrowDownLeft,
   Zap,
   HelpCircle,
-} from "lucide-react";
-import { motion } from "framer-motion";
+} from "lucide-react"
+import { motion } from "framer-motion"
 
 interface MetricsPanelProps {
-  stats: RouteStats;
+  stats: RouteStats
 }
 
 const container = {
@@ -22,18 +23,20 @@ const container = {
     opacity: 1,
     transition: { staggerChildren: 0.08 },
   },
-};
+}
 
 const item = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0 },
-};
+}
 
 function formatDistance(meters: number): string {
-  return (meters / 1000).toFixed(2);
+  return (meters / 1000).toFixed(2)
 }
 
 export function MetricsPanel({ stats }: MetricsPanelProps) {
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
+
   const cards = [
     {
       icon: Mountain,
@@ -45,7 +48,7 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
     {
       icon: Zap,
       label: "Total Effort",
-      value: `${((stats.totalDistance / 1000) + (stats.elevationGain * 0.01)).toFixed(1)} km`,
+      value: `${(stats.totalDistance / 1000 + stats.elevationGain * 0.01).toFixed(1)} km`,
       color: "text-[#E76F51]",
       bg: "bg-[#E76F51]/5",
       tooltip: "Distance (km) + (Elevation Gain (m) / 100)",
@@ -80,45 +83,56 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
       color: "text-[#2D3436]",
       bg: "bg-gray-50",
     },
-  ];
+  ]
 
   return (
     <motion.div
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-2 gap-3"
+      className="grid w-full grid-cols-2 gap-3"
     >
       {cards.map((card) => (
         <motion.div
           key={card.label}
           variants={item}
-          className="flex items-start gap-3 rounded-xl bg-white p-3 shadow-sm border border-gray-100"
+          className="flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm"
         >
           <div className={`rounded-lg p-1.5 ${card.bg}`}>
             <card.icon className={`h-4 w-4 ${card.color}`} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+              <p className="text-[11px] font-medium tracking-wide text-gray-400">
                 {card.label}
               </p>
               {card.tooltip && (
-                <div className="group relative flex items-center">
-                  <HelpCircle className="h-3 w-3 text-gray-400 cursor-help" />
-                  <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100 z-10">
-                    {card.tooltip}
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
-                  </div>
+                <div className="relative flex items-center">
+                  <button
+                    onClick={() =>
+                      setActiveTooltip(
+                        activeTooltip === card.label ? null : card.label
+                      )
+                    }
+                    className="flex items-center justify-center"
+                  >
+                    <HelpCircle className="h-3 w-3 cursor-help text-gray-400" />
+                  </button>
+                  {activeTooltip === card.label && (
+                    <div className="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-[10px] whitespace-nowrap text-white">
+                      {card.tooltip}
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            <p className="text-lg font-bold leading-tight text-[#2D3436]">
+            <p className="text-lg leading-tight font-bold text-[#2D3436]">
               {card.value}
             </p>
           </div>
         </motion.div>
       ))}
     </motion.div>
-  );
+  )
 }
