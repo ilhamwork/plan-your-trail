@@ -13,7 +13,7 @@ interface SegmentListProps {
   onTabChange?: () => void
 }
 
-type TabType = "waypoints" | "elevation"
+type TabType = "waypoints" | "gradient"
 
 export function SegmentList({
   segments,
@@ -24,7 +24,7 @@ export function SegmentList({
 }: SegmentListProps) {
   const hasWaypoints = waypointSegments.length > 0
   const [tab, setTab] = useState<TabType>(
-    hasWaypoints ? "waypoints" : "elevation"
+    hasWaypoints ? "waypoints" : "gradient"
   )
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
@@ -33,8 +33,8 @@ export function SegmentList({
       {/* Header */}
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
-          <Waypoints className="h-4 w-4 text-[#1B4332]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">Route Segments</h3>
+          <Waypoints className="h-4 w-4 text-[#E9C46A]" />
+          <h3 className="text-sm font-bold text-[#2D3436]">Segment Analysis</h3>
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
           {tab === "waypoints"
@@ -54,25 +54,25 @@ export function SegmentList({
                 onTabChange?.()
               }
             }}
-            className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
+            className={`flex-1 cursor-pointer py-2.5 text-xs font-semibold transition-all ${
               tab === "waypoints"
                 ? "border-b-2 border-[#1B4332] bg-white text-[#1B4332]"
                 : "bg-gray-50 text-gray-400 hover:text-gray-600"
             }`}
           >
-            Water Station
+            Waypoints
           </button>
         )}
         <button
           onClick={() => {
-            if (tab !== "elevation") {
-              setTab("elevation")
+            if (tab !== "gradient") {
+              setTab("gradient")
               setExpandedId(null)
               onTabChange?.()
             }
           }}
-          className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
-            tab === "elevation"
+          className={`flex-1 cursor-pointer py-2.5 text-xs font-semibold transition-all ${
+            tab === "gradient"
               ? "border-b-2 border-[#1B4332] bg-white text-[#1B4332]"
               : "bg-gray-50 text-gray-400 hover:text-gray-600"
           }`}
@@ -96,7 +96,7 @@ export function SegmentList({
               />
             ))
           : segments.map((seg) => (
-              <ElevationSegmentRow
+              <GradientSegmentRow
                 key={seg.id}
                 segment={seg}
                 expanded={expandedId === seg.id}
@@ -130,7 +130,7 @@ function WaypointSegmentRow({
           onToggle()
           onClick()
         }}
-        className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors ${
+        className={`flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left transition-colors ${
           expanded ? "bg-[#1B4332] text-white" : "hover:bg-gray-50"
         }`}
       >
@@ -164,17 +164,17 @@ function WaypointSegmentRow({
           >
             <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4">
               <StatCell
-                label="START ELEV"
+                label="Start Elev"
                 value={`${segment.startElevation}m`}
               />
-              <StatCell label="END ELEV" value={`${segment.endElevation}m`} />
+              <StatCell label="End Elev" value={`${segment.endElevation}m`} />
               <StatCell
-                label="GAIN"
+                label="Gain"
                 value={`+${segment.elevationGain}m`}
                 color="text-green-400"
               />
               <StatCell
-                label="LOSS"
+                label="Loss"
                 value={`-${segment.elevationLoss}m`}
                 color="text-red-400"
               />
@@ -187,7 +187,7 @@ function WaypointSegmentRow({
 }
 
 // ─── Elevation segment row ─────────────────────────────────────────
-function ElevationSegmentRow({
+function GradientSegmentRow({
   segment,
   expanded,
   onToggle,
@@ -199,11 +199,11 @@ function ElevationSegmentRow({
   onClick: () => void
 }) {
   const typeColors: Record<string, string> = {
-    climb: "bg-red-100 text-red-700",
-    uphill: "bg-orange-100 text-orange-700",
-    flat: "bg-green-100 text-green-700",
-    downhill: "bg-blue-100 text-blue-700",
-    descent: "bg-purple-100 text-purple-700",
+    climb: "bg-[#E76F51]/10 text-[#E76F51]",
+    uphill: "bg-[#F4A261]/10 text-[#F4A261]",
+    flat: "bg-[#2A9D8F]/10 text-[#2A9D8F]",
+    downhill: "bg-[#457B9D]/10 text-[#457B9D]",
+    descent: "bg-[#264653]/10 text-[#264653]",
   }
 
   return (
@@ -213,7 +213,7 @@ function ElevationSegmentRow({
           onToggle()
           onClick()
         }}
-        className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors ${
+        className={`flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left transition-colors ${
           expanded ? "bg-[#1B4332] text-white" : "hover:bg-gray-50"
         }`}
       >
@@ -256,26 +256,26 @@ function ElevationSegmentRow({
           >
             <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4">
               <StatCell
-                label="START ELEV"
+                label="Start Elev"
                 value={`${segment.startElevation}m`}
               />
-              <StatCell label="END ELEV" value={`${segment.endElevation}m`} />
+              <StatCell label="End Elev" value={`${segment.endElevation}m`} />
               <StatCell
-                label="GAIN"
+                label="Gain"
                 value={`+${segment.elevationGain}m`}
                 color="text-green-400"
               />
               <StatCell
-                label="LOSS"
+                label="Loss"
                 value={`-${segment.elevationLoss}m`}
                 color="text-red-400"
               />
               <StatCell
-                label="AVG GRADIENT"
+                label="Avg Gradient"
                 value={`${segment.avgGradient}%`}
               />
               <StatCell
-                label="ELEV CHANGE"
+                label="Elev Change"
                 value={`${segment.elevationChange > 0 ? "+" : ""}${segment.elevationChange}m`}
               />
             </div>
@@ -298,7 +298,7 @@ function StatCell({
 }) {
   return (
     <div>
-      <p className="text-[10px] font-medium tracking-wider text-white/50 uppercase">
+      <p className="text-[10px] font-medium tracking-wider text-white/50">
         {label}
       </p>
       <p className={`text-sm font-bold ${color || "text-white"}`}>{value}</p>

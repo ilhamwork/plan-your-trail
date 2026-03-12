@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
-import { Map, BarChart3, Layers, CloudSun, Mountain } from "lucide-react"
+import { Map, BarChart3, Waypoints, CloudSun } from "lucide-react"
 
 import type {
   ParsedRoute,
@@ -16,7 +16,7 @@ import { supabase } from "@/lib/supabase"
 
 import { Header } from "@/components/trail/Header"
 import { UploadCard } from "@/components/trail/UploadCard"
-import { RouteHeaderInfo } from "@/components/trail/RouteHeaderInfo"
+import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
 import { ElevationChart } from "@/components/trail/ElevationChart"
 import { SegmentList } from "@/components/trail/SegmentList"
@@ -24,9 +24,9 @@ import { WeatherForecast } from "@/components/trail/WeatherForecast"
 import { GradientDistribution } from "@/components/trail/GradientDistribution"
 import { Footer } from "@/components/trail/Footer"
 import {
-  RouteDetailsModal,
+  ModalFormInfo,
   type RouteDetailsData,
-} from "@/components/trail/RouteDetailsModal"
+} from "@/components/trail/ModalFormInfo"
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
 const MapView = dynamic(
@@ -47,29 +47,29 @@ const FEATURES = [
     icon: Map,
     title: "Route Map",
     desc: "Interactive 3D map",
-    color: "text-[#1B4332]",
-    bg: "bg-[#1B4332]/5",
+    color: "text-[#2A9D8F]",
+    bg: "bg-[#2A9D8F]/5",
   },
   {
     icon: BarChart3,
     title: "Elevation Profile",
     desc: "Detailed elevation chart",
-    color: "text-[#E76F51]",
-    bg: "bg-[#E76F51]/5",
+    color: "text-[#F4A261]",
+    bg: "bg-[#F4A261]/5",
   },
   {
-    icon: Layers,
+    icon: Waypoints,
     title: "Segment Analysis",
     desc: "Auto-detected segments",
-    color: "text-[#1B4332]",
-    bg: "bg-[#1B4332]/5",
+    color: "text-[#E9C46A]",
+    bg: "bg-[#E9C46A]/5",
   },
   {
     icon: CloudSun,
     title: "Weather Forecast",
     desc: "Forecast along the route",
-    color: "text-[#E76F51]",
-    bg: "bg-[#E76F51]/5",
+    color: "text-[#457B9D]",
+    bg: "bg-[#457B9D]/5",
   },
 ]
 
@@ -201,16 +201,13 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-10 text-center"
+                className="mt-8 text-center"
               >
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B4332]/10">
-                  <Mountain />
-                </div>
-                <p className="text-sm text-gray-500">
-                  Analyze your trail route. Plan your strategy.
+                <p className="text-lg font-semibold text-gray-500">
+                  Analyze your trail route.
                 </p>
-                <p className="text-sm text-gray-500">
-                  Get detailed route map, elevation, and segments.
+                <p className="text-lg font-semibold text-gray-500">
+                  Plan your strategy.
                 </p>
               </motion.div>
 
@@ -251,7 +248,7 @@ export default function Home() {
               <div className="order-2 flex flex-col gap-5 lg:order-1">
                 {/* Route Header Info */}
                 <div className="block lg:hidden">
-                  <RouteHeaderInfo
+                  <HeaderInfo
                     routeName={routeDetails.routeName}
                     userName={routeDetails.userName}
                     raceDate={routeDetails.raceDate}
@@ -313,7 +310,7 @@ export default function Home() {
 
                   {/* Route Header Info */}
                   <div className="hidden lg:block">
-                    <RouteHeaderInfo
+                    <HeaderInfo
                       routeName={routeDetails.routeName}
                       userName={routeDetails.userName}
                       raceDate={routeDetails.raceDate}
@@ -331,7 +328,7 @@ export default function Home() {
         </AnimatePresence>
 
         {/* ── Route Details Modal ────────────────────── */}
-        <RouteDetailsModal
+        <ModalFormInfo
           isOpen={showDetailsModal}
           routeDetails={routeDetails}
           onChange={setRouteDetails}

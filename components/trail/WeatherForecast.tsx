@@ -98,6 +98,16 @@ function degToDirection(deg: number): string {
   return dirs[Math.round(deg / 45) % 8]
 }
 
+// Format YYYY-MM-DD to "14 April 2026"
+function formatDate(dateStr: string): string {
+  if (!dateStr) return ""
+  return new Date(dateStr).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+}
+
 // Format a Nominatim display_name to Kecamatan, Kabupaten/Kota, Provinsi
 function shortName(display_name: string): string {
   const parts = display_name.split(",").map((s) => s.trim())
@@ -427,7 +437,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
       {/* Header */}
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
-          <CloudSun className="h-4 w-4 text-[#E76F51]" />
+          <CloudSun className="h-4 w-4 text-[#457B9D]" />
           <h3 className="text-sm font-bold text-[#2D3436]">Weather Forecast</h3>
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
@@ -459,7 +469,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
                   onClick={clearLocation}
                   className="shrink-0 text-gray-400 transition-colors hover:text-gray-600"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5 cursor-pointer" />
                 </button>
               )}
             </div>
@@ -521,7 +531,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
           <button
             onClick={fetchWeather}
             disabled={loading || !date}
-            className="rounded-lg bg-[#2D3436] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B4332] disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-[#2D3436] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B4332] disabled:opacity-50"
           >
             {loading ? "..." : "Check"}
           </button>
@@ -571,7 +581,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
             {weather && !isHistoricalMode && (
               <>
                 <div className="mx-4 mb-3 rounded-xl bg-[#1B4332] p-4 text-white">
-                  <p className="text-xs text-white/60">{weather.date}</p>
+                  <p className="text-xs text-white/60">{formatDate(weather.date)}</p>
                   <div className="mt-2 flex items-center justify-between">
                     <div>
                       <span className="text-3xl">
@@ -652,7 +662,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
             {history.length > 0 && (
               <div className="mx-4 mb-4 border-t border-gray-100 pt-3">
                 <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400">
-                  Historical Records for {date.split("-").slice(1).join("-")}
+                  Historical Records for {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {history.map((h) => (

@@ -2,7 +2,7 @@
 
 export function Footer() {
   return (
-    <footer className="py-6 text-center">
+    <footer className="pt-8 text-center">
       <p className="text-sm text-gray-500 italic">
         Built by trail runner, for trail runners.
       </p>

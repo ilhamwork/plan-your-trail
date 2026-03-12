@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import type { TrackPoint, Waypoint } from "@/lib/types"
-import { Mountain } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 
 interface ElevationChartProps {
   points: TrackPoint[]
@@ -98,7 +98,7 @@ export function ElevationChart({
     <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
-          <Mountain className="h-4 w-4 text-[#1B4332]" />
+          <BarChart3 className="h-4 w-4 text-[#F4A261]" />
           <h3 className="text-sm font-bold text-[#2D3436]">
             Elevation Profile
           </h3>

@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { Mountain } from "lucide-react";
-import { motion } from "framer-motion";
+import { Mountain } from "lucide-react"
+import { motion } from "framer-motion"
 
 export function Header() {
   return (
@@ -16,9 +16,9 @@ export function Header() {
           <Mountain className="h-5 w-5 text-white" />
         </div>
         <h1 className="text-lg font-bold tracking-tight text-white">
-          Trail Analyzer
+          Plan Your Trail
         </h1>
       </div>
     </motion.header>
-  );
+  )
 }
