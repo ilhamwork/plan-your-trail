@@ -15,9 +15,14 @@ export function Header() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15">
           <Mountain className="h-5 w-5 text-white" />
         </div>
-        <h1 className="text-lg font-bold tracking-tight text-white">
-          Plan Your Trail
-        </h1>
+        <div className="flex flex-col">
+          <h1 className="text-lg leading-tight font-bold tracking-tight text-white">
+            Plan Your Trail
+          </h1>
+          <p className="text-[10px] font-medium tracking-wider text-white/50">
+            GPX Route Analysis
+          </p>
+        </div>
       </div>
     </motion.header>
   )

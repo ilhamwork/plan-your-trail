@@ -101,6 +101,15 @@ export default function Home() {
       // Wait to set full route until details are filled
       setTempRoute(parsed)
       setTempFileName(name)
+
+      // If example file, pre-fill the name
+      if (name === "Rinjani-162K-2025.gpx") {
+        setRouteDetails((prev) => ({
+          ...prev,
+          routeName: "Rinjani 162K",
+        }))
+      }
+
       setShowDetailsModal(true)
       setHighlightRange(null)
       setHoveredPoint(null)

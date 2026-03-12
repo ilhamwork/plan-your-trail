@@ -83,7 +83,7 @@ export function ModalFormInfo({
                           routeName: e.target.value,
                         })
                       }
-                      placeholder="e.g. Rinjani 100K"
+                      placeholder="e.g. Rinjani 162K"
                       className="w-full rounded-lg border border-gray-200 py-2.5 pr-4 pl-9 text-sm transition-all outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
                     />
                   </div>

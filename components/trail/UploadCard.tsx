@@ -47,6 +47,20 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
     [handleFile]
   )
 
+  const handleLoadExample = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation()
+      try {
+        const response = await fetch("/Rinjani-162K-2025.gpx")
+        const content = await response.text()
+        onFileLoaded(content, "Rinjani-162K-2025.gpx")
+      } catch (err) {
+        console.error("Failed to load example:", err)
+      }
+    },
+    [onFileLoaded]
+  )
+
   const hasFile = !!fileName
 
   return (
@@ -102,16 +116,27 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="flex flex-col items-center gap-3"
+              className="flex flex-col items-center gap-4"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-                <FileUp className="h-6 w-6 text-white" />
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
+                  <FileUp className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold">Import GPX</p>
+                  <p className="text-sm text-white/50">
+                    Drop file or tap to browse
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-lg font-bold">Import GPX</p>
-                <p className="text-sm text-white/50">
-                  Drop file or tap to browse
-                </p>
+
+              <div className="mt-2 w-full border-t border-white/10 pt-4">
+                <button
+                  onClick={handleLoadExample}
+                  className="mx-auto flex items-center gap-2 rounded-lg bg-[#2A9D8F] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#2A9D8F]/80 active:scale-95"
+                >
+                  Try example: Rinjani 162K
+                </button>
               </div>
             </motion.div>
           )}
