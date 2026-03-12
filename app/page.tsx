@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
 import { Map, BarChart3, Waypoints, CloudSun } from "lucide-react"
@@ -94,6 +94,53 @@ export default function Home() {
   const [tempFileName, setTempFileName] = useState<string>("")
   const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
 
+  // Auth State
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    // Initial user fetch
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      if (currentUser) {
+        setRouteDetails((prev) => ({
+          ...prev,
+          userName:
+            currentUser.user_metadata?.full_name ||
+            currentUser.user_metadata?.name ||
+            currentUser.email?.split("@")[0] ||
+            "",
+        }))
+      }
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+
+      if (event === "SIGNED_IN") {
+        setRouteDetails((prev) => ({
+          ...prev,
+          userName:
+            currentUser?.user_metadata?.full_name ||
+            currentUser?.user_metadata?.name ||
+            currentUser?.email?.split("@")[0] ||
+            "",
+        }))
+      } else if (event === "SIGNED_OUT") {
+        setRouteDetails((prev) => ({ ...prev, userName: "" }))
+        setRoute(null)
+        setFileName("")
+        setError("")
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   const handleFileLoaded = useCallback((content: string, name: string) => {
     try {
       setError("")
@@ -107,6 +154,12 @@ export default function Home() {
         setRouteDetails((prev) => ({
           ...prev,
           routeName: "Rinjani 162K",
+        }))
+      } else {
+        // Reset routeName for any other file
+        setRouteDetails((prev) => ({
+          ...prev,
+          routeName: "",
         }))
       }
 
@@ -199,6 +252,15 @@ export default function Home() {
               exit={{ opacity: 0, y: -20 }}
               className="mx-auto max-w-lg"
             >
+              {user && (
+                <motion.h2
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-8 text-center text-2xl font-bold text-[#1B4332]"
+                >
+                  Hi {user.user_metadata?.full_name?.split(" ")[0] || "Runner"}!
+                </motion.h2>
+              )}
               <UploadCard
                 onFileLoaded={handleFileLoaded}
                 fileName={fileName}
@@ -311,11 +373,13 @@ export default function Home() {
               <div className="order-1 lg:order-2 lg:block">
                 <div className="flex flex-col gap-5 lg:sticky lg:top-15">
                   {/* Upload card */}
-                  <UploadCard
-                    onFileLoaded={handleFileLoaded}
-                    fileName={fileName}
-                    error={error}
-                  />
+                  <div className="flex flex-col gap-2">
+                    <UploadCard
+                      onFileLoaded={handleFileLoaded}
+                      fileName={fileName}
+                      error={error}
+                    />
+                  </div>
 
                   {/* Route Header Info */}
                   <div className="hidden lg:block">

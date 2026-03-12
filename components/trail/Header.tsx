@@ -5,9 +5,11 @@ import { Mountain, LogIn, LogOut, User } from "lucide-react"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 import { AuthModal } from "./AuthModal"
+import { LogoutConfirmModal } from "./LogoutConfirmModal"
 
 export function Header() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
@@ -26,6 +28,7 @@ export function Header() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+    setIsLogoutModalOpen(false)
   }
 
   return (
@@ -66,7 +69,7 @@ export function Header() {
                   </span>
                 </div>
                 <button
-                  onClick={handleSignOut}
+                  onClick={() => setIsLogoutModalOpen(true)}
                   className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -89,6 +92,12 @@ export function Header() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+      />
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleSignOut}
       />
     </>
   )
