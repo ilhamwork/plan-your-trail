@@ -8,7 +8,7 @@ interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
   fileName?: string
   error?: string
-  isLoggedIn: boolean
+  isRegistered: boolean
   onAuthRequired: () => void
 }
 
@@ -16,7 +16,7 @@ export function UploadCard({
   onFileLoaded,
   fileName,
   error,
-  isLoggedIn,
+  isRegistered,
   onAuthRequired,
 }: UploadCardProps) {
   const [isDragging, setIsDragging] = useState(false)
@@ -42,14 +42,14 @@ export function UploadCard({
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragging(false)
-      if (!isLoggedIn) {
+      if (!isRegistered) {
         onAuthRequired()
         return
       }
       const file = e.dataTransfer.files[0]
       if (file) handleFile(file)
     },
-    [handleFile, isLoggedIn, onAuthRequired]
+    [handleFile, isRegistered, onAuthRequired]
   )
 
   const handleChange = useCallback(
@@ -96,7 +96,7 @@ export function UploadCard({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={(e) => {
-          if (!isLoggedIn) {
+          if (!isRegistered) {
             onAuthRequired()
           } else {
             inputRef.current?.click()

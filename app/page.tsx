@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useCallback, useMemo, useEffect } from "react"
+import { useState, useCallback, useMemo, useEffect, Suspense } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
 import { Map, BarChart3, Waypoints, CloudSun } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { useProfile } from "@/hooks/useProfile"
 
 import type {
   ParsedRoute,
@@ -74,7 +76,19 @@ const FEATURES = [
   },
 ]
 
-export default function Home() {
+export default function HomeWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FAF6F1] flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1B4332]/20 border-t-[#1B4332]" />
+      </div>
+    }>
+      <Home />
+    </Suspense>
+  )
+}
+
+function Home() {
   const [route, setRoute] = useState<ParsedRoute | null>(null)
   const [fileName, setFileName] = useState<string>("")
   const [error, setError] = useState<string>("")
@@ -96,43 +110,32 @@ export default function Home() {
   const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
 
   // Auth State
-  const [user, setUser] = useState<any>(null)
+  const { profile, user, fetched } = useProfile()
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const searchParams = useSearchParams()
+
+  // Auto-open modal if there's an auth error in the URL
+  useEffect(() => {
+    if (searchParams?.get('error') === 'user_not_found') {
+      setIsAuthModalOpen(true)
+    }
+  }, [searchParams])
 
   useEffect(() => {
-    // Initial user fetch
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
-      if (currentUser) {
-        setRouteDetails((prev) => ({
-          ...prev,
-          userName:
-            currentUser.user_metadata?.full_name ||
-            currentUser.user_metadata?.name ||
-            currentUser.email?.split("@")[0] ||
-            "",
-        }))
-      }
-    })
+    if (user && profile) {
+      setRouteDetails((prev) => ({
+        ...prev,
+        userName: profile.full_name || profile.username || "",
+      }))
+    }
+  }, [user, profile])
 
-    // Listen for auth changes
+  useEffect(() => {
+    // Listen for auth sign out to clear state
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
-
-      if (event === "SIGNED_IN") {
-        setRouteDetails((prev) => ({
-          ...prev,
-          userName:
-            currentUser?.user_metadata?.full_name ||
-            currentUser?.user_metadata?.name ||
-            currentUser?.email?.split("@")[0] ||
-            "",
-        }))
-      } else if (event === "SIGNED_OUT") {
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
         setRouteDetails((prev) => ({ ...prev, userName: "" }))
         setRoute(null)
         setFileName("")
@@ -265,20 +268,20 @@ export default function Home() {
               exit={{ opacity: 0, y: -20 }}
               className="mx-auto max-w-lg"
             >
-              {user && (
+              {profile && (
                 <motion.h2
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="mb-8 text-center text-2xl font-bold text-[#1B4332]"
                 >
-                  Hi {user.user_metadata?.full_name?.split(" ")[0] || "Runner"}!
+                  Hi {profile.full_name?.split(" ")[0] || "Runner"}!
                 </motion.h2>
               )}
               <UploadCard
                 onFileLoaded={handleFileLoaded}
                 fileName={fileName}
                 error={error}
-                isLoggedIn={!!user}
+                isRegistered={!!profile}
                 onAuthRequired={() => setIsAuthModalOpen(true)}
               />
 
@@ -393,7 +396,7 @@ export default function Home() {
                       onFileLoaded={handleFileLoaded}
                       fileName={fileName}
                       error={error}
-                      isLoggedIn={!!user}
+                      isRegistered={!!profile}
                       onAuthRequired={() => setIsAuthModalOpen(true)}
                     />
                   </div>

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, LogIn } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { useProfile } from "@/hooks/useProfile"
 
 interface AuthModalProps {
   isOpen: boolean
@@ -12,15 +13,36 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState<string | null>(null)
+  const [mode, setMode] = useState<"signin" | "signup">("signin")
+  const [error, setError] = useState<string | null>(null)
+  const { profile, user, fetched } = useProfile()
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const urlError = searchParams.get("error")
+    if (urlError === "user_not_found") {
+      setError(
+        "We couldn't find your account. Please register to create your profile."
+      )
+      setMode("signup")
+      // Remove error from URL
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, document.title, newUrl)
+    }
+  }, [isOpen])
+
+  // Automatically handle strict login rejection
+  const isProfileMissing = fetched && user && !profile
 
   const handleOAuthLogin = async (provider: "google") => {
     try {
       setLoading(provider)
+      setError(null)
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?intent=${currentMode}`,
         },
       })
       if (error) throw error
@@ -29,6 +51,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setLoading(null)
     }
   }
+
+  const currentMode = isProfileMissing ? "signup" : mode
 
   return (
     <AnimatePresence>
@@ -54,21 +78,42 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <X size={20} />
             </button>
 
-            <div className="mb-8 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B4332]/10 text-[#1B4332]">
-                <LogIn size={24} />
+            <div className="mb-8 text-center text-[#1B4332]">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1B4332]/10">
+                <LogIn size={32} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-              <p className="mt-2 text-gray-500">
-                Sign in to sync your routes and data
+              <h2 className="text-3xl font-bold tracking-tight">
+                {isProfileMissing
+                  ? "Register Required"
+                  : currentMode === "signin"
+                    ? "Welcome Back"
+                    : "Create Account"}
+              </h2>
+              <p className="mt-2 px-4 text-sm font-medium text-gray-500">
+                {currentMode === "signin"
+                  ? "Sign in to access your saved trails"
+                  : "Join our community of trail runners"}
               </p>
             </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 rounded-lg border border-red-100 bg-red-50 p-3 text-center text-xs font-bold text-red-600"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="space-y-4">
               <button
                 onClick={() => handleOAuthLogin("google")}
                 disabled={!!loading}
-                className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 font-semibold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+                className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-4 font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98] disabled:opacity-50"
               >
                 {loading === "google" ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
@@ -92,13 +137,35 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     />
                   </svg>
                 )}
-                Continue with Google
+                {currentMode === "signin"
+                  ? "Continue with Google"
+                  : "Register with Google"}
               </button>
             </div>
 
-            <p className="mt-8 text-center text-xs text-gray-400">
-              By signing in, you agree to our Terms of Service and Privacy
-              Policy.
+            {!isProfileMissing && (
+              <div className="mt-8 text-center">
+                <p className="text-sm text-gray-500">
+                  {currentMode === "signin"
+                    ? "New to Plan Your Trail?"
+                    : "Already have an account?"}{" "}
+                  <button
+                    onClick={() => {
+                      setMode(currentMode === "signin" ? "signup" : "signin")
+                      setError(null)
+                    }}
+                    className="cursor-pointer font-bold text-[#1B4332] hover:underline"
+                  >
+                    {currentMode === "signin" ? "Create an account" : "Sign in"}
+                  </button>
+                </p>
+              </div>
+            )}
+
+            <p className="mt-6 text-center text-[10px] leading-relaxed text-gray-400">
+              By continued use, you agree to our{" "}
+              <span className="underline">Terms of Service</span> and{" "}
+              <span className="underline">Privacy Policy</span>.
             </p>
           </motion.div>
         </div>

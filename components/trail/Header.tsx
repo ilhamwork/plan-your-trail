@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Mountain, LogIn, LogOut, User } from "lucide-react"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
+import { useProfile } from "@/hooks/useProfile"
 import { AuthModal } from "./AuthModal"
 import { LogoutConfirmModal } from "./LogoutConfirmModal"
 
@@ -18,6 +19,7 @@ export function Header({
 }: HeaderProps) {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const { profile, fetched } = useProfile()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -32,6 +34,13 @@ export function Header({
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // Guide user to register if they log in but have no profile
+  useEffect(() => {
+    if (fetched && user && !profile) {
+      onAuthModalOpenChange(true)
+    }
+  }, [fetched, user, profile, onAuthModalOpenChange])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -65,13 +74,16 @@ export function Header({
             {user ? (
               <div className="flex items-center gap-4">
                 <div className="hidden items-center gap-2 sm:flex">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
-                    <User className="h-4 w-4 text-white/70" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 overflow-hidden">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt={profile.full_name || "User"} className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-4 w-4 text-white/70" />
+                    )}
                   </div>
                   <span className="text-sm font-medium text-white/80">
-                    {user.user_metadata?.full_name ||
-                      user.user_metadata?.name ||
-                      user.email?.split("@")[0] ||
+                    {profile?.full_name ||
+                      profile?.username ||
                       "Racer"}
                   </span>
                 </div>
