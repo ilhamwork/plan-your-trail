@@ -15,6 +15,7 @@ import { parseGPX } from "@/lib/gpx-parser"
 import { supabase } from "@/lib/supabase"
 
 import { Header } from "@/components/trail/Header"
+import { AuthModal } from "@/components/trail/AuthModal"
 import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
@@ -96,6 +97,7 @@ export default function Home() {
 
   // Auth State
   const [user, setUser] = useState<any>(null)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
 
   useEffect(() => {
     // Initial user fetch
@@ -141,27 +143,64 @@ export default function Home() {
     return () => subscription.unsubscribe()
   }, [])
 
+  const finalizeRoute = useCallback(async (
+    routeData: ParsedRoute, 
+    fName: string, 
+    details: { userName: string, routeName: string, raceDate: string }
+  ) => {
+    setIsSubmittingDetails(true)
+
+    try {
+      // Save to Supabase telemetry table
+      const { error: dbError } = await supabase.from("user_routes").insert([
+        {
+          user_name: details.userName,
+          route_name: details.routeName,
+          race_date: details.raceDate,
+          file_name: fName,
+          distance: parseFloat(
+            (routeData.stats.totalDistance / 1000).toFixed(2)
+          ),
+          elevation_gain: routeData.stats.elevationGain,
+        },
+      ])
+
+      if (dbError) {
+        console.error("Failed to save route telemetry:", dbError)
+      }
+    } catch (err) {
+      console.error("Error saving to supabase:", err)
+    } finally {
+      setRouteDetails(details)
+      setRoute(routeData)
+      setFileName(fName)
+      setShowDetailsModal(false)
+      setTempRoute(null)
+      setIsSubmittingDetails(false)
+    }
+  }, [])
+
   const handleFileLoaded = useCallback((content: string, name: string) => {
     try {
       setError("")
       const parsed = parseGPX(content)
-      // Wait to set full route until details are filled
+      
+      // If example file, skip modal and fill automatically
+      if (name === "Rinjani-162K-2025.gpx") {
+        finalizeRoute(parsed, name, {
+          ...routeDetails,
+          routeName: "Rinjani 162K"
+        })
+        return
+      }
+
+      // For other files, show modal
       setTempRoute(parsed)
       setTempFileName(name)
-
-      // If example file, pre-fill the name
-      if (name === "Rinjani-162K-2025.gpx") {
-        setRouteDetails((prev) => ({
-          ...prev,
-          routeName: "Rinjani 162K",
-        }))
-      } else {
-        // Reset routeName for any other file
-        setRouteDetails((prev) => ({
-          ...prev,
-          routeName: "",
-        }))
-      }
+      setRouteDetails((prev) => ({
+        ...prev,
+        routeName: "",
+      }))
 
       setShowDetailsModal(true)
       setHighlightRange(null)
@@ -171,41 +210,12 @@ export default function Home() {
       setTempRoute(null)
       setTempFileName("")
     }
-  }, [])
+  }, [finalizeRoute, routeDetails])
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (tempRoute) {
-      setIsSubmittingDetails(true)
-
-      try {
-        // Save to Supabase telemetry table
-        const { error: dbError } = await supabase.from("user_routes").insert([
-          {
-            user_name: routeDetails.userName,
-            route_name: routeDetails.routeName,
-            race_date: routeDetails.raceDate,
-            file_name: tempFileName,
-            distance: parseFloat(
-              (tempRoute.stats.totalDistance / 1000).toFixed(2)
-            ),
-            elevation_gain: tempRoute.stats.elevationGain,
-          },
-        ])
-
-        if (dbError) {
-          console.error("Failed to save route telemetry:", dbError)
-          // We can silently fail or show a toast message here
-        }
-      } catch (err) {
-        console.error("Error saving to supabase:", err)
-      } finally {
-        setRoute(tempRoute)
-        setFileName(tempFileName)
-        setShowDetailsModal(false)
-        setTempRoute(null)
-        setIsSubmittingDetails(false)
-      }
+      await finalizeRoute(tempRoute, tempFileName, routeDetails)
     }
   }
 
@@ -239,7 +249,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
-      <Header />
+      <Header 
+        isAuthModalOpen={isAuthModalOpen}
+        onAuthModalOpenChange={setIsAuthModalOpen}
+      />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         {/* ── Empty state ───────────────────────── */}
@@ -265,6 +278,8 @@ export default function Home() {
                 onFileLoaded={handleFileLoaded}
                 fileName={fileName}
                 error={error}
+                isLoggedIn={!!user}
+                onAuthRequired={() => setIsAuthModalOpen(true)}
               />
 
               {/* Tagline */}
@@ -378,6 +393,8 @@ export default function Home() {
                       onFileLoaded={handleFileLoaded}
                       fileName={fileName}
                       error={error}
+                      isLoggedIn={!!user}
+                      onAuthRequired={() => setIsAuthModalOpen(true)}
                     />
                   </div>
 
@@ -412,6 +429,11 @@ export default function Home() {
             setTempRoute(null)
             setTempFileName("")
           }}
+        />
+
+        <AuthModal 
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
         />
       </main>
     </div>

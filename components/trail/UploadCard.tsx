@@ -8,10 +8,19 @@ interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
   fileName?: string
   error?: string
+  isLoggedIn: boolean
+  onAuthRequired: () => void
 }
 
-export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
+export function UploadCard({
+  onFileLoaded,
+  fileName,
+  error,
+  isLoggedIn,
+  onAuthRequired,
+}: UploadCardProps) {
   const [isDragging, setIsDragging] = useState(false)
+  const [isLoadingExample, setIsLoadingExample] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(
@@ -33,10 +42,14 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragging(false)
+      if (!isLoggedIn) {
+        onAuthRequired()
+        return
+      }
       const file = e.dataTransfer.files[0]
       if (file) handleFile(file)
     },
-    [handleFile]
+    [handleFile, isLoggedIn, onAuthRequired]
   )
 
   const handleChange = useCallback(
@@ -50,12 +63,15 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
   const handleLoadExample = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation()
+      setIsLoadingExample(true)
       try {
         const response = await fetch("/Rinjani-162K-2025.gpx")
         const content = await response.text()
         onFileLoaded(content, "Rinjani-162K-2025.gpx")
       } catch (err) {
         console.error("Failed to load example:", err)
+      } finally {
+        setIsLoadingExample(false)
       }
     },
     [onFileLoaded]
@@ -79,7 +95,13 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
+        onClick={(e) => {
+          if (!isLoggedIn) {
+            onAuthRequired()
+          } else {
+            inputRef.current?.click()
+          }
+        }}
       >
         <input
           ref={inputRef}
@@ -135,9 +157,17 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
               <div className="mt-2 w-full border-t border-white/10 pt-4">
                 <button
                   onClick={handleLoadExample}
-                  className="mx-auto flex items-center gap-2 rounded-lg bg-[#2A9D8F] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#2A9D8F]/80 active:scale-95"
+                  disabled={isLoadingExample}
+                  className="mx-auto flex cursor-pointer items-center gap-2 rounded-lg bg-[#2A9D8F] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#2A9D8F]/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Try example gpx file
+                  {isLoadingExample ? (
+                    <>
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Try example gpx file"
+                  )}
                 </button>
               </div>
             </motion.div>

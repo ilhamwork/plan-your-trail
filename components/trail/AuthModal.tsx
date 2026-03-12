@@ -13,10 +13,10 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState<string | null>(null)
 
-  const handleOAuthLogin = async (provider: 'google') => {
+  const handleOAuthLogin = async (provider: "google") => {
     try {
       setLoading(provider)
-      
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
         options: {
@@ -49,7 +49,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           >
             <button
               onClick={onClose}
-              className="absolute right-4 top-4 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              className="absolute top-4 right-4 cursor-pointer rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
             >
               <X size={20} />
             </button>
@@ -59,17 +59,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <LogIn size={24} />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-              <p className="mt-2 text-gray-500">Sign in to sync your routes and data</p>
+              <p className="mt-2 text-gray-500">
+                Sign in to sync your routes and data
+              </p>
             </div>
 
             <div className="space-y-4">
               <button
-                onClick={() => handleOAuthLogin('google')}
+                onClick={() => handleOAuthLogin("google")}
                 disabled={!!loading}
-                className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50"
+                className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 font-semibold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
               >
-                {loading === 'google' ? (
-                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                {loading === "google" ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
                 ) : (
                   <svg className="h-5 w-5" viewBox="0 0 24 24">
                     <path
@@ -95,7 +97,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <p className="mt-8 text-center text-xs text-gray-400">
-              By signing in, you agree to our Terms of Service and Privacy Policy.
+              By signing in, you agree to our Terms of Service and Privacy
+              Policy.
             </p>
           </motion.div>
         </div>

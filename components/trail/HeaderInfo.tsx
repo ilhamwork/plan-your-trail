@@ -16,7 +16,7 @@ export function HeaderInfo({ routeName, userName, raceDate }: HeaderInfoProps) {
       <div className="flex justify-between">
         <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
           <User className="h-4 w-4" />
-          {userName || "Anonymous"}
+          {userName || "Guest"}
         </p>
         <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-[#2D3436]">
           <Calendar className="h-4 w-4 text-[#1B4332]" />
