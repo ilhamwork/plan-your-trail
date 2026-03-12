@@ -29,7 +29,7 @@ export function ModalFormInfo({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-2000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -37,39 +37,47 @@ export function ModalFormInfo({
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
           >
             <div className="bg-[#1B4332] p-5 text-white">
-              <h3 className="text-xl font-bold">Route Details</h3>
+              <h3 className="text-xl font-bold">
+                {routeDetails.userName
+                  ? `Hi ${routeDetails.userName.split(" ")[0]}!`
+                  : "Route Details"}
+              </h3>
               <p className="mt-1 text-sm text-white/80">
-                Please provide some information about this route.
+                {routeDetails.userName
+                  ? "Let's finish setting up your route analysis."
+                  : "Please provide some information about this route."}
               </p>
             </div>
 
             <form onSubmit={onSubmit} className="p-5">
               <div className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
-                    Runner Name <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      required
-                      value={routeDetails.userName}
-                      onChange={(e) =>
-                        onChange({
-                          ...routeDetails,
-                          userName: e.target.value,
-                        })
-                      }
-                      placeholder="John Doe"
-                      className="w-full rounded-lg border border-gray-200 py-2.5 pr-4 pl-9 text-sm transition-all outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
-                    />
+                {!routeDetails.userName && (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
+                      Runner Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        required
+                        value={routeDetails.userName}
+                        onChange={(e) =>
+                          onChange({
+                            ...routeDetails,
+                            userName: e.target.value,
+                          })
+                        }
+                        placeholder="John Doe"
+                        className="w-full rounded-lg border border-gray-200 py-2.5 pr-4 pl-9 text-sm transition-all outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
-                    Race / Route Name <span className="text-red-500">*</span>
+                    Race Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Flag className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
