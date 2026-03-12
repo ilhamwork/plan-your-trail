@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
-import { Map, BarChart3, Layers, CloudSun } from "lucide-react"
+import { Map, BarChart3, Layers, CloudSun, Mountain } from "lucide-react"
 
 import type {
   ParsedRoute,
@@ -34,7 +34,7 @@ const MapView = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[350px] items-center justify-center rounded-xl bg-gray-100 lg:h-[450px]">
+      <div className="flex h-87.5 items-center justify-center rounded-xl bg-gray-100 lg:h-112.5">
         <div className="text-sm text-gray-400">Loading map...</div>
       </div>
     ),
@@ -46,7 +46,7 @@ const FEATURES = [
   {
     icon: Map,
     title: "Route Map",
-    desc: "Interactive topographic map",
+    desc: "Interactive 3D map",
     color: "text-[#1B4332]",
     bg: "bg-[#1B4332]/5",
   },
@@ -204,19 +204,7 @@ export default function Home() {
                 className="mt-10 text-center"
               >
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B4332]/10">
-                  <svg
-                    className="h-6 w-6 text-[#1B4332]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8 14l-4-4 4-4m8 0l4 4-4 4M3 20l7-7 4 4 7-7"
-                    />
-                  </svg>
+                  <Mountain />
                 </div>
                 <p className="text-sm text-gray-500">
                   Analyze your trail route. Plan your strategy.
@@ -314,8 +302,8 @@ export default function Home() {
               </div>
 
               {/* Right column (sidebar — sticky on desktop) */}
-              <div className="order-1 lg:order-2">
-                <div className="flex flex-col gap-5 lg:sticky lg:top-[60px]">
+              <div className="order-1 lg:order-2 lg:block">
+                <div className="flex flex-col gap-5 lg:sticky lg:top-15">
                   {/* Upload card */}
                   <UploadCard
                     onFileLoaded={handleFileLoaded}

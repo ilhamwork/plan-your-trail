@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import type { Segment, WaypointSegment } from "@/lib/types";
-import { Layers, ChevronRight, ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react"
+import type { Segment, WaypointSegment } from "@/lib/types"
+import { Waypoints, ChevronRight, ChevronDown } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface SegmentListProps {
-  segments: Segment[];
-  waypointSegments: WaypointSegment[];
-  onSegmentClick?: (segment: Segment) => void;
-  onWaypointSegmentClick?: (segment: WaypointSegment) => void;
-  onTabChange?: () => void;
+  segments: Segment[]
+  waypointSegments: WaypointSegment[]
+  onSegmentClick?: (segment: Segment) => void
+  onWaypointSegmentClick?: (segment: WaypointSegment) => void
+  onTabChange?: () => void
 }
 
-type TabType = "waypoints" | "elevation";
+type TabType = "waypoints" | "elevation"
 
 export function SegmentList({
   segments,
@@ -22,16 +22,18 @@ export function SegmentList({
   onWaypointSegmentClick,
   onTabChange,
 }: SegmentListProps) {
-  const hasWaypoints = waypointSegments.length > 0;
-  const [tab, setTab] = useState<TabType>(hasWaypoints ? "waypoints" : "elevation");
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const hasWaypoints = waypointSegments.length > 0
+  const [tab, setTab] = useState<TabType>(
+    hasWaypoints ? "waypoints" : "elevation"
+  )
+  const [expandedId, setExpandedId] = useState<number | null>(null)
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
+    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100">
+      <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
-          <Layers className="h-4 w-4 text-[#1B4332]" />
+          <Waypoints className="h-4 w-4 text-[#1B4332]" />
           <h3 className="text-sm font-bold text-[#2D3436]">Route Segments</h3>
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
@@ -47,14 +49,14 @@ export function SegmentList({
           <button
             onClick={() => {
               if (tab !== "waypoints") {
-                setTab("waypoints");
-                setExpandedId(null);
-                onTabChange?.();
+                setTab("waypoints")
+                setExpandedId(null)
+                onTabChange?.()
               }
             }}
             className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
               tab === "waypoints"
-                ? "bg-white text-[#1B4332] border-b-2 border-[#1B4332]"
+                ? "border-b-2 border-[#1B4332] bg-white text-[#1B4332]"
                 : "bg-gray-50 text-gray-400 hover:text-gray-600"
             }`}
           >
@@ -64,14 +66,14 @@ export function SegmentList({
         <button
           onClick={() => {
             if (tab !== "elevation") {
-              setTab("elevation");
-              setExpandedId(null);
-              onTabChange?.();
+              setTab("elevation")
+              setExpandedId(null)
+              onTabChange?.()
             }
           }}
           className={`flex-1 py-2.5 text-xs font-semibold transition-all ${
             tab === "elevation"
-              ? "bg-white text-[#1B4332] border-b-2 border-[#1B4332]"
+              ? "border-b-2 border-[#1B4332] bg-white text-[#1B4332]"
               : "bg-gray-50 text-gray-400 hover:text-gray-600"
           }`}
         >
@@ -106,7 +108,7 @@ export function SegmentList({
             ))}
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Waypoint segment row ──────────────────────────────────────────
@@ -116,24 +118,31 @@ function WaypointSegmentRow({
   onToggle,
   onClick,
 }: {
-  segment: WaypointSegment;
-  expanded: boolean;
-  onToggle: () => void;
-  onClick: () => void;
+  segment: WaypointSegment
+  expanded: boolean
+  onToggle: () => void
+  onClick: () => void
 }) {
   return (
     <div>
       <button
-        onClick={() => { onToggle(); onClick(); }}
+        onClick={() => {
+          onToggle()
+          onClick()
+        }}
         className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors ${
           expanded ? "bg-[#1B4332] text-white" : "hover:bg-gray-50"
         }`}
       >
         <div className="flex flex-1 items-center gap-2">
-          <p className={`text-sm font-semibold ${expanded ? "text-white" : "text-[#2D3436]"}`}>
+          <p
+            className={`text-sm font-semibold ${expanded ? "text-white" : "text-[#2D3436]"}`}
+          >
             {segment.name}
           </p>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${expanded ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"}`}>
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${expanded ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"}`}
+          >
             {(segment.distance / 1000).toFixed(2)} km
           </span>
         </div>
@@ -153,15 +162,12 @@ function WaypointSegmentRow({
             transition={{ duration: 0.2 }}
             className="overflow-hidden bg-[#1B4332]"
           >
-            <div className="grid grid-cols-2 gap-3 px-4 pb-4 pt-1">
+            <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4">
               <StatCell
                 label="START ELEV"
                 value={`${segment.startElevation}m`}
               />
-              <StatCell
-                label="END ELEV"
-                value={`${segment.endElevation}m`}
-              />
+              <StatCell label="END ELEV" value={`${segment.endElevation}m`} />
               <StatCell
                 label="GAIN"
                 value={`+${segment.elevationGain}m`}
@@ -177,7 +183,7 @@ function WaypointSegmentRow({
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }
 
 // ─── Elevation segment row ─────────────────────────────────────────
@@ -187,10 +193,10 @@ function ElevationSegmentRow({
   onToggle,
   onClick,
 }: {
-  segment: Segment;
-  expanded: boolean;
-  onToggle: () => void;
-  onClick: () => void;
+  segment: Segment
+  expanded: boolean
+  onToggle: () => void
+  onClick: () => void
 }) {
   const typeColors: Record<string, string> = {
     climb: "bg-red-100 text-red-700",
@@ -198,14 +204,14 @@ function ElevationSegmentRow({
     flat: "bg-green-100 text-green-700",
     downhill: "bg-blue-100 text-blue-700",
     descent: "bg-purple-100 text-purple-700",
-  };
+  }
 
   return (
     <div>
       <button
         onClick={() => {
-          onToggle();
-          onClick();
+          onToggle()
+          onClick()
         }}
         className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors ${
           expanded ? "bg-[#1B4332] text-white" : "hover:bg-gray-50"
@@ -214,19 +220,21 @@ function ElevationSegmentRow({
         <div className="flex items-center gap-2">
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-              expanded
-                ? "bg-white/20 text-white"
-                : typeColors[segment.type]
+              expanded ? "bg-white/20 text-white" : typeColors[segment.type]
             }`}
           >
             {segment.label}
           </span>
-          <span className={`text-xs ${expanded ? "text-white/70" : "text-gray-400"}`}>
+          <span
+            className={`text-xs ${expanded ? "text-white/70" : "text-gray-400"}`}
+          >
             KM {segment.startKm.toFixed(1)}–{segment.endKm.toFixed(1)}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-medium ${expanded ? "text-white" : "text-[#2D3436]"}`}>
+          <span
+            className={`text-xs font-medium ${expanded ? "text-white" : "text-[#2D3436]"}`}
+          >
             {(segment.distance / 1000).toFixed(2)} km
           </span>
           {expanded ? (
@@ -246,15 +254,12 @@ function ElevationSegmentRow({
             transition={{ duration: 0.2 }}
             className="overflow-hidden bg-[#1B4332]"
           >
-            <div className="grid grid-cols-2 gap-3 px-4 pb-4 pt-1">
+            <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4">
               <StatCell
                 label="START ELEV"
                 value={`${segment.startElevation}m`}
               />
-              <StatCell
-                label="END ELEV"
-                value={`${segment.endElevation}m`}
-              />
+              <StatCell label="END ELEV" value={`${segment.endElevation}m`} />
               <StatCell
                 label="GAIN"
                 value={`+${segment.elevationGain}m`}
@@ -278,7 +283,7 @@ function ElevationSegmentRow({
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }
 
 // ─── Stat cell ─────────────────────────────────────────────────────
@@ -287,16 +292,16 @@ function StatCell({
   value,
   color,
 }: {
-  label: string;
-  value: string;
-  color?: string;
+  label: string
+  value: string
+  color?: string
 }) {
   return (
     <div>
-      <p className="text-[10px] font-medium uppercase tracking-wider text-white/50">
+      <p className="text-[10px] font-medium tracking-wider text-white/50 uppercase">
         {label}
       </p>
       <p className={`text-sm font-bold ${color || "text-white"}`}>{value}</p>
     </div>
-  );
+  )
 }

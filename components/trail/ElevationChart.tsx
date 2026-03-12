@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react"
 import {
   ComposedChart,
   Area,
@@ -9,14 +9,14 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import type { TrackPoint, Waypoint } from "@/lib/types";
-import { TrendingUp } from "lucide-react";
+} from "recharts"
+import type { TrackPoint, Waypoint } from "@/lib/types"
+import { Mountain } from "lucide-react"
 
 interface ElevationChartProps {
-  points: TrackPoint[];
-  waypoints: Waypoint[];
-  onHover: (point: TrackPoint | null) => void;
+  points: TrackPoint[]
+  waypoints: Waypoint[]
+  onHover: (point: TrackPoint | null) => void
 }
 
 export function ElevationChart({
@@ -26,8 +26,8 @@ export function ElevationChart({
 }: ElevationChartProps) {
   // Downsample points for chart performance
   const chartData = useMemo(() => {
-    const maxPoints = 500;
-    const step = Math.max(1, Math.floor(points.length / maxPoints));
+    const maxPoints = 500
+    const step = Math.max(1, Math.floor(points.length / maxPoints))
 
     const data = points
       .filter((_, i) => i % step === 0 || i === points.length - 1)
@@ -37,45 +37,50 @@ export function ElevationChart({
         gradient: Math.round(p.gradient * 10) / 10,
         original: p,
         wpElevation: null as number | null,
-      }));
+      }))
 
     // Inject waypoint elevations into the closest data points
     for (const wp of waypoints) {
-      let minDiff = Infinity;
-      let closestIdx = 0;
+      let minDiff = Infinity
+      let closestIdx = 0
       for (let i = 0; i < data.length; i++) {
-        const diff = Math.abs(data[i].original.distance - wp.distance);
+        const diff = Math.abs(data[i].original.distance - wp.distance)
         if (diff < minDiff) {
-          minDiff = diff;
-          closestIdx = i;
+          minDiff = diff
+          closestIdx = i
         }
       }
-      data[closestIdx].wpElevation = data[closestIdx].elevation;
+      data[closestIdx].wpElevation = data[closestIdx].elevation
     }
 
-    return data;
-  }, [points, waypoints]);
+    return data
+  }, [points, waypoints])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMouseMove = useCallback(
     (state: any) => {
-      if (state && state.isTooltipActive && state.activePayload && state.activePayload.length > 0) {
-        onHover(state.activePayload[0].payload.original);
+      if (
+        state &&
+        state.isTooltipActive &&
+        state.activePayload &&
+        state.activePayload.length > 0
+      ) {
+        onHover(state.activePayload[0].payload.original)
       } else {
-        onHover(null);
+        onHover(null)
       }
     },
     [onHover]
-  );
+  )
 
   const handleMouseLeave = useCallback(() => {
-    onHover(null);
-  }, [onHover]);
+    onHover(null)
+  }, [onHover])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderWaypointDot = (props: any) => {
-    const { cx, cy } = props;
-    if (cx == null || cy == null) return null;
+    const { cx, cy } = props
+    if (cx == null || cy == null) return null
     return (
       <circle
         cx={cx}
@@ -86,14 +91,14 @@ export function ElevationChart({
         strokeWidth={2}
         style={{ pointerEvents: "none" }} // Prevents scatter dots from blocking tooltips/hover
       />
-    );
-  };
+    )
+  }
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
-      <div className="px-4 py-3 border-b border-gray-100">
+    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+      <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-[#1B4332]" />
+          <Mountain className="h-4 w-4 text-[#1B4332]" />
           <h3 className="text-sm font-bold text-[#2D3436]">
             Elevation Profile
           </h3>
@@ -112,7 +117,13 @@ export function ElevationChart({
             margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
           >
             <defs>
-              <linearGradient id="elevationGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient
+                id="elevationGradient"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
                 <stop offset="5%" stopColor="#1B4332" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#1B4332" stopOpacity={0.05} />
               </linearGradient>
@@ -134,15 +145,15 @@ export function ElevationChart({
             />
             <Tooltip
               content={({ active, payload }) => {
-                if (!active || !payload?.[0]) return null;
-                const data = payload[0].payload;
+                if (!active || !payload?.[0]) return null
+                const data = payload[0].payload
                 return (
-                  <div className="rounded-lg bg-[#2D3436] px-3 py-2 text-xs text-white shadow-lg pointer-events-none">
+                  <div className="pointer-events-none rounded-lg bg-[#2D3436] px-3 py-2 text-xs text-white shadow-lg">
                     <p className="font-semibold">{data.distance} km</p>
                     <p>Altitude: {data.elevation} m</p>
                     <p>Gradient: {data.gradient}%</p>
                   </div>
-                );
+                )
               }}
               animationDuration={100}
             />
@@ -165,5 +176,5 @@ export function ElevationChart({
         </ResponsiveContainer>
       </div>
     </div>
-  );
+  )
 }

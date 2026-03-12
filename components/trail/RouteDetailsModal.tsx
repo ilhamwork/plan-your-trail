@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { User, Flag, Calendar, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion"
+import { User, Flag, Calendar, Check } from "lucide-react"
 
 export interface RouteDetailsData {
-  userName: string;
-  routeName: string;
-  raceDate: string;
+  userName: string
+  routeName: string
+  raceDate: string
 }
 
 interface RouteDetailsModalProps {
-  isOpen: boolean;
-  routeDetails: RouteDetailsData;
-  onChange: (details: RouteDetailsData) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onCancel: () => void;
-  isSubmitting?: boolean;
+  isOpen: boolean
+  routeDetails: RouteDetailsData
+  onChange: (details: RouteDetailsData) => void
+  onSubmit: (e: React.FormEvent) => void
+  onCancel: () => void
+  isSubmitting?: boolean
 }
 
 export function RouteDetailsModal({
@@ -46,7 +46,7 @@ export function RouteDetailsModal({
             <form onSubmit={onSubmit} className="p-5">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
                     Runner Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -68,7 +68,7 @@ export function RouteDetailsModal({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
                     Race / Route Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -90,7 +90,7 @@ export function RouteDetailsModal({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
                     Race Date <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -132,7 +132,11 @@ export function RouteDetailsModal({
                   {isSubmitting ? (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 1,
+                        ease: "linear",
+                      }}
                       className="h-4 w-4 rounded-full border-2 border-white/20 border-t-white"
                     />
                   ) : (
@@ -146,5 +150,5 @@ export function RouteDetailsModal({
         </div>
       )}
     </AnimatePresence>
-  );
+  )
 }

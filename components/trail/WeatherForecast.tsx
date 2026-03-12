@@ -600,32 +600,32 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
                 <div className="grid grid-cols-2 gap-2 px-4 pb-3 lg:grid-cols-3">
                   <WeatherDetailCard
                     icon={<Droplets className="h-3.5 w-3.5 text-blue-400" />}
-                    label="RAIN PROBABILITY"
+                    label="Rain Probability"
                     value={`${weather.rainProbability}%`}
                   />
                   <WeatherDetailCard
                     icon={<Droplets className="h-3.5 w-3.5 text-blue-500" />}
-                    label="PRECIPITATION"
+                    label="Precipitation"
                     value={`${weather.precipitation} mm`}
                   />
                   <WeatherDetailCard
                     icon={<Wind className="h-3.5 w-3.5 text-teal-500" />}
-                    label="WIND"
+                    label="Wind"
                     value={`${weather.windSpeed} km/h ${weather.windDirection}`}
                   />
                   <WeatherDetailCard
                     icon={<Eye className="h-3.5 w-3.5 text-blue-400" />}
-                    label="HUMIDITY"
+                    label="Humidity"
                     value={`${weather.humidity}%`}
                   />
                   <WeatherDetailCard
                     icon={<Sun className="h-3.5 w-3.5 text-yellow-500" />}
-                    label="UV INDEX"
+                    label="UV Index"
                     value={`${weather.uvIndex}`}
                   />
                   <WeatherDetailCard
                     icon={<Thermometer className="h-3.5 w-3.5 text-red-400" />}
-                    label="FEELS LIKE"
+                    label="Feels Like"
                     value={`${weather.feelsLikeMax}°C`}
                   />
                 </div>
@@ -651,7 +651,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
             {/* Historical 2-Year Summary */}
             {history.length > 0 && (
               <div className="mx-4 mb-4 border-t border-gray-100 pt-3">
-                <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
+                <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400">
                   Historical Records for {date.split("-").slice(1).join("-")}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -701,7 +701,7 @@ function WeatherDetailCard({
     <div className="rounded-lg border border-gray-100 p-2.5">
       <div className="flex items-center gap-1.5">
         {icon}
-        <span className="text-[10px] font-medium tracking-wider text-gray-400 uppercase">
+        <span className="text-[10px] font-medium tracking-wider text-gray-400">
           {label}
         </span>
       </div>
