@@ -12,16 +12,12 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host') // Hello, my name is...
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      if (isLocalEnv) {
-        // we can be sure that next is a relative URL (starting with /)
-        return NextResponse.redirect(`${origin}${next}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
-      } else {
+      if (next) {
         return NextResponse.redirect(`${origin}${next}`)
       }
+      return NextResponse.redirect(`${origin}/`)
+    } else {
+      console.error('Auth callback error:', error)
     }
   }
 

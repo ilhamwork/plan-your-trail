@@ -13,9 +13,10 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState<string | null>(null)
 
-  const handleOAuthLogin = async (provider: 'google' | 'strava') => {
+  const handleOAuthLogin = async (provider: 'google') => {
     try {
       setLoading(provider)
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
         options: {
@@ -90,21 +91,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   </svg>
                 )}
                 Continue with Google
-              </button>
-
-              <button
-                onClick={() => handleOAuthLogin('strava')}
-                disabled={!!loading}
-                className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#FC4C02] px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-[#E34402] disabled:opacity-50"
-              >
-                {loading === 'strava' ? (
-                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                ) : (
-                  <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
-                  </svg>
-                )}
-                Continue with Strava
               </button>
             </div>
 

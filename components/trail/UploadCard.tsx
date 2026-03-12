@@ -103,7 +103,9 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-white">
-                  {fileName}
+                  {fileName && fileName.length > 25
+                    ? `${fileName.slice(0, 25)}...`
+                    : fileName}
                 </p>
                 <p className="text-[10px] font-medium text-white/50">
                   GPX file loaded • Tap to change
@@ -135,7 +137,7 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
                   onClick={handleLoadExample}
                   className="mx-auto flex items-center gap-2 rounded-lg bg-[#2A9D8F] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#2A9D8F]/80 active:scale-95"
                 >
-                  Try example: Rinjani 162K
+                  Try example gpx file
                 </button>
               </div>
             </motion.div>
