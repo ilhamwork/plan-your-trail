@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Trash2, Map, Calendar, User, ChevronRight, FileCode } from "lucide-react"
 import { SavedRoute, storage } from "@/lib/storage"
 import { useEffect, useState } from "react"
+import { useProfile } from "@/hooks/useProfile"
 
 interface SavedRoutesModalProps {
   isOpen: boolean
@@ -17,20 +18,21 @@ export function SavedRoutesModal({
   onLoadRoute,
 }: SavedRoutesModalProps) {
   const [routes, setRoutes] = useState<SavedRoute[]>([])
+  const { user } = useProfile()
 
   useEffect(() => {
     const loadRoutes = async () => {
       if (isOpen) {
-        setRoutes(await storage.getRoutes())
+        setRoutes(await storage.getRoutes(user?.id || null))
       }
     }
     loadRoutes()
-  }, [isOpen])
+  }, [isOpen, user?.id])
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     await storage.deleteRoute(id)
-    setRoutes(await storage.getRoutes())
+    setRoutes(await storage.getRoutes(user?.id || null))
   }
 
   return (
@@ -54,9 +56,9 @@ export function SavedRoutesModal({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 bg-[#1B4332] p-4 text-white">
               <div>
-                <h3 className="text-lg font-bold">My Saved Routes</h3>
+                <h3 className="text-lg font-bold">My Routes</h3>
                 <p className="text-xs text-white/60">
-                  {routes.length} / 10 routes saved
+                  {routes.length} / 5 routes saved
                 </p>
               </div>
               <button

@@ -195,7 +195,7 @@ function Home() {
         return
       }
 
-      const routes = await storage.getRoutes()
+      const routes = await storage.getRoutes(user?.id || null)
       const isSaved = routes.some(
         (r) => r.fileName === fileName && r.name === routeDetails.routeName
       )
@@ -250,6 +250,7 @@ function Home() {
     if (!route || !routeDetails.routeName) return
 
     const result = await storage.saveRoute(
+      user?.id || null,
       routeDetails.routeName,
       routeDetails.userName || "Runner",
       routeDetails.raceDate,
@@ -481,7 +482,11 @@ function Home() {
                         : handleSaveRoute
                     }
                     isSaved={isCurrentRouteSaved}
-                    onShare={isReadOnly ? undefined : handleShareRoute}
+                    onShare={
+                      isReadOnly || fileName === "Rinjani-162K-2025.gpx"
+                        ? undefined
+                        : handleShareRoute
+                    }
                     isSharing={isSharing}
                   />
                 </div>
@@ -567,7 +572,11 @@ function Home() {
                           : handleSaveRoute
                       }
                       isSaved={isCurrentRouteSaved}
-                      onShare={isReadOnly ? undefined : handleShareRoute}
+                      onShare={
+                        isReadOnly || fileName === "Rinjani-162K-2025.gpx"
+                          ? undefined
+                          : handleShareRoute
+                      }
                       isSharing={isSharing}
                     />
                   </div>

@@ -1,135 +1,128 @@
+import { supabase } from "./supabase"
 import { ParsedRoute } from "./types"
 
 export interface SavedRoute {
   id: string
+  userId: string | null
   name: string
   userName: string
   date: string
   fileName: string
   stats: ParsedRoute["stats"]
   routeData: ParsedRoute
-  savedAt: number
+  savedAt: string
 }
 
-const DB_NAME = "PlanYourTrailDB"
-const STORE_NAME = "routes"
-const MAX_ROUTES = 10
+const MAX_ROUTES = 5
 
-const getDB = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1)
-    request.onupgradeneeded = (e) => {
-      const db = (e.target as IDBOpenDBRequest).result
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id" })
-      }
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
+// IndexedDB logic removed in favor of Supabase
 
 export const storage = {
-  async getRoutes(): Promise<SavedRoute[]> {
-    if (typeof window === "undefined") return []
+  async getRoutes(userId: string | null = null): Promise<SavedRoute[]> {
+    if (!userId) return []
     try {
-      const db = await getDB()
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, "readonly")
-        const store = transaction.objectStore(STORE_NAME)
-        const request = store.getAll()
-        request.onsuccess = () => {
-          const routes = (request.result as SavedRoute[]).sort((a, b) => b.savedAt - a.savedAt)
-          resolve(routes)
-        }
-        request.onerror = () => reject(request.error)
-      })
+      const { data, error } = await supabase
+        .from("saved_routes")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+
+      return (data || []).map((r: any) => ({
+        id: r.id,
+        userId: r.user_id,
+        name: r.name,
+        userName: r.user_name,
+        date: r.race_date,
+        fileName: r.file_name,
+        stats: r.route_data.stats,
+        routeData: r.route_data,
+        savedAt: r.created_at,
+      }))
     } catch (err) {
-      console.error("Failed to load routes from IndexedDB:", err)
+      console.error("Failed to load routes from Supabase:", err)
       return []
     }
   },
 
   async saveRoute(
+    userId: string | null,
     name: string,
     userName: string,
     date: string,
     fileName: string,
     routeData: ParsedRoute
   ): Promise<{ success: boolean; error?: string }> {
-    if (typeof window === "undefined") return { success: false, error: "Not in browser" }
+    if (!userId) return { success: false, error: "Please sign in to save routes" }
 
     try {
-      const routes = await this.getRoutes()
+      const routes = await this.getRoutes(userId)
       
       const existingRoute = routes.find(
         (r) => r.fileName === fileName && r.name === name
       )
 
-      const db = await getDB()
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, "readwrite")
-        const store = transaction.objectStore(STORE_NAME)
-        
-        if (existingRoute) {
-          // Update existing route
-          const updatedRoute: SavedRoute = {
-            ...existingRoute,
-            savedAt: Date.now(),
-            routeData,
-            stats: routeData.stats,
-            userName,
-            date,
-          }
-          store.put(updatedRoute)
-        } else {
-          // Add new route
-          const newRoute: SavedRoute = {
-            id: crypto.randomUUID(),
+      if (existingRoute) {
+        // Update existing route
+        const { error } = await supabase
+          .from("saved_routes")
+          .update({
             name,
-            userName,
-            date,
-            fileName,
-            stats: routeData.stats,
-            routeData,
-            savedAt: Date.now(),
-          }
-          store.add(newRoute)
+            user_name: userName,
+            race_date: date,
+            route_data: routeData,
+          })
+          .eq("id", existingRoute.id)
 
-          // If we exceeded the limit, delete the oldest
-          if (routes.length >= MAX_ROUTES) {
-            const oldest = routes[routes.length - 1]
-            store.delete(oldest.id)
-          }
+        if (error) throw error
+      } else {
+        // Check limit
+        if (routes.length >= MAX_ROUTES) {
+          // Delete oldest
+          const oldest = routes[routes.length - 1]
+          await this.deleteRoute(oldest.id)
         }
 
-        transaction.oncomplete = () => resolve({ success: true })
-        transaction.onerror = () => reject(transaction.error)
-      })
+        // Add new route
+        const { error } = await supabase
+          .from("saved_routes")
+          .insert([
+            {
+              user_id: userId,
+              name,
+              user_name: userName,
+              race_date: date,
+              file_name: fileName,
+              route_data: routeData,
+            },
+          ])
+
+        if (error) throw error
+      }
+
+      return { success: true }
     } catch (err) {
-      console.error("Failed to save route to IndexedDB:", err)
-      return { success: false, error: "Failed to save to database. Storage might be full." }
+      console.error("Failed to save route to Supabase:", err)
+      return { success: false, error: "Failed to save to database." }
     }
   },
 
   async deleteRoute(id: string): Promise<void> {
-    if (typeof window === "undefined") return
     try {
-      const db = await getDB()
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, "readwrite")
-        const store = transaction.objectStore(STORE_NAME)
-        const request = store.delete(id)
-        request.onsuccess = () => resolve()
-        request.onerror = () => reject(request.error)
-      })
+      const { error } = await supabase
+        .from("saved_routes")
+        .delete()
+        .eq("id", id)
+
+      if (error) throw error
     } catch (err) {
-      console.error("Failed to delete route from IndexedDB:", err)
+      console.error("Failed to delete route from Supabase:", err)
     }
   },
 
-  async isLimitReached(): Promise<boolean> {
-    const routes = await this.getRoutes()
+  async isLimitReached(userId: string | null = null): Promise<boolean> {
+    const routes = await this.getRoutes(userId)
     return routes.length >= MAX_ROUTES
   }
 }
