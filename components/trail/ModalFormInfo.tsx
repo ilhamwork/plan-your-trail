@@ -92,7 +92,7 @@ export function ModalFormInfo({
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-500 transition-all hover:bg-gray-50 cursor-pointer"
+                  className="flex-1 cursor-pointer rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-500 transition-all hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -103,7 +103,7 @@ export function ModalFormInfo({
                     !routeDetails.raceDate ||
                     isSubmitting
                   }
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#E76F51] py-2.5 text-sm font-bold text-white transition-all hover:bg-[#D55A3C] disabled:opacity-50 cursor-pointer"
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] py-2.5 text-sm font-bold text-white transition-all hover:bg-[#2D5A46] active:scale-98 disabled:opacity-50"
                 >
                   {isSubmitting && (
                     <motion.div
@@ -116,7 +116,7 @@ export function ModalFormInfo({
                       className="h-4 w-4 rounded-full border-2 border-white/20 border-t-white"
                     />
                   )}
-                  {isSubmitting ? 'Saving...' : 'Continue'}
+                  {isSubmitting ? "Saving..." : "Continue"}
                 </button>
               </div>
             </form>

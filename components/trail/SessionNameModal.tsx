@@ -61,7 +61,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                 <button
                   type="submit"
                   disabled={!name.trim()}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#E76F51] py-2.5 text-sm font-bold text-white transition-all hover:bg-[#D55A3C] disabled:opacity-50"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] py-2.5 text-sm font-bold text-white transition-all hover:bg-[#2D5A46] active:scale-98 disabled:opacity-50"
                 >
                   Begin
                 </button>
