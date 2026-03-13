@@ -523,10 +523,10 @@ export function MapView({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIs3D(!is3D)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
+            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
               is3D
-                ? "bg-[#1B4332] text-white"
-                : "cursor-pointer bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
+                : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
             }`}
           >
             <Globe className="h-3 w-3" />
@@ -534,17 +534,17 @@ export function MapView({
           </button>
           <button
             onClick={() => setIsSatellite(!isSatellite)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+            className={`cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-all ${
               isSatellite
-                ? "bg-[#1B4332] text-white"
-                : "cursor-pointer bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
+                : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
             }`}
           >
             Satellite
           </button>
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:text-[#1B4332]"
+            className={`flex h-6 w-6 cursor-pointer items-center justify-center rounded-full ${isFullscreen ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]" : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"}`}
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
           >
             {isFullscreen ? (
