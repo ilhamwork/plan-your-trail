@@ -30,9 +30,9 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
           >
             <div className="bg-[#1B4332] p-5 text-white">
-              <h3 className="text-xl font-bold">Welcome to Plan Your Trail</h3>
+              <h3 className="text-xl font-bold">Welcome</h3>
               <p className="mt-1 text-sm text-white/80">
-                Please enter your name to start.
+                Please enter your name to start
               </p>
             </div>
 
@@ -40,7 +40,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
-                    Runner Name <span className="text-red-500">*</span>
+                    Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -50,7 +50,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                       autoFocus
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. John Doe"
+                      placeholder="e.g. Kilian Jornet"
                       className="w-full rounded-lg border border-gray-200 py-2.5 pr-4 pl-9 text-sm transition-all outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
                     />
                   </div>

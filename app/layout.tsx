@@ -27,17 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fontSans.variable} font-sans antialiased`}>
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          crossOrigin=""
-        />
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"
-        />
-      </head>
+      <head />
       <body>{children}</body>
     </html>
   )

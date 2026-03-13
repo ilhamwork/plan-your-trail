@@ -531,9 +531,9 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
           <button
             onClick={fetchWeather}
             disabled={loading || !date}
-            className="cursor-pointer rounded-lg bg-[#2D3436] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B4332] disabled:opacity-50"
+            className="group flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332]/5 px-4 py-2 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#1B4332] hover:text-white disabled:opacity-50"
           >
-            {loading ? "..." : "Check"}
+            {loading ? "Checking..." : "Check"}
           </button>
         </div>
       </div>
@@ -581,7 +581,9 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
             {weather && !isHistoricalMode && (
               <>
                 <div className="mx-4 mb-3 rounded-xl bg-[#1B4332] p-4 text-white">
-                  <p className="text-xs text-white/60">{formatDate(weather.date)}</p>
+                  <p className="text-xs text-white/60">
+                    {formatDate(weather.date)}
+                  </p>
                   <div className="mt-2 flex items-center justify-between">
                     <div>
                       <span className="text-3xl">
@@ -662,7 +664,11 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
             {history.length > 0 && (
               <div className="mx-4 mb-4 border-t border-gray-100 pt-3">
                 <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400">
-                  Historical Records for {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
+                  Historical Records for{" "}
+                  {new Date(date).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "long",
+                  })}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {history.map((h) => (

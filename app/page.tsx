@@ -28,6 +28,8 @@ import {
   type RouteDetailsData,
 } from "@/components/trail/ModalFormInfo"
 import { SessionNameModal } from "@/components/trail/SessionNameModal"
+import { ShareModal } from "@/components/trail/ShareModal"
+import { ShareCard } from "@/components/trail/ShareCard"
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
 const MapView = dynamic(
@@ -116,6 +118,43 @@ export default function Home() {
   const [tempFileName, setTempFileName] = useState<string>("")
   const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
 
+  // Share Modal State
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareId, setShareId] = useState<string | null>(null)
+  const [isGeneratingShare, setIsGeneratingShare] = useState(false)
+
+  const handleShare = async () => {
+    if (!route) return
+    setIsGeneratingShare(true)
+    setShowShareModal(true)
+
+    try {
+      const { data, error: dbError } = await supabase
+        .from("shared_routes")
+        .insert([
+          {
+            route_data: route,
+            race_name: routeDetails.raceName,
+            race_date: routeDetails.raceDate,
+            user_name: sessionRunnerName,
+            file_name: fileName,
+          },
+        ])
+        .select()
+
+      if (dbError) throw dbError
+      if (data && data[0]) {
+        setShareId(data[0].id)
+      }
+    } catch (err) {
+      console.error("Failed to share route:", err)
+      setError("Failed to generate shareable link.")
+      setShowShareModal(false)
+    } finally {
+      setIsGeneratingShare(false)
+    }
+  }
+
   const finishUpload = useCallback(
     async (
       parsed: ParsedRoute,
@@ -133,7 +172,9 @@ export default function Home() {
             race_name: details.raceName,
             race_date: details.raceDate,
             file_name: name,
-            distance: parseFloat((parsed.stats.totalDistance / 1000).toFixed(2)),
+            distance: parseFloat(
+              (parsed.stats.totalDistance / 1000).toFixed(2)
+            ),
             elevation_gain: parsed.stats.elevationGain,
           },
         ])
@@ -185,7 +226,9 @@ export default function Home() {
         setHighlightRange(null)
         setHoveredPoint(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to parse GPX file")
+        setError(
+          err instanceof Error ? err.message : "Failed to parse GPX file"
+        )
         setTempRoute(null)
         setTempFileName("")
       }
@@ -196,14 +239,19 @@ export default function Home() {
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (tempRoute && tempFileName) {
-      await finishUpload(tempRoute, tempFileName, routeDetails, sessionRunnerName)
+      await finishUpload(
+        tempRoute,
+        tempFileName,
+        routeDetails,
+        sessionRunnerName
+      )
     }
   }
 
   const handleSegmentClick = useCallback((segment: Segment) => {
     setHighlightRange((prev) =>
       prev?.startIndex === segment.startIndex &&
-        prev?.endIndex === segment.endIndex
+      prev?.endIndex === segment.endIndex
         ? null
         : { startIndex: segment.startIndex, endIndex: segment.endIndex }
     )
@@ -212,7 +260,7 @@ export default function Home() {
   const handleWaypointSegmentClick = useCallback((segment: WaypointSegment) => {
     setHighlightRange((prev) =>
       prev?.startIndex === segment.startIndex &&
-        prev?.endIndex === segment.endIndex
+      prev?.endIndex === segment.endIndex
         ? null
         : { startIndex: segment.startIndex, endIndex: segment.endIndex }
     )
@@ -269,7 +317,7 @@ export default function Home() {
                 className="mt-8 text-center"
               >
                 <p className="text-lg font-semibold text-gray-500">
-                  Analyze your trail race.
+                  Analyze your trail route.
                 </p>
                 <p className="text-lg font-semibold text-gray-500">
                   Plan your strategy.
@@ -317,6 +365,8 @@ export default function Home() {
                     raceName={routeDetails.raceName}
                     userName={sessionRunnerName}
                     raceDate={routeDetails.raceDate}
+                    onShare={handleShare}
+                    isSharing={isGeneratingShare}
                   />
                 </div>
 
@@ -379,6 +429,8 @@ export default function Home() {
                       raceName={routeDetails.raceName}
                       userName={sessionRunnerName}
                       raceDate={routeDetails.raceDate}
+                      onShare={handleShare}
+                      isSharing={isGeneratingShare}
                     />
                   </div>
 
@@ -409,6 +461,17 @@ export default function Home() {
         <SessionNameModal
           isOpen={showSessionModal}
           onSubmit={handleSessionNameSubmit}
+        />
+
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          shareId={shareId}
+          isGenerating={isGeneratingShare}
+          route={route}
+          raceName={routeDetails.raceName}
+          userName={sessionRunnerName}
+          raceDate={routeDetails.raceDate}
         />
       </main>
     </div>
