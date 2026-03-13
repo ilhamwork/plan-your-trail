@@ -4,15 +4,38 @@ interface HeaderInfoProps {
   routeName: string
   userName: string
   raceDate: string
+  onSave?: () => void
+  isSaved?: boolean
 }
 
-export function HeaderInfo({ routeName, userName, raceDate }: HeaderInfoProps) {
+export function HeaderInfo({
+  routeName,
+  userName,
+  raceDate,
+  onSave,
+  isSaved,
+}: HeaderInfoProps) {
   return (
-    <div className="flex flex-col justify-between gap-2 rounded-xl border border-gray-100 bg-white p-3 shadow-sm md:flex-row md:items-center">
-      <h2 className="flex items-center gap-2 text-xl font-bold text-[#1B4332]">
-        <Flag className="h-5 w-5 text-[#2A9D8F]" />
-        {routeName || "Unnamed Route"}
-      </h2>
+    <div className="flex flex-col justify-between gap-2 rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-xl font-bold text-[#1B4332]">
+          <Flag className="h-5 w-5 text-[#2A9D8F]" />
+          {routeName || "Unnamed Route"}
+        </h2>
+        {onSave && (
+          <button
+            onClick={onSave}
+            disabled={isSaved}
+            className={`ml-4 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
+              isSaved
+                ? "bg-gray-100 text-gray-400"
+                : "bg-[#2A9D8F]/10 text-[#2A9D8F] hover:bg-[#2A9D8F]/20"
+            }`}
+          >
+            {isSaved ? "Saved" : "Save Route"}
+          </button>
+        )}
+      </div>
       <div className="flex justify-between">
         <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
           <User className="h-4 w-4" />

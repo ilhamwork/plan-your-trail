@@ -15,6 +15,7 @@ import type {
 } from "@/lib/types"
 import { parseGPX } from "@/lib/gpx-parser"
 import { supabase } from "@/lib/supabase"
+import { storage, type SavedRoute } from "@/lib/storage"
 
 import { Header } from "@/components/trail/Header"
 import { AuthModal } from "@/components/trail/AuthModal"
@@ -30,6 +31,7 @@ import {
   ModalFormInfo,
   type RouteDetailsData,
 } from "@/components/trail/ModalFormInfo"
+import { SavedRoutesModal } from "@/components/trail/SavedRoutesModal"
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
 const MapView = dynamic(
@@ -78,11 +80,13 @@ const FEATURES = [
 
 export default function HomeWrapper() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#FAF6F1] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1B4332]/20 border-t-[#1B4332]" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#FAF6F1]">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1B4332]/20 border-t-[#1B4332]" />
+        </div>
+      }
+    >
       <Home />
     </Suspense>
   )
@@ -109,6 +113,10 @@ function Home() {
   const [tempFileName, setTempFileName] = useState<string>("")
   const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
 
+  // Saved Routes State
+  const [isSavedRoutesModalOpen, setIsSavedRoutesModalOpen] = useState(false)
+  const [isCurrentRouteSaved, setIsCurrentRouteSaved] = useState(false)
+
   // Auth State
   const { profile, user, fetched } = useProfile()
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
@@ -116,7 +124,7 @@ function Home() {
 
   // Auto-open modal if there's an auth error in the URL
   useEffect(() => {
-    if (searchParams?.get('error') === 'user_not_found') {
+    if (searchParams?.get("error") === "user_not_found") {
       setIsAuthModalOpen(true)
     }
   }, [searchParams])
@@ -146,74 +154,131 @@ function Home() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const finalizeRoute = useCallback(async (
-    routeData: ParsedRoute, 
-    fName: string, 
-    details: { userName: string, routeName: string, raceDate: string }
-  ) => {
-    setIsSubmittingDetails(true)
-
-    try {
-      // Save to Supabase telemetry table
-      const { error: dbError } = await supabase.from("user_routes").insert([
-        {
-          user_name: details.userName,
-          route_name: details.routeName,
-          race_date: details.raceDate,
-          file_name: fName,
-          distance: parseFloat(
-            (routeData.stats.totalDistance / 1000).toFixed(2)
-          ),
-          elevation_gain: routeData.stats.elevationGain,
-        },
-      ])
-
-      if (dbError) {
-        console.error("Failed to save route telemetry:", dbError)
-      }
-    } catch (err) {
-      console.error("Error saving to supabase:", err)
-    } finally {
-      setRouteDetails(details)
-      setRoute(routeData)
-      setFileName(fName)
-      setShowDetailsModal(false)
-      setTempRoute(null)
-      setIsSubmittingDetails(false)
-    }
-  }, [])
-
-  const handleFileLoaded = useCallback((content: string, name: string) => {
-    try {
-      setError("")
-      const parsed = parseGPX(content)
-      
-      // If example file, skip modal and fill automatically
-      if (name === "Rinjani-162K-2025.gpx") {
-        finalizeRoute(parsed, name, {
-          ...routeDetails,
-          routeName: "Rinjani 162K"
-        })
+  // Sync "isSaved" state with storage
+  useEffect(() => {
+    const checkSaved = async () => {
+      if (!route || !routeDetails.routeName) {
+        setIsCurrentRouteSaved(false)
         return
       }
 
-      // For other files, show modal
-      setTempRoute(parsed)
-      setTempFileName(name)
-      setRouteDetails((prev) => ({
-        ...prev,
-        routeName: "",
-      }))
-
-      setShowDetailsModal(true)
-      setHighlightRange(null)
-      setHoveredPoint(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to parse GPX file")
-      setTempRoute(null)
-      setTempFileName("")
+      const routes = await storage.getRoutes()
+      const isSaved = routes.some(
+        (r) => r.fileName === fileName && r.name === routeDetails.routeName
+      )
+      setIsCurrentRouteSaved(isSaved)
     }
-  }, [finalizeRoute, routeDetails])
+
+    checkSaved()
+  }, [route, routeDetails.routeName, fileName])
+
+  const finalizeRoute = useCallback(
+    async (
+      routeData: ParsedRoute,
+      fName: string,
+      details: { userName: string; routeName: string; raceDate: string }
+    ) => {
+      setIsSubmittingDetails(true)
+
+      try {
+        // Save to Supabase telemetry table
+        const { error: dbError } = await supabase.from("user_routes").insert([
+          {
+            user_name: details.userName,
+            route_name: details.routeName,
+            race_date: details.raceDate,
+            file_name: fName,
+            distance: parseFloat(
+              (routeData.stats.totalDistance / 1000).toFixed(2)
+            ),
+            elevation_gain: routeData.stats.elevationGain,
+          },
+        ])
+
+        if (dbError) {
+          console.error("Failed to save route telemetry:", dbError)
+        }
+      } catch (err) {
+        console.error("Error saving to supabase:", err)
+      } finally {
+        setRouteDetails(details)
+        setRoute(routeData)
+        setFileName(fName)
+        setShowDetailsModal(false)
+        setTempRoute(null)
+        setIsSubmittingDetails(false)
+        setIsCurrentRouteSaved(false)
+      }
+    },
+    []
+  )
+
+  const handleSaveRoute = useCallback(async () => {
+    if (!route || !routeDetails.routeName) return
+
+    const result = await storage.saveRoute(
+      routeDetails.routeName,
+      routeDetails.userName || "Runner",
+      routeDetails.raceDate,
+      fileName,
+      route
+    )
+
+    if (result.success) {
+      setIsCurrentRouteSaved(true)
+    } else {
+      setError(result.error || "Failed to save route")
+    }
+  }, [route, routeDetails, fileName])
+
+  const handleLoadSavedRoute = useCallback((saved: SavedRoute) => {
+    setRoute(saved.routeData)
+    setFileName(saved.fileName)
+    setRouteDetails({
+      userName: saved.userName,
+      routeName: saved.name,
+      raceDate: saved.date,
+    })
+    setIsCurrentRouteSaved(true)
+    setError("")
+  }, [])
+
+  const handleFileLoaded = useCallback(
+    (content: string, name: string) => {
+      try {
+        setError("")
+        const parsed = parseGPX(content)
+
+        // If example file, skip modal and fill automatically
+        if (name === "Rinjani-162K-2025.gpx") {
+          finalizeRoute(parsed, name, {
+            ...routeDetails,
+            routeName: "Rinjani 162K",
+          })
+          return
+        }
+
+        // For other files, show modal
+        setTempRoute(parsed)
+        setTempFileName(name)
+        setRouteDetails((prev) => ({
+          ...prev,
+          routeName: "",
+        }))
+
+        setShowDetailsModal(true)
+        setHighlightRange(null)
+        setHoveredPoint(null)
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to parse GPX file"
+        )
+        setTempRoute(null)
+        setTempFileName("")
+      }
+    },
+    [finalizeRoute, routeDetails]
+  )
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -252,9 +317,10 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
-      <Header 
+      <Header
         isAuthModalOpen={isAuthModalOpen}
         onAuthModalOpenChange={setIsAuthModalOpen}
+        onOpenSavedRoutes={() => setIsSavedRoutesModalOpen(true)}
       />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
@@ -272,7 +338,7 @@ function Home() {
                 <motion.h2
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="mb-8 text-center text-2xl font-bold text-[#1B4332]"
+                  className="mb-6 text-center text-2xl font-bold text-[#1B4332]"
                 >
                   Hi {profile.full_name?.split(" ")[0] || "Runner"}!
                 </motion.h2>
@@ -341,6 +407,12 @@ function Home() {
                     routeName={routeDetails.routeName}
                     userName={routeDetails.userName}
                     raceDate={routeDetails.raceDate}
+                    onSave={
+                      fileName === "Rinjani-162K-2025.gpx"
+                        ? undefined
+                        : handleSaveRoute
+                    }
+                    isSaved={isCurrentRouteSaved}
                   />
                 </div>
 
@@ -407,6 +479,12 @@ function Home() {
                       routeName={routeDetails.routeName}
                       userName={routeDetails.userName}
                       raceDate={routeDetails.raceDate}
+                      onSave={
+                        fileName === "Rinjani-162K-2025.gpx"
+                          ? undefined
+                          : handleSaveRoute
+                      }
+                      isSaved={isCurrentRouteSaved}
                     />
                   </div>
 
@@ -434,9 +512,15 @@ function Home() {
           }}
         />
 
-        <AuthModal 
+        <AuthModal
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
+        />
+
+        <SavedRoutesModal
+          isOpen={isSavedRoutesModalOpen}
+          onClose={() => setIsSavedRoutesModalOpen(false)}
+          onLoadRoute={handleLoadSavedRoute}
         />
       </main>
     </div>
