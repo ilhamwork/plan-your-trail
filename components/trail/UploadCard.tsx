@@ -70,9 +70,8 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
       transition={{ duration: 0.5 }}
     >
       <div
-        className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 ${
-          hasFile ? "p-3" : "p-10 text-center"
-        } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""}`}
+        className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 ${hasFile ? "p-3" : "p-10 text-center"
+          } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""}`}
         onDragOver={(e) => {
           e.preventDefault()
           setIsDragging(true)
@@ -133,9 +132,9 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
               <div className="mt-2 w-full border-t border-white/10 pt-4">
                 <button
                   onClick={handleLoadExample}
-                  className="mx-auto flex items-center gap-2 rounded-lg bg-[#2A9D8F] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#2A9D8F]/80 active:scale-95"
+                  className="mx-auto flex items-center cursor-pointer gap-2 rounded-lg bg-[#2A9D8F] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#2A9D8F]/80 active:scale-95"
                 >
-                  Try example: Rinjani 162K
+                  Try gpx example
                 </button>
               </div>
             </motion.div>
