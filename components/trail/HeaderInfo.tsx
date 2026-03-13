@@ -1,17 +1,17 @@
 import { Flag, User, Calendar } from "lucide-react"
 
 interface HeaderInfoProps {
-  routeName: string
+  raceName: string
   userName: string
   raceDate: string
 }
 
-export function HeaderInfo({ routeName, userName, raceDate }: HeaderInfoProps) {
+export function HeaderInfo({ raceName, userName, raceDate }: HeaderInfoProps) {
   return (
     <div className="flex flex-col justify-between gap-2 rounded-xl border border-gray-100 bg-white p-3 shadow-sm md:flex-row md:items-center">
       <h2 className="flex items-center gap-2 text-xl font-bold text-[#1B4332]">
         <Flag className="h-5 w-5 text-[#2A9D8F]" />
-        {routeName || "Unnamed Route"}
+        {raceName || "Unnamed Route"}
       </h2>
       <div className="flex justify-between">
         <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">

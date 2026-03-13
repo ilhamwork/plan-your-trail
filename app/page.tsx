@@ -27,6 +27,7 @@ import {
   ModalFormInfo,
   type RouteDetailsData,
 } from "@/components/trail/ModalFormInfo"
+import { SessionNameModal } from "@/components/trail/SessionNameModal"
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
 const MapView = dynamic(
@@ -59,7 +60,7 @@ const FEATURES = [
   },
   {
     icon: Waypoints,
-    title: "Segment Analysis",
+    title: "Segment Breakdown",
     desc: "Auto-detected segments",
     color: "text-[#E9C46A]",
     bg: "bg-[#E9C46A]/5",
@@ -83,83 +84,126 @@ export default function Home() {
     endIndex: number
   } | null>(null)
 
+  // Session Runner Name
+  const [sessionRunnerName, setSessionRunnerName] = useState<string>("")
+  const [showSessionModal, setShowSessionModal] = useState(false)
+
+  // Load session name on mount
+  useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("runnerName")
+      if (saved) {
+        setSessionRunnerName(saved)
+      } else {
+        setShowSessionModal(true)
+      }
+    }
+  })
+
+  const handleSessionNameSubmit = (name: string) => {
+    setSessionRunnerName(name)
+    sessionStorage.setItem("runnerName", name)
+    setShowSessionModal(false)
+  }
+
   // Route Details Form State
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [routeDetails, setRouteDetails] = useState<RouteDetailsData>({
-    userName: "",
-    routeName: "",
+    raceName: "",
     raceDate: new Date().toISOString().split("T")[0],
   })
   const [tempRoute, setTempRoute] = useState<ParsedRoute | null>(null)
   const [tempFileName, setTempFileName] = useState<string>("")
   const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
 
-  const handleFileLoaded = useCallback((content: string, name: string) => {
-    try {
-      setError("")
-      const parsed = parseGPX(content)
-      // Wait to set full route until details are filled
-      setTempRoute(parsed)
-      setTempFileName(name)
-
-      // If example file, pre-fill the name
-      if (name === "Rinjani-162K-2025.gpx") {
-        setRouteDetails((prev) => ({
-          ...prev,
-          routeName: "Rinjani 162K",
-        }))
-      }
-
-      setShowDetailsModal(true)
-      setHighlightRange(null)
-      setHoveredPoint(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to parse GPX file")
-      setTempRoute(null)
-      setTempFileName("")
-    }
-  }, [])
-
-  const handleDetailsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (tempRoute) {
+  const finishUpload = useCallback(
+    async (
+      parsed: ParsedRoute,
+      name: string,
+      details: RouteDetailsData,
+      runnerName: string
+    ) => {
       setIsSubmittingDetails(true)
 
       try {
         // Save to Supabase telemetry table
         const { error: dbError } = await supabase.from("user_routes").insert([
           {
-            user_name: routeDetails.userName,
-            route_name: routeDetails.routeName,
-            race_date: routeDetails.raceDate,
-            file_name: tempFileName,
-            distance: parseFloat(
-              (tempRoute.stats.totalDistance / 1000).toFixed(2)
-            ),
-            elevation_gain: tempRoute.stats.elevationGain,
+            user_name: runnerName,
+            race_name: details.raceName,
+            race_date: details.raceDate,
+            file_name: name,
+            distance: parseFloat((parsed.stats.totalDistance / 1000).toFixed(2)),
+            elevation_gain: parsed.stats.elevationGain,
           },
         ])
 
         if (dbError) {
           console.error("Failed to save route telemetry:", dbError)
-          // We can silently fail or show a toast message here
         }
       } catch (err) {
         console.error("Error saving to supabase:", err)
       } finally {
-        setRoute(tempRoute)
-        setFileName(tempFileName)
+        setRoute(parsed)
+        setFileName(name)
         setShowDetailsModal(false)
         setTempRoute(null)
+        setTempFileName("")
         setIsSubmittingDetails(false)
       }
+    },
+    []
+  )
+
+  const handleFileLoaded = useCallback(
+    (content: string, name: string) => {
+      try {
+        setError("")
+        const parsed = parseGPX(content)
+        const today = new Date().toISOString().split("T")[0]
+
+        // If example file, skip modal and auto-fill
+        if (name === "Rinjani-162K-2025.gpx") {
+          const exampleDetails = {
+            raceName: "Rinjani 162K",
+            raceDate: today,
+          }
+          setRouteDetails(exampleDetails)
+          finishUpload(parsed, name, exampleDetails, sessionRunnerName)
+          return
+        }
+
+        // For manual upload, reset fields (except date) and show modal
+        setTempRoute(parsed)
+        setTempFileName(name)
+        setRouteDetails({
+          raceName: "",
+          raceDate: today,
+        })
+
+        setShowDetailsModal(true)
+        setHighlightRange(null)
+        setHoveredPoint(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to parse GPX file")
+        setTempRoute(null)
+        setTempFileName("")
+      }
+    },
+    [finishUpload, sessionRunnerName]
+  )
+
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (tempRoute && tempFileName) {
+      await finishUpload(tempRoute, tempFileName, routeDetails, sessionRunnerName)
     }
   }
 
   const handleSegmentClick = useCallback((segment: Segment) => {
     setHighlightRange((prev) =>
       prev?.startIndex === segment.startIndex &&
-      prev?.endIndex === segment.endIndex
+        prev?.endIndex === segment.endIndex
         ? null
         : { startIndex: segment.startIndex, endIndex: segment.endIndex }
     )
@@ -168,7 +212,7 @@ export default function Home() {
   const handleWaypointSegmentClick = useCallback((segment: WaypointSegment) => {
     setHighlightRange((prev) =>
       prev?.startIndex === segment.startIndex &&
-      prev?.endIndex === segment.endIndex
+        prev?.endIndex === segment.endIndex
         ? null
         : { startIndex: segment.startIndex, endIndex: segment.endIndex }
     )
@@ -199,6 +243,18 @@ export default function Home() {
               exit={{ opacity: 0, y: -20 }}
               className="mx-auto max-w-lg"
             >
+              {sessionRunnerName && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 text-center"
+                >
+                  <h2 className="text-2xl font-bold text-[#1B4332]">
+                    Hello, {sessionRunnerName}!
+                  </h2>
+                </motion.div>
+              )}
+
               <UploadCard
                 onFileLoaded={handleFileLoaded}
                 fileName={fileName}
@@ -213,7 +269,7 @@ export default function Home() {
                 className="mt-8 text-center"
               >
                 <p className="text-lg font-semibold text-gray-500">
-                  Analyze your trail route.
+                  Analyze your trail race.
                 </p>
                 <p className="text-lg font-semibold text-gray-500">
                   Plan your strategy.
@@ -258,8 +314,8 @@ export default function Home() {
                 {/* Route Header Info */}
                 <div className="block lg:hidden">
                   <HeaderInfo
-                    routeName={routeDetails.routeName}
-                    userName={routeDetails.userName}
+                    raceName={routeDetails.raceName}
+                    userName={sessionRunnerName}
                     raceDate={routeDetails.raceDate}
                   />
                 </div>
@@ -320,8 +376,8 @@ export default function Home() {
                   {/* Route Header Info */}
                   <div className="hidden lg:block">
                     <HeaderInfo
-                      routeName={routeDetails.routeName}
-                      userName={routeDetails.userName}
+                      raceName={routeDetails.raceName}
+                      userName={sessionRunnerName}
                       raceDate={routeDetails.raceDate}
                     />
                   </div>
@@ -348,6 +404,11 @@ export default function Home() {
             setTempRoute(null)
             setTempFileName("")
           }}
+        />
+
+        <SessionNameModal
+          isOpen={showSessionModal}
+          onSubmit={handleSessionNameSubmit}
         />
       </main>
     </div>
