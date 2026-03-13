@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import type { TrackPoint, Waypoint } from "@/lib/types"
-import { Map, Globe } from "lucide-react"
+import { Map, Globe, Maximize2, Minimize2 } from "lucide-react"
 import type L from "leaflet"
+import "maplibre-gl/dist/maplibre-gl.css"
 
 interface HighlightRange {
   startIndex: number
@@ -43,8 +44,32 @@ export function MapView({
 
   const [is3D, setIs3D] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [mapReady, setMapReady] = useState(false)
   const [maplibreReady, setMaplibreReady] = useState(false)
+
+  // Handle ESC key to exit fullscreen
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false)
+      }
+    }
+    window.addEventListener("keydown", handleEsc)
+    return () => window.removeEventListener("keydown", handleEsc)
+  }, [isFullscreen])
+
+  // Prevent scrolling when fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [isFullscreen])
 
   // Store points in a ref so effects always have the latest array without triggering re-renders
   const pointsRef = useRef(points)
@@ -83,6 +108,9 @@ export function MapView({
       osm.addTo(map)
       osmLayerRef.current = osm
       satLayerRef.current = sat
+
+      // Add scale control
+      Lf.control.scale({ position: "bottomleft" }).addTo(map)
 
       // Route polyline — ORANGE
       const routeCoords: [number, number][] = points.map((p) => [p.lat, p.lon])
@@ -306,6 +334,10 @@ export function MapView({
         maxPitch: 85,
       })
 
+      // Add Controls
+      map.addControl(new maplibregl.NavigationControl(), "top-left")
+      map.addControl(new maplibregl.ScaleControl(), "bottom-left")
+
       map.on("load", () => {
         if (cancelled) return
 
@@ -476,7 +508,13 @@ export function MapView({
   }, [highlightRange, maplibreReady, is3D])
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+    <div
+      className={`overflow-hidden transition-all duration-300 ${
+        isFullscreen
+          ? "fixed inset-0 z-1003 bg-[#FAF6F1]"
+          : "rounded-xl border border-gray-100 bg-white shadow-sm"
+      }`}
+    >
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <Map className="h-4 w-4 text-[#2A9D8F]" />
@@ -504,11 +542,24 @@ export function MapView({
           >
             Satellite
           </button>
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:text-[#1B4332]"
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </button>
         </div>
       </div>
       <div
         ref={mapContainerRef}
-        className="h-[350px] w-full lg:h-[350px]"
+        className={`w-full transition-all duration-300 ${
+          isFullscreen ? "h-[calc(100vh-53px)]" : "h-[350px]"
+        }`}
         style={{ position: "relative" }}
       />
     </div>
