@@ -1,4 +1,4 @@
-import { Flag, User, Calendar } from "lucide-react"
+import { Flag, User, Calendar, Share2 } from "lucide-react"
 
 interface HeaderInfoProps {
   routeName: string
@@ -6,6 +6,8 @@ interface HeaderInfoProps {
   raceDate: string
   onSave?: () => void
   isSaved?: boolean
+  onShare?: () => void
+  isSharing?: boolean
 }
 
 export function HeaderInfo({
@@ -14,6 +16,8 @@ export function HeaderInfo({
   raceDate,
   onSave,
   isSaved,
+  onShare,
+  isSharing,
 }: HeaderInfoProps) {
   return (
     <div className="flex flex-col justify-between gap-2 rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
@@ -22,19 +26,31 @@ export function HeaderInfo({
           <Flag className="h-5 w-5 text-[#2A9D8F]" />
           {routeName || "Unnamed Route"}
         </h2>
-        {onSave && (
-          <button
-            onClick={onSave}
-            disabled={isSaved}
-            className={`ml-4 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
-              isSaved
-                ? "bg-gray-100 text-gray-400"
-                : "bg-[#2A9D8F]/10 text-[#2A9D8F] hover:bg-[#2A9D8F]/20"
-            }`}
-          >
-            {isSaved ? "Saved" : "Save Route"}
-          </button>
-        )}
+        <div className="flex gap-2">
+          {onShare && (
+            <button
+              onClick={onShare}
+              disabled={isSharing}
+              className="flex items-center gap-1.5 rounded-lg bg-[#2A9D8F]/10 px-3 py-1.5 text-xs font-bold text-[#2A9D8F] transition-all hover:bg-[#2A9D8F]/20 active:scale-95 disabled:opacity-50"
+            >
+              <Share2 className={`h-3.5 w-3.5 ${isSharing ? "animate-pulse" : ""}`} />
+              {isSharing ? "Sharing..." : "Share"}
+            </button>
+          )}
+          {onSave && (
+            <button
+              onClick={onSave}
+              disabled={isSaved}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
+                isSaved
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-[#1B4332]/10 text-[#1B4332] hover:bg-[#1B4332]/20"
+              }`}
+            >
+              {isSaved ? "Saved" : "Save Route"}
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex justify-between">
         <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">

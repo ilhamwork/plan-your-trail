@@ -27,11 +27,9 @@ import { SegmentList } from "@/components/trail/SegmentList"
 import { WeatherForecast } from "@/components/trail/WeatherForecast"
 import { GradientDistribution } from "@/components/trail/GradientDistribution"
 import { Footer } from "@/components/trail/Footer"
-import {
-  ModalFormInfo,
-  type RouteDetailsData,
-} from "@/components/trail/ModalFormInfo"
+import { ModalFormInfo, type RouteDetailsData } from "@/components/trail/ModalFormInfo"
 import { SavedRoutesModal } from "@/components/trail/SavedRoutesModal"
+import { ShareModal } from "@/components/trail/ShareModal"
 
 // Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
 const MapView = dynamic(
@@ -117,15 +115,50 @@ function Home() {
   const [isSavedRoutesModalOpen, setIsSavedRoutesModalOpen] = useState(false)
   const [isCurrentRouteSaved, setIsCurrentRouteSaved] = useState(false)
 
+  // Sharing State
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState("")
+  const [isSharing, setIsSharing] = useState(false)
+  const [isReadOnly, setIsReadOnly] = useState(false)
+
   // Auth State
   const { profile, user, fetched } = useProfile()
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const searchParams = useSearchParams()
 
-  // Auto-open modal if there's an auth error in the URL
+  // Auto-open modal if there's an auth error in the URL or load shared route
   useEffect(() => {
     if (searchParams?.get("error") === "user_not_found") {
       setIsAuthModalOpen(true)
+    }
+
+    const shareId = searchParams?.get("share")
+    if (shareId) {
+      const fetchShared = async () => {
+        try {
+          const { data, error: dbError } = await supabase
+            .from("shared_routes")
+            .select("*")
+            .eq("id", shareId)
+            .single()
+
+          if (dbError) throw dbError
+          if (data) {
+            setRoute(data.route_data)
+            setFileName(data.file_name)
+            setRouteDetails({
+              userName: data.user_name || "",
+              routeName: data.name,
+              raceDate: data.race_date || "",
+            })
+            setIsReadOnly(true)
+          }
+        } catch (err) {
+          console.error("Failed to fetch shared route:", err)
+          setError("Could not find the shared route.")
+        }
+      }
+      fetchShared()
     }
   }, [searchParams])
 
@@ -230,6 +263,41 @@ function Home() {
       setError(result.error || "Failed to save route")
     }
   }, [route, routeDetails, fileName])
+
+  const handleShareRoute = useCallback(async () => {
+    if (!route || !routeDetails.routeName) return
+    setIsSharing(true)
+
+    try {
+      const { data, error: dbError } = await supabase
+        .from("shared_routes")
+        .insert([
+          {
+            name: routeDetails.routeName,
+            user_name: routeDetails.userName,
+            race_date: routeDetails.raceDate,
+            file_name: fileName,
+            route_data: route,
+            user_id: user?.id,
+          },
+        ])
+        .select()
+        .single()
+
+      if (dbError) throw dbError
+
+      if (data) {
+        const url = `${window.location.origin}${window.location.pathname}?share=${data.id}`
+        setShareUrl(url)
+        setIsShareModalOpen(true)
+      }
+    } catch (err) {
+      console.error("Failed to share route:", err)
+      setError("Failed to generate share link. Please try again.")
+    } finally {
+      setIsSharing(false)
+    }
+  }, [route, routeDetails, fileName, user])
 
   const handleLoadSavedRoute = useCallback((saved: SavedRoute) => {
     setRoute(saved.routeData)
@@ -408,11 +476,13 @@ function Home() {
                     userName={routeDetails.userName}
                     raceDate={routeDetails.raceDate}
                     onSave={
-                      fileName === "Rinjani-162K-2025.gpx"
+                      isReadOnly || fileName === "Rinjani-162K-2025.gpx"
                         ? undefined
                         : handleSaveRoute
                     }
                     isSaved={isCurrentRouteSaved}
+                    onShare={isReadOnly ? undefined : handleShareRoute}
+                    isSharing={isSharing}
                   />
                 </div>
 
@@ -464,13 +534,25 @@ function Home() {
                 <div className="flex flex-col gap-5 lg:sticky lg:top-15">
                   {/* Upload card */}
                   <div className="flex flex-col gap-2">
-                    <UploadCard
-                      onFileLoaded={handleFileLoaded}
-                      fileName={fileName}
-                      error={error}
-                      isRegistered={!!profile}
-                      onAuthRequired={() => setIsAuthModalOpen(true)}
-                    />
+                    {!isReadOnly && (
+                      <UploadCard
+                        onFileLoaded={handleFileLoaded}
+                        fileName={fileName}
+                        error={error}
+                        isRegistered={!!profile}
+                        onAuthRequired={() => setIsAuthModalOpen(true)}
+                      />
+                    )}
+                    {isReadOnly && (
+                      <button
+                        onClick={() => {
+                          window.location.href = window.location.pathname
+                        }}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-bold text-[#1B4332] shadow-sm transition-all hover:bg-gray-50 active:scale-95"
+                      >
+                        Create Your Own Route Analysis
+                      </button>
+                    )}
                   </div>
 
                   {/* Route Header Info */}
@@ -480,11 +562,13 @@ function Home() {
                       userName={routeDetails.userName}
                       raceDate={routeDetails.raceDate}
                       onSave={
-                        fileName === "Rinjani-162K-2025.gpx"
+                        isReadOnly || fileName === "Rinjani-162K-2025.gpx"
                           ? undefined
                           : handleSaveRoute
                       }
                       isSaved={isCurrentRouteSaved}
+                      onShare={isReadOnly ? undefined : handleShareRoute}
+                      isSharing={isSharing}
                     />
                   </div>
 
@@ -521,6 +605,13 @@ function Home() {
           isOpen={isSavedRoutesModalOpen}
           onClose={() => setIsSavedRoutesModalOpen(false)}
           onLoadRoute={handleLoadSavedRoute}
+        />
+
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          shareUrl={shareUrl}
+          routeName={routeDetails.routeName}
         />
       </main>
     </div>
