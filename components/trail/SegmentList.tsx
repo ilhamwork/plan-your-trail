@@ -34,7 +34,9 @@ export function SegmentList({
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <Waypoints className="h-4 w-4 text-[#E9C46A]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">Segment Analysis</h3>
+          <h3 className="text-sm font-bold text-[#2D3436]">
+            Segment Breakdown
+          </h3>
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
           {tab === "waypoints"
