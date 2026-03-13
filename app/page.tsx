@@ -22,6 +22,7 @@ import { ElevationChart } from "@/components/trail/ElevationChart"
 import { SegmentList } from "@/components/trail/SegmentList"
 import { WeatherForecast } from "@/components/trail/WeatherForecast"
 import { GradientDistribution } from "@/components/trail/GradientDistribution"
+import { DonationSection } from "@/components/trail/DonationSection"
 import { Footer } from "@/components/trail/Footer"
 import {
   ModalFormInfo,
@@ -409,6 +410,8 @@ export default function Home() {
                   center={route.center}
                   initialDate={routeDetails.raceDate}
                 />
+
+                <DonationSection />
 
                 <Footer />
               </div>
