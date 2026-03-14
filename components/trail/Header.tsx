@@ -15,12 +15,12 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
         <Image src="/logo.png" alt="Logo" width={24} height={24} />
         <div className="flex flex-col">
-          <h1 className="text-lg leading-tight font-bold tracking-tight text-white">
-            Plan Your Trail
-          </h1>
-          <p className="text-[10px] font-medium tracking-wider text-white/50">
-            GPX Route Analysis
-          </p>
+          <Image
+            src="/text-logo-white.png"
+            alt="Text Logo"
+            width={160}
+            height={40}
+          />
         </div>
       </div>
     </motion.header>

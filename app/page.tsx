@@ -18,21 +18,11 @@ import { Header } from "@/components/trail/Header"
 import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
-import { ElevationChart } from "@/components/trail/ElevationChart"
 import { SegmentList } from "@/components/trail/SegmentList"
-import { WeatherForecast } from "@/components/trail/WeatherForecast"
-import { GradientDistribution } from "@/components/trail/GradientDistribution"
-import { DonationSection } from "@/components/trail/DonationSection"
 import { Footer } from "@/components/trail/Footer"
-import {
-  ModalFormInfo,
-  type RouteDetailsData,
-} from "@/components/trail/ModalFormInfo"
-import { SessionNameModal } from "@/components/trail/SessionNameModal"
-import { ShareModal } from "@/components/trail/ShareModal"
-import { ShareCard } from "@/components/trail/ShareCard"
+import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
 
-// Dynamic import for MapView (no SSR — Leaflet + MapLibre need window)
+// ─── Dynamic Component Imports ─────────────────────────────────────
 const MapView = dynamic(
   () => import("@/components/trail/MapView").then((mod) => mod.MapView),
   {
@@ -43,6 +33,57 @@ const MapView = dynamic(
       </div>
     ),
   }
+)
+
+const ElevationChart = dynamic(
+  () =>
+    import("@/components/trail/ElevationChart").then(
+      (mod) => mod.ElevationChart
+    ),
+  { ssr: false }
+)
+
+const WeatherForecast = dynamic(
+  () =>
+    import("@/components/trail/WeatherForecast").then(
+      (mod) => mod.WeatherForecast
+    ),
+  { ssr: false }
+)
+
+const GradientDistribution = dynamic(
+  () =>
+    import("@/components/trail/GradientDistribution").then(
+      (mod) => mod.GradientDistribution
+    ),
+  { ssr: false }
+)
+
+const DonationSection = dynamic(
+  () =>
+    import("@/components/trail/DonationSection").then(
+      (mod) => mod.DonationSection
+    ),
+  { ssr: false }
+)
+
+const ModalFormInfo = dynamic(
+  () =>
+    import("@/components/trail/ModalFormInfo").then((mod) => mod.ModalFormInfo),
+  { ssr: false }
+)
+
+const SessionNameModal = dynamic(
+  () =>
+    import("@/components/trail/SessionNameModal").then(
+      (mod) => mod.SessionNameModal
+    ),
+  { ssr: false }
+)
+
+const ShareModal = dynamic(
+  () => import("@/components/trail/ShareModal").then((mod) => mod.ShareModal),
+  { ssr: false }
 )
 
 // ─── Feature cards for empty state ─────────────────────────────────
@@ -279,6 +320,7 @@ export default function Home() {
 
               <UploadCard
                 onFileLoaded={handleFileLoaded}
+                onError={setError}
                 fileName={fileName}
                 error={error}
                 isLoading={isSubmittingDetails}
@@ -289,7 +331,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-8 text-center"
+                className="mt-6 text-center"
               >
                 <p className="text-lg font-semibold text-gray-500">
                   Analyze your trail route.
@@ -304,7 +346,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="mt-8 grid grid-cols-2 gap-3"
+                className="my-6 grid grid-cols-2 gap-3"
               >
                 {FEATURES.map((f) => (
                   <div
