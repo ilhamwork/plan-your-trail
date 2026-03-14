@@ -11,15 +11,12 @@ import {
 } from "recharts"
 import type { RouteStats, TrackPoint } from "@/lib/types"
 
-export type AspectRatio = "9:16" | "4:5"
-
 interface ShareCardProps {
   stats: RouteStats
   points: TrackPoint[]
   raceName: string
   userName: string
   raceDate: string
-  ratio: AspectRatio
   shareUrl: string
 }
 
@@ -28,7 +25,6 @@ export function ShareCard({
   points,
   raceName,
   raceDate,
-  ratio,
 }: ShareCardProps) {
   // Downsample points for the chart
   const chartData = useMemo(() => {
@@ -88,24 +84,14 @@ export function ShareCard({
       : ""
   }, [raceDate])
 
-  const dimensions = {
-    "9:16": { width: 1080, height: 1920 },
-    "4:5": { width: 1080, height: 1350 },
-  }[ratio]
-
   return (
     <div
-      id={`share-card-${ratio.replace(":", "-")}`}
-      className="relative overflow-hidden bg-transparent font-sans text-white"
-      style={{
-        width: dimensions.width,
-        height: dimensions.height,
-      }}
+      id="share-card-content"
+      className="relative w-[1080px] overflow-hidden bg-black p-12 font-sans text-white"
     >
       {/* Background - Transparent */}
 
-      {/* Main Content */}
-      <div className="absolute right-12 bottom-40 left-12 z-20 flex flex-col gap-10">
+      <div className="flex flex-col gap-10">
         {/* Title & Date */}
         <div className="flex flex-col items-center space-y-1">
           <h1 className="text-6xl leading-tight font-black tracking-tight">
@@ -159,7 +145,7 @@ export function ShareCard({
         </div>
 
         {/* Elevation Profile */}
-        <div className="mt-4 flex h-32 justify-center">
+        <div className="flex h-40 justify-center">
           <div className="w-10/12">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
@@ -172,7 +158,7 @@ export function ShareCard({
                   type="number"
                   domain={["dataMin", "dataMax"]}
                 />
-                <YAxis hide domain={["dataMin - 500", "dataMax + 100"]} />
+                <YAxis hide domain={["dataMin - 600", "dataMax + 100"]} />
                 <Area
                   type="monotone"
                   dataKey="elevation"
@@ -193,7 +179,7 @@ export function ShareCard({
                         fill: "white",
                         fontSize: 24,
                         fontWeight: "bold",
-                        opacity: 0.6,
+                        opacity: 0.8,
                       }}
                     />
                     <ReferenceDot
@@ -206,7 +192,7 @@ export function ShareCard({
                         fill: "white",
                         fontSize: 24,
                         fontWeight: "bold",
-                        opacity: 0.6,
+                        opacity: 0.8,
                       }}
                     />
                   </>
@@ -217,7 +203,7 @@ export function ShareCard({
         </div>
 
         {/* Terrain Breakdown */}
-        <div className="mt-4 flex flex-col items-center space-y-6">
+        <div className="mt-5 flex flex-col items-center space-y-5">
           <div className="flex w-10/12 items-center justify-between gap-12 text-2xl font-bold tracking-tight">
             <div className="flex items-center gap-3">
               <span className="text-3xl text-[#F4A261]">▲</span>
@@ -248,7 +234,7 @@ export function ShareCard({
             </div>
           </div>
 
-          {/* Minimal Distribution Bar */}
+          {/* Distribution Bar */}
           <div className="flex h-4 w-10/12 justify-center overflow-hidden rounded-full bg-white/10">
             <div
               style={{ width: `${gradientDistribution.uphill}%` }}

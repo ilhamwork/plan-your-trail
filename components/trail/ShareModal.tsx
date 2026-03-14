@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Share2, Image as ImageIcon } from "lucide-react"
+import { X, Share2, Image as ImageIcon, Download, Share } from "lucide-react"
 import { toPng } from "html-to-image"
-import { ShareCard, type AspectRatio } from "./ShareCard"
+import { ShareCard } from "./ShareCard"
 import type { ParsedRoute } from "@/lib/types"
 
 interface ShareModalProps {
@@ -24,39 +24,81 @@ export function ShareModal({
   userName,
   raceDate,
 }: ShareModalProps) {
-  const [isExportingImage, setIsExportingImage] = useState(false)
-  const [selectedRatio, setSelectedRatio] = useState<AspectRatio>("4:5")
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
-  const handleDownloadImage = async () => {
-    const ratioId = selectedRatio.replace(":", "-")
-    const node = document.getElementById(`share-card-${ratioId}`)
+  const generateImageBlob = async (): Promise<Blob | null> => {
+    const node = document.getElementById("share-card-content")
     if (!node) {
-      console.error("Node not found:", `share-card-${ratioId}`)
-      return
+      console.error("Capture node not found")
+      return null
     }
 
-    setIsExportingImage(true)
     try {
       // Small delay to ensure Recharts components are rendered
       await new Promise((resolve) => setTimeout(resolve, 300))
 
       const dataUrl = await toPng(node, {
         quality: 1,
-        pixelRatio: 1,
+        pixelRatio: 2, // High resolution for sharing
         backgroundColor: undefined, // Supports transparency
         cacheBust: true,
       })
 
-      const link = document.createElement("a")
-      link.download = `plan-your-trail-${selectedRatio.replace(":", "x")}-${raceName || "route"}.png`
-      link.href = dataUrl
-      link.click()
+      const res = await fetch(dataUrl)
+      return await res.blob()
     } catch (err) {
       console.error("Error generating image:", err)
-    } finally {
-      setIsExportingImage(false)
+      return null
     }
   }
+
+  const handleDownloadImage = async () => {
+    setIsDownloading(true)
+    const blob = await generateImageBlob()
+    if (blob) {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.download = `PlanYourTrail - ${raceName || "route"}.png`
+      link.href = url
+      link.click()
+      URL.revokeObjectURL(url)
+    }
+    setIsDownloading(false)
+  }
+
+  const handleNativeShare = async () => {
+    if (!navigator.share) {
+      alert("Sharing is not supported on this browser.")
+      return
+    }
+
+    setIsExporting(true)
+    const blob = await generateImageBlob()
+    if (blob) {
+      try {
+        const file = new File(
+          [blob],
+          `PlanYourTrail - ${raceName || "route"}.png`,
+          { type: "image/png" }
+        )
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: raceName || "My Trail Run",
+            text: "Check out my route analysis on Plan Your Trail!",
+          })
+        } else {
+          alert("Your browser doesn't support file sharing.")
+        }
+      } catch (err) {
+        console.error("Share failed:", err)
+      }
+    }
+    setIsExporting(false)
+  }
+
+  const canNativeShare = typeof navigator !== "undefined" && !!navigator.share
 
   return (
     <AnimatePresence>
@@ -78,7 +120,7 @@ export function ShareModal({
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
               <h3 className="flex items-center gap-2 text-lg font-bold text-[#1B4332]">
                 <Share2 className="h-5 w-5 text-[#2A9D8F]" />
-                Share Route
+                Share Stats
               </h3>
               <button
                 onClick={onClose}
@@ -88,49 +130,41 @@ export function ShareModal({
               </button>
             </div>
 
-            <div className="px-6 pt-6">
+            <div className="px-6 py-8">
               <div className="space-y-6">
-                {/* Share as Image Section */}
-                <div className="space-y-3">
-                  <label className="text-xs font-bold tracking-wider text-gray-400 uppercase">
-                    Share as Image
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["9:16", "4:5"] as AspectRatio[]).map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => setSelectedRatio(r)}
-                        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 py-3 transition-all ${
-                          selectedRatio === r
-                            ? "border-[#1B4332] bg-[#1B4332]/5 text-[#1B4332]"
-                            : "border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200"
-                        }`}
-                      >
-                        <div
-                          className={`border-2 ${
-                            r === "9:16" ? "h-6 w-3.5" : "h-6 w-5"
-                          } ${selectedRatio === r ? "border-[#1B4332]" : "border-gray-300"}`}
-                        />
-                        <span className="text-[10px] font-bold">
-                          {r === "9:16" ? "Stories" : "Posts"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="space-y-2 text-center">
+                  <p className="text-sm font-medium text-gray-500">
+                    Your route stats are ready to share.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  {canNativeShare && (
+                    <button
+                      onClick={handleNativeShare}
+                      disabled={isExporting}
+                      className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] py-4 text-sm font-bold text-white transition-all hover:bg-[#2D5A46] active:scale-95 disabled:opacity-50"
+                    >
+                      {isExporting ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                      ) : (
+                        <Share className="h-4 w-4" />
+                      )}
+                      Share to Stories
+                    </button>
+                  )}
 
                   <button
                     onClick={handleDownloadImage}
-                    disabled={isExportingImage}
-                    className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#1B4332] bg-white py-3 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#1B4332] hover:text-white active:scale-95 disabled:opacity-50"
+                    disabled={isDownloading}
+                    className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#1B4332] bg-white py-4 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#1B4332]/5 active:scale-95 disabled:opacity-50"
                   >
-                    {isExportingImage ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B4332] border-t-white" />
+                    {isDownloading ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B4332]/20 border-t-[#1B4332]" />
                     ) : (
-                      <ImageIcon className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                     )}
-                    {isExportingImage
-                      ? "Processing..."
-                      : `Download ${selectedRatio} Card`}
+                    Save as Image
                   </button>
                 </div>
 
@@ -138,7 +172,6 @@ export function ShareModal({
                 <div className="fixed top-[-99999px] left-[-99999px] overflow-hidden">
                   {route && (
                     <ShareCard
-                      ratio={selectedRatio}
                       stats={route.stats}
                       points={route.points}
                       raceName={raceName}
