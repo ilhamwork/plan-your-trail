@@ -19,7 +19,6 @@ import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
 import { SegmentList } from "@/components/trail/SegmentList"
-import { Footer } from "@/components/trail/Footer"
 import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
 
 // ─── Dynamic Component Imports ─────────────────────────────────────
@@ -83,6 +82,15 @@ const SessionNameModal = dynamic(
 
 const ShareModal = dynamic(
   () => import("@/components/trail/ShareModal").then((mod) => mod.ShareModal),
+  { ssr: false }
+)
+const ToolFeedback = dynamic(
+  () =>
+    import("@/components/trail/ToolFeedback").then((mod) => mod.ToolFeedback),
+  { ssr: false }
+)
+const Footer = dynamic(
+  () => import("@/components/trail/Footer").then((mod) => mod.Footer),
   { ssr: false }
 )
 
@@ -426,10 +434,13 @@ export default function Home() {
                   center={route.center}
                   initialDate={routeDetails.raceDate}
                 />
+                <div className="block lg:hidden">
+                  <ToolFeedback />
+                </div>
 
-                <DonationSection />
-
-                <Footer />
+                <div className="block lg:hidden">
+                  <DonationSection />
+                </div>
               </div>
 
               {/* Right column (sidebar — sticky on desktop) */}
@@ -457,11 +468,22 @@ export default function Home() {
                   <div className="hidden lg:block">
                     <MetricsPanel stats={route.stats} />
                   </div>
+
+                  {/* Tool Feedback prompt */}
+                  <div className="hidden lg:block">
+                    <ToolFeedback />
+                  </div>
+
+                  {/* Donation Section */}
+                  <div className="hidden lg:block">
+                    <DonationSection />
+                  </div>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+        <Footer />
 
         {/* ── Route Details Modal ────────────────────── */}
         <ModalFormInfo

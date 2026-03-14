@@ -4,7 +4,7 @@ import { Heart } from "lucide-react"
 
 export function DonationSection() {
   return (
-    <div className="rounded-2xl border border-[#1B4332]/10 bg-linear-to-br from-[#1B4332]/5 to-[#2A9D8F]/5 p-6 text-center">
+    <div className="rounded-2xl border border-[#1B4332]/10 bg-white p-6 text-center">
       <div className="mb-3 flex items-center justify-center gap-2">
         <Heart className="h-5 w-5 fill-[#E76F51] text-[#E76F51]" />
         <span className="text-sm font-bold tracking-wider text-[#1B4332] uppercase">

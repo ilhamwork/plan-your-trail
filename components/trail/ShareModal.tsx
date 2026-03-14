@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Share2, Image as ImageIcon, Download, Share } from "lucide-react"
 import { toPng } from "html-to-image"
+import { supabase } from "@/lib/supabase"
 import { ShareCard } from "./ShareCard"
 import type { ParsedRoute } from "@/lib/types"
 
@@ -26,6 +27,37 @@ export function ShareModal({
 }: ShareModalProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Use effect for client-side window detection
+  useEffect(() => {
+    const checkIsMobile = () => {
+      // Breakpoint matching project's typical tablet/desktop split
+      setIsMobile(window.innerWidth < 1024)
+    }
+
+    checkIsMobile()
+    window.addEventListener("resize", checkIsMobile)
+    return () => window.removeEventListener("resize", checkIsMobile)
+  }, [])
+
+  const recordShareTelemetry = async (type: "download" | "native_share") => {
+    if (!route) return
+    try {
+      await supabase.from("user_shares").insert([
+        {
+          user_name: userName,
+          race_name: raceName,
+          race_date: raceDate,
+          share_type: type,
+          distance: parseFloat((route.stats.totalDistance / 1000).toFixed(2)),
+          elevation_gain: route.stats.elevationGain,
+        },
+      ])
+    } catch (err) {
+      console.error("Failed to record share telemetry:", err)
+    }
+  }
 
   const generateImageBlob = async (): Promise<Blob | null> => {
     const node = document.getElementById("share-card-content")
@@ -63,6 +95,8 @@ export function ShareModal({
       link.href = url
       link.click()
       URL.revokeObjectURL(url)
+      // Record telemetry
+      await recordShareTelemetry("download")
     }
     setIsDownloading(false)
   }
@@ -88,6 +122,8 @@ export function ShareModal({
             title: raceName || "My Trail Run",
             text: "Check out my route analysis on Plan Your Trail!",
           })
+          // Record telemetry
+          await recordShareTelemetry("native_share")
         } else {
           alert("Your browser doesn't support file sharing.")
         }
@@ -134,38 +170,43 @@ export function ShareModal({
               <div className="space-y-6">
                 <div className="space-y-2 text-center">
                   <p className="text-sm font-medium text-gray-500">
-                    Your route stats are ready to share.
+                    Your route stats are ready to{" "}
+                    {`${isMobile ? "share" : "save"}`}.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
-                  {canNativeShare && (
+                <div className="flex justify-center gap-3">
+                  {isMobile ? (
+                    // On Mobile/Tablet: Show only Native Share
+                    canNativeShare && (
+                      <button
+                        onClick={handleNativeShare}
+                        disabled={isExporting}
+                        className="group flex w-1/2 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] py-4 text-sm font-bold text-white transition-all hover:bg-[#2D5A46] active:scale-95 disabled:opacity-50"
+                      >
+                        {isExporting ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                        ) : (
+                          <Share className="h-4 w-4" />
+                        )}
+                        Share to Stories
+                      </button>
+                    )
+                  ) : (
+                    // On Desktop: Show only Save as Image
                     <button
-                      onClick={handleNativeShare}
-                      disabled={isExporting}
-                      className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] py-4 text-sm font-bold text-white transition-all hover:bg-[#2D5A46] active:scale-95 disabled:opacity-50"
+                      onClick={handleDownloadImage}
+                      disabled={isDownloading}
+                      className="group flex w-1/2 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] py-4 text-sm font-bold text-white transition-all hover:bg-[#2D5A46] active:scale-95 disabled:opacity-50"
                     >
-                      {isExporting ? (
+                      {isDownloading ? (
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
                       ) : (
-                        <Share className="h-4 w-4" />
+                        <Download className="h-4 w-4" />
                       )}
-                      Share to Stories
+                      Save to device
                     </button>
                   )}
-
-                  <button
-                    onClick={handleDownloadImage}
-                    disabled={isDownloading}
-                    className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#1B4332] bg-white py-4 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#1B4332]/5 active:scale-95 disabled:opacity-50"
-                  >
-                    {isDownloading ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B4332]/20 border-t-[#1B4332]" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    Save as Image
-                  </button>
                 </div>
 
                 {/* Hidden Card for Exporting */}
