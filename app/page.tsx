@@ -330,7 +330,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-8 text-center"
+                className="mt-6 text-center"
               >
                 <p className="text-lg font-semibold text-gray-500">
                   Analyze your trail route.
@@ -345,7 +345,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="mt-8 grid grid-cols-2 gap-3"
+                className="my-6 grid grid-cols-2 gap-3"
               >
                 {FEATURES.map((f) => (
                   <div

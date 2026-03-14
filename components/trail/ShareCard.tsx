@@ -10,6 +10,7 @@ import {
   ReferenceDot,
 } from "recharts"
 import type { RouteStats, TrackPoint } from "@/lib/types"
+import Image from "next/image"
 
 interface ShareCardProps {
   stats: RouteStats
@@ -252,10 +253,16 @@ export function ShareCard({
         </div>
 
         {/* Branding Overlay */}
-        <div className="mt-20 flex justify-center">
-          <span className="text-5xl font-black tracking-tighter opacity-80">
-            www.planyourtrail.run
+        <div className="mt-10 flex justify-center">
+          <span className="text-5xl font-black tracking-tighter">
+            planyourtrail.run
           </span>
+          {/* <Image
+            src="/text-logo-white.png"
+            alt="Text Logo"
+            width={320}
+            height={80}
+          /> */}
         </div>
       </div>
     </div>
