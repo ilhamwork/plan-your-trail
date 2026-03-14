@@ -13,13 +13,45 @@ const fontSans = Outfit({
 })
 
 export const metadata: Metadata = {
-  title: "Plan Your Trail — GPX Route Analysis for Trail Runners",
+  title: "PlanYourTrail — GPX Trail Route Analyzer",
   description:
-    "Upload your GPX file and analyze the course with detailed elevation profiles, segment analysis, and weather forecasts. Plan your race strategy like a pro.",
+    "Upload your GPX file and instantly analyze route map, elevation profile, segment breakdown, and gradient distribution.",
+  keywords: [
+    "trail running",
+    "gpx analyzer",
+    "route planner",
+    "elevation profile",
+    "race strategy",
+  ],
+  authors: [{ name: "PlanYourTrail" }],
+  metadataBase: new URL("https://planyourtrail.run"),
   openGraph: {
-    title: "Plan Your Trail",
-    description: "GPX route analysis tool for trail running race strategy",
+    title: "PlanYourTrail — GPX Trail Route Analyzer",
+    description:
+      "Upload your GPX file and instantly analyze route map, elevation profile, segment breakdown, and gradient distribution.",
+    url: "https://planyourtrail.run",
+    siteName: "PlanYourTrail",
+    images: [
+      {
+        url: "/og",
+        width: 1200,
+        height: 630,
+        alt: "PlanYourTrail — GPX Trail Route Analyzer",
+      },
+    ],
+    locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PlanYourTrail — GPX Trail Route Analyzer",
+    description:
+      "Upload your GPX file and instantly analyze route map, elevation profile, segment breakdown, and gradient distribution.",
+    images: ["/og"],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 }
 
