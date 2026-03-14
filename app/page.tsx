@@ -126,34 +126,7 @@ export default function Home() {
 
   const handleShare = async () => {
     if (!route) return
-    setIsGeneratingShare(true)
     setShowShareModal(true)
-
-    try {
-      const { data, error: dbError } = await supabase
-        .from("shared_routes")
-        .insert([
-          {
-            route_data: route,
-            race_name: routeDetails.raceName,
-            race_date: routeDetails.raceDate,
-            user_name: sessionRunnerName,
-            file_name: fileName,
-          },
-        ])
-        .select()
-
-      if (dbError) throw dbError
-      if (data && data[0]) {
-        setShareId(data[0].id)
-      }
-    } catch (err) {
-      console.error("Failed to share route:", err)
-      setError("Failed to generate shareable link.")
-      setShowShareModal(false)
-    } finally {
-      setIsGeneratingShare(false)
-    }
   }
 
   const finishUpload = useCallback(
@@ -308,6 +281,7 @@ export default function Home() {
                 onFileLoaded={handleFileLoaded}
                 fileName={fileName}
                 error={error}
+                isLoading={isSubmittingDetails}
               />
 
               {/* Tagline */}
@@ -469,8 +443,6 @@ export default function Home() {
         <ShareModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
-          shareId={shareId}
-          isGenerating={isGeneratingShare}
           route={route}
           raceName={routeDetails.raceName}
           userName={sessionRunnerName}
