@@ -320,6 +320,7 @@ export default function Home() {
 
               <UploadCard
                 onFileLoaded={handleFileLoaded}
+                onError={setError}
                 fileName={fileName}
                 error={error}
                 isLoading={isSubmittingDetails}

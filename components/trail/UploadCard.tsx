@@ -4,8 +4,11 @@ import { useCallback, useRef, useState } from "react"
 import { FileUp, FileCheck } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
 interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
+  onError?: (message: string) => void
   fileName?: string
   error?: string
   isLoading?: boolean
@@ -13,6 +16,7 @@ interface UploadCardProps {
 
 export function UploadCard({
   onFileLoaded,
+  onError,
   fileName,
   error,
   isLoading,
@@ -23,9 +27,19 @@ export function UploadCard({
 
   const handleFile = useCallback(
     (file: File) => {
+      // Clear previous errors if parent provided onError
+      if (onError) onError("")
+
       if (!file.name.endsWith(".gpx")) {
+        if (onError) onError("Please upload a .gpx file")
         return
       }
+
+      if (file.size > MAX_FILE_SIZE) {
+        if (onError) onError("File is too large (max 10MB)")
+        return
+      }
+
       const reader = new FileReader()
       reader.onload = (e) => {
         const content = e.target?.result as string
@@ -116,7 +130,7 @@ export function UploadCard({
                   {fileName}
                 </p>
                 <p className="text-[10px] font-medium text-white/50">
-                  GPX file loaded • Tap to change
+                  GPX file loaded • Tap to change (Max 10MB)
                 </p>
               </div>
             </motion.div>
@@ -136,6 +150,9 @@ export function UploadCard({
                   <p className="text-lg font-bold">Import GPX</p>
                   <p className="text-sm text-white/50">
                     Drop file or tap to browse
+                  </p>
+                  <p className="mt-1 text-[10px] font-medium text-white/30">
+                    (Max 10MB)
                   </p>
                 </div>
               </div>
