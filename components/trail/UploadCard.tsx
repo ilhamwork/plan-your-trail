@@ -8,10 +8,17 @@ interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
   fileName?: string
   error?: string
+  isLoading?: boolean
 }
 
-export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
+export function UploadCard({
+  onFileLoaded,
+  fileName,
+  error,
+  isLoading,
+}: UploadCardProps) {
   const [isDragging, setIsDragging] = useState(false)
+  const [isLoadingExample, setIsLoadingExample] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(
@@ -50,12 +57,15 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
   const handleLoadExample = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation()
+      setIsLoadingExample(true)
       try {
         const response = await fetch("/Rinjani-162K-2025.gpx")
         const content = await response.text()
         onFileLoaded(content, "Rinjani-162K-2025.gpx")
       } catch (err) {
         console.error("Failed to load example:", err)
+      } finally {
+        setIsLoadingExample(false)
       }
     },
     [onFileLoaded]
@@ -133,9 +143,14 @@ export function UploadCard({ onFileLoaded, fileName, error }: UploadCardProps) {
               <div className="mt-2 w-full border-t border-white/10 pt-4">
                 <button
                   onClick={handleLoadExample}
-                  className="mx-auto flex cursor-pointer items-center gap-2 rounded-lg bg-[#E76F51] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#D55A3C] active:scale-95"
+                  disabled={isLoadingExample || isLoading}
+                  className="mx-auto flex h-9 min-w-[100px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#E76F51] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#D55A3C] active:scale-95 disabled:opacity-70"
                 >
-                  TRY GPX
+                  {isLoadingExample || isLoading ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                  ) : (
+                    "TRY GPX"
+                  )}
                 </button>
               </div>
             </motion.div>

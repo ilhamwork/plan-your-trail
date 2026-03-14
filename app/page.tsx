@@ -281,6 +281,7 @@ export default function Home() {
                 onFileLoaded={handleFileLoaded}
                 fileName={fileName}
                 error={error}
+                isLoading={isSubmittingDetails}
               />
 
               {/* Tagline */}
