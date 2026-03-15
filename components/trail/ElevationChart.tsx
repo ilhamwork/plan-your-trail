@@ -2,97 +2,73 @@
 
 import { useCallback, useMemo } from "react"
 import {
-  ComposedChart,
+  AreaChart,
   Area,
-  Scatter,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  ReferenceDot,
 } from "recharts"
 import type { TrackPoint, Waypoint } from "@/lib/types"
 import { BarChart3 } from "lucide-react"
 
 interface ElevationChartProps {
-  points: TrackPoint[]
+  trackPoints: TrackPoint[]
   waypoints: Waypoint[]
   onHover: (point: TrackPoint | null) => void
 }
 
+interface ChartDataPoint {
+  distance: number
+  elevation: number
+  gradient: number
+  original: TrackPoint
+}
+
 export function ElevationChart({
-  points,
-  waypoints,
+  trackPoints,
+  waypoints = [],
   onHover,
 }: ElevationChartProps) {
-  // Downsample points for chart performance
+  // Downsample points for chart performance and stabilize reference
   const chartData = useMemo(() => {
-    const maxPoints = 500
-    const step = Math.max(1, Math.floor(points.length / maxPoints))
-
-    const data = points
-      .filter((_, i) => i % step === 0 || i === points.length - 1)
-      .map((p) => ({
-        distance: Math.round((p.distance / 1000) * 100) / 100,
-        elevation: Math.round(p.ele),
-        gradient: Math.round(p.gradient * 10) / 10,
-        original: p,
-        wpElevation: null as number | null,
+    const sampleRate = Math.max(1, Math.floor(trackPoints.length / 500))
+    return trackPoints
+      .filter((_, index) => index % sampleRate === 0)
+      .map((point) => ({
+        distance: point.distance / 1000,
+        elevation: Math.round(point.ele),
+        gradient: Math.round(point.gradient * 10) / 10,
+        original: point,
       }))
+  }, [trackPoints])
 
-    // Inject waypoint elevations into the closest data points
-    for (const wp of waypoints) {
-      let minDiff = Infinity
-      let closestIdx = 0
-      for (let i = 0; i < data.length; i++) {
-        const diff = Math.abs(data[i].original.distance - wp.distance)
-        if (diff < minDiff) {
-          minDiff = diff
-          closestIdx = i
+  const handleMouseMove = useCallback(
+    (data: any) => {
+      if (data && data.activeTooltipIndex !== undefined) {
+        const point = chartData[data.activeTooltipIndex]?.original
+        if (point) {
+          onHover?.(point)
         }
       }
-      data[closestIdx].wpElevation = data[closestIdx].elevation
-    }
-
-    return data
-  }, [points, waypoints])
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleMouseMove = useCallback(
-    (state: any) => {
-      if (
-        state &&
-        state.isTooltipActive &&
-        state.activePayload &&
-        state.activePayload.length > 0
-      ) {
-        onHover(state.activePayload[0].payload.original)
-      } else {
-        onHover(null)
-      }
     },
-    [onHover]
+    [onHover, chartData]
   )
 
   const handleMouseLeave = useCallback(() => {
-    onHover(null)
+    onHover?.(null)
   }, [onHover])
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderWaypointDot = (props: any) => {
-    const { cx, cy } = props
-    if (cx == null || cy == null) return null
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={5}
-        fill="#E76F51"
-        stroke="white"
-        strokeWidth={2}
-        style={{ pointerEvents: "none" }} // Prevents scatter dots from blocking tooltips/hover
-      />
-    )
-  }
+  const getElevationAtDistance = useCallback(
+    (distanceKm: number) => {
+      const point = chartData.find((d) => d.distance >= distanceKm)
+      return point
+        ? point.elevation
+        : chartData[chartData.length - 1]?.elevation
+    },
+    [chartData]
+  )
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
@@ -110,7 +86,7 @@ export function ElevationChart({
 
       <div className="p-3">
         <ResponsiveContainer width="100%" height={100}>
-          <ComposedChart
+          <AreaChart
             data={chartData}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
@@ -124,39 +100,44 @@ export function ElevationChart({
                 x2="0"
                 y2="1"
               >
-                <stop offset="5%" stopColor="#1B4332" stopOpacity={0.3} />
+                <stop offset="50%" stopColor="#1B4332" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#1B4332" stopOpacity={0.05} />
               </linearGradient>
             </defs>
+
             <XAxis
               dataKey="distance"
-              tick={{ fontSize: 11, fill: "#9CA3AF" }}
-              tickFormatter={(v: number) => `${v} km`}
+              tick={{ fontSize: 10, fill: "#9CA3AF" }}
+              tickFormatter={(v: number) => `${v.toFixed(0)} km`}
               axisLine={{ stroke: "#E5E7EB" }}
               tickLine={false}
               type="number"
               domain={["dataMin", "dataMax"]}
             />
+
             <YAxis
-              tick={{ fontSize: 11, fill: "#9CA3AF" }}
+              tick={{ fontSize: 10, fill: "#9CA3AF" }}
               tickFormatter={(v: number) => `${v}`}
-              axisLine={false}
               tickLine={false}
+              axisLine={{ stroke: "#E5E7EB" }}
+              domain={["dataMin", "dataMax"]}
             />
+
             <Tooltip
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null
                 const data = payload[0].payload
                 return (
                   <div className="pointer-events-none rounded-lg bg-[#2D3436] px-3 py-2 text-xs text-white shadow-lg">
-                    <p className="font-semibold">{data.distance} km</p>
+                    <p>Distance: {data.distance.toFixed(0)} km</p>
                     <p>Altitude: {data.elevation} m</p>
-                    <p>Gradient: {data.gradient}%</p>
+                    <p>Gradient: {data.gradient.toFixed(0)}%</p>
                   </div>
                 )
               }}
               animationDuration={100}
             />
+
             <Area
               type="monotone"
               dataKey="elevation"
@@ -166,13 +147,28 @@ export function ElevationChart({
               animationDuration={1000}
               isAnimationActive={false}
             />
-            {/* Waypoint dots */}
-            <Scatter
-              dataKey="wpElevation"
-              shape={renderWaypointDot}
-              isAnimationActive={false}
-            />
-          </ComposedChart>
+
+            {waypoints.map((wp, i) => {
+              const x = wp.distance / 1000
+              const y = getElevationAtDistance(x)
+
+              return (
+                <ReferenceDot
+                  key={i}
+                  x={x}
+                  y={y}
+                  r={5}
+                  fill="#E76F51"
+                  stroke="white"
+                  strokeWidth={2}
+                  label={{
+                    position: "top",
+                    fontSize: 10,
+                  }}
+                />
+              )
+            })}
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>

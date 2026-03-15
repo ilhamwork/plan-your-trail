@@ -59,8 +59,8 @@ export interface WaypointSegment {
   endIndex: number;
 }
 
-export interface ParsedRoute {
-  points: TrackPoint[];
+export interface GPXData {
+  trackPoints: TrackPoint[];
   stats: RouteStats;
   segments: Segment[];
   waypointSegments: WaypointSegment[];

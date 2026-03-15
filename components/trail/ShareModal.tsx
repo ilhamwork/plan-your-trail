@@ -6,12 +6,12 @@ import { X, Share2, Image as ImageIcon, Download, Share } from "lucide-react"
 import { toPng } from "html-to-image"
 import { supabase } from "@/lib/supabase"
 import { ShareCard } from "./ShareCard"
-import type { ParsedRoute } from "@/lib/types"
+import type { GPXData } from "@/lib/types"
 
 interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
-  route: ParsedRoute | null
+  route: GPXData | null
   raceName: string
   userName: string
   raceDate: string
@@ -214,7 +214,7 @@ export function ShareModal({
                   {route && (
                     <ShareCard
                       stats={route.stats}
-                      points={route.points}
+                      points={route.trackPoints}
                       raceName={raceName}
                       userName={userName}
                       raceDate={raceDate}

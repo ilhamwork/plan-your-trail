@@ -5,12 +5,7 @@ import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
 import { Map, BarChart3, Waypoints, CloudSun } from "lucide-react"
 
-import type {
-  ParsedRoute,
-  TrackPoint,
-  Segment,
-  WaypointSegment,
-} from "@/lib/types"
+import type { GPXData, TrackPoint, Segment, WaypointSegment } from "@/lib/types"
 import { parseGPX } from "@/lib/gpx-parser"
 import { supabase } from "@/lib/supabase"
 
@@ -127,7 +122,7 @@ const FEATURES = [
 ]
 
 export default function Home() {
-  const [route, setRoute] = useState<ParsedRoute | null>(null)
+  const [gpxData, setGpxData] = useState<GPXData | null>(null)
   const [fileName, setFileName] = useState<string>("")
   const [error, setError] = useState<string>("")
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
@@ -164,7 +159,7 @@ export default function Home() {
     raceName: "",
     raceDate: new Date().toISOString().split("T")[0],
   })
-  const [tempRoute, setTempRoute] = useState<ParsedRoute | null>(null)
+  const [tempRoute, setTempRoute] = useState<GPXData | null>(null)
   const [tempFileName, setTempFileName] = useState<string>("")
   const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
 
@@ -174,13 +169,13 @@ export default function Home() {
   const [isGeneratingShare, setIsGeneratingShare] = useState(false)
 
   const handleShare = async () => {
-    if (!route) return
+    if (!gpxData) return
     setShowShareModal(true)
   }
 
   const finishUpload = useCallback(
     async (
-      parsed: ParsedRoute,
+      parsed: GPXData,
       name: string,
       details: RouteDetailsData,
       runnerName: string
@@ -208,7 +203,7 @@ export default function Home() {
       } catch (err) {
         console.error("Error saving to supabase:", err)
       } finally {
-        setRoute(parsed)
+        setGpxData(parsed)
         setFileName(name)
         setShowDetailsModal(false)
         setTempRoute(null)
@@ -291,13 +286,13 @@ export default function Home() {
 
   // Memoize to avoid unnecessary re-renders
   const mapProps = useMemo(() => {
-    if (!route) return null
+    if (!gpxData) return null
     return {
-      points: route.points,
-      waypoints: route.waypoints,
-      bounds: route.bounds,
+      trackPoints: gpxData.trackPoints,
+      waypoints: gpxData.waypoints,
+      bounds: gpxData.bounds,
     }
-  }, [route])
+  }, [gpxData])
 
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
@@ -306,7 +301,7 @@ export default function Home() {
       <main className="mx-auto max-w-7xl px-4 py-6">
         {/* ── Empty state ───────────────────────── */}
         <AnimatePresence mode="wait">
-          {!route ? (
+          {!gpxData ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0 }}
@@ -422,7 +417,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="block lg:hidden"
                 >
-                  <MetricsPanel stats={route.stats} />
+                  <MetricsPanel stats={gpxData.stats} />
                 </motion.div>
 
                 {/* Map */}
@@ -447,8 +442,8 @@ export default function Home() {
                   transition={{ delay: 0.4 }}
                 >
                   <ElevationChart
-                    points={route.points}
-                    waypoints={route.waypoints}
+                    trackPoints={gpxData.trackPoints}
+                    waypoints={gpxData.waypoints}
                     onHover={setHoveredPoint}
                   />
                 </motion.div>
@@ -462,8 +457,8 @@ export default function Home() {
                 >
                   <SegmentList
                     key={fileName}
-                    segments={route.segments}
-                    waypointSegments={route.waypointSegments}
+                    segments={gpxData.segments}
+                    waypointSegments={gpxData.waypointSegments}
                     onSegmentClick={handleSegmentClick}
                     onWaypointSegmentClick={handleWaypointSegmentClick}
                     onTabChange={() => setHighlightRange(null)}
@@ -476,7 +471,7 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
                 >
-                  <GradientDistribution points={route.points} />
+                  <GradientDistribution points={gpxData.trackPoints} />
                 </motion.div>
 
                 {/* Weather */}
@@ -486,7 +481,7 @@ export default function Home() {
                   transition={{ delay: 0.7 }}
                 >
                   <WeatherForecast
-                    center={route.center}
+                    center={gpxData.center}
                     initialDate={routeDetails.raceDate}
                   />
                 </motion.div>
@@ -526,6 +521,7 @@ export default function Home() {
                       onFileLoaded={handleFileLoaded}
                       fileName={fileName}
                       error={error}
+                      isLoading={isSubmittingDetails}
                     />
                   </motion.div>
 
@@ -552,7 +548,7 @@ export default function Home() {
                     transition={{ delay: 0.4 }}
                     className="hidden lg:block"
                   >
-                    <MetricsPanel stats={route.stats} />
+                    <MetricsPanel stats={gpxData.stats} />
                   </motion.div>
 
                   {/* Tool Feedback prompt */}
@@ -579,7 +575,7 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
-        {route && (
+        {gpxData && (
           <motion.div
             key="footer"
             initial={{ opacity: 0 }}
@@ -613,7 +609,7 @@ export default function Home() {
         <ShareModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
-          route={route}
+          route={gpxData}
           raceName={routeDetails.raceName}
           userName={sessionRunnerName}
           raceDate={routeDetails.raceDate}

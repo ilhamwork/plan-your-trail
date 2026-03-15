@@ -3,7 +3,7 @@ import type {
   TrackPoint,
   Waypoint,
   RouteStats,
-  ParsedRoute,
+  GPXData,
 } from "./types";
 import { analyzeSegments, buildWaypointSegments } from "./segment-analysis";
 
@@ -38,7 +38,7 @@ function smoothElevation(elevations: number[], windowSize: number = 5): number[]
 }
 
 // ─── Parse GPX string ──────────────────────────────────────────────
-export function parseGPX(gpxString: string): ParsedRoute {
+export function parseGPX(gpxString: string): GPXData {
   const parser = new DOMParser();
   const doc = parser.parseFromString(gpxString, "text/xml");
 
@@ -85,7 +85,7 @@ export function parseGPX(gpxString: string): ParsedRoute {
   const smoothedEle = smoothElevation(rawPoints.map((p) => p.ele));
 
   // Build track points with cumulative distance and gradient
-  const points: TrackPoint[] = [];
+  const trackPoints: TrackPoint[] = [];
   let cumulativeDistance = 0;
 
   for (let i = 0; i < rawPoints.length; i++) {
@@ -112,7 +112,7 @@ export function parseGPX(gpxString: string): ParsedRoute {
           })()
         : 0;
 
-    points.push({
+    trackPoints.push({
       lat: rawPoints[i].lat,
       lon: rawPoints[i].lon,
       ele: smoothedEle[i],
@@ -127,12 +127,12 @@ export function parseGPX(gpxString: string): ParsedRoute {
   let highestPoint = -Infinity;
   let lowestPoint = Infinity;
 
-  for (let i = 0; i < points.length; i++) {
-    if (points[i].ele > highestPoint) highestPoint = points[i].ele;
-    if (points[i].ele < lowestPoint) lowestPoint = points[i].ele;
+  for (let i = 0; i < trackPoints.length; i++) {
+    if (trackPoints[i].ele > highestPoint) highestPoint = trackPoints[i].ele;
+    if (trackPoints[i].ele < lowestPoint) lowestPoint = trackPoints[i].ele;
 
     if (i > 0) {
-      const diff = points[i].ele - points[i - 1].ele;
+      const diff = trackPoints[i].ele - trackPoints[i - 1].ele;
       if (diff > 0) elevationGain += diff;
       else elevationLoss += Math.abs(diff);
     }
@@ -152,8 +152,8 @@ export function parseGPX(gpxString: string): ParsedRoute {
     let minDist = Infinity;
     let closestIdx = 0;
 
-    for (let i = 0; i < points.length; i++) {
-      const d = haversineDistance(lat, lon, points[i].lat, points[i].lon);
+    for (let i = 0; i < trackPoints.length; i++) {
+      const d = haversineDistance(lat, lon, trackPoints[i].lat, trackPoints[i].lon);
       if (d < minDist) {
         minDist = d;
         closestIdx = i;
@@ -165,7 +165,7 @@ export function parseGPX(gpxString: string): ParsedRoute {
       lat,
       lon,
       ele,
-      distance: points[closestIdx].distance,
+      distance: trackPoints[closestIdx].distance,
     });
   });
 
@@ -177,7 +177,7 @@ export function parseGPX(gpxString: string): ParsedRoute {
     west = Infinity,
     north = -Infinity,
     east = -Infinity;
-  for (const p of points) {
+  for (const p of trackPoints) {
     if (p.lat < south) south = p.lat;
     if (p.lat > north) north = p.lat;
     if (p.lon < west) west = p.lon;
@@ -193,11 +193,11 @@ export function parseGPX(gpxString: string): ParsedRoute {
     waypointCount: waypoints.length,
   };
 
-  const segments = analyzeSegments(points, cumulativeDistance);
-  const waypointSegments = buildWaypointSegments(points, waypoints);
+  const segments = analyzeSegments(trackPoints, cumulativeDistance);
+  const waypointSegments = buildWaypointSegments(trackPoints, waypoints);
 
   return {
-    points,
+    trackPoints,
     stats,
     segments,
     waypointSegments,

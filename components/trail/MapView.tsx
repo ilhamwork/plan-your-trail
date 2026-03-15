@@ -12,7 +12,7 @@ interface HighlightRange {
 }
 
 interface MapViewProps {
-  points: TrackPoint[]
+  trackPoints: TrackPoint[]
   waypoints: Waypoint[]
   bounds: [[number, number], [number, number]]
   hoveredPoint?: TrackPoint | null
@@ -20,7 +20,7 @@ interface MapViewProps {
 }
 
 export function MapView({
-  points,
+  trackPoints,
   waypoints,
   bounds,
   hoveredPoint,
@@ -36,9 +36,12 @@ export function MapView({
   const osmLayerRef = useRef<L.TileLayer | null>(null)
   const satLayerRef = useRef<L.TileLayer | null>(null)
 
-  // ── 3D Map Refs ─────────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const maplibreMapRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const maplibreHoverMarkerRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const maplibreModuleRef = useRef<any>(null)
 
   const [is3D, setIs3D] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
@@ -70,8 +73,8 @@ export function MapView({
   }, [isFullscreen])
 
   // Store points in a ref so effects always have the latest array without triggering re-renders
-  const pointsRef = useRef(points)
-  pointsRef.current = points
+  const pointsRef = useRef(trackPoints)
+  pointsRef.current = trackPoints
 
   // ── Initialize 2D Leaflet map ────────────────────────────────────
   useEffect(() => {
@@ -111,7 +114,10 @@ export function MapView({
       Lf.control.scale({ position: "bottomleft" }).addTo(map)
 
       // Route polyline — ORANGE
-      const routeCoords: [number, number][] = points.map((p) => [p.lat, p.lon])
+      const routeCoords: [number, number][] = trackPoints.map((p) => [
+        p.lat,
+        p.lon,
+      ])
       Lf.polyline(routeCoords, {
         color: "#E76F51",
         weight: 4,
@@ -127,8 +133,8 @@ export function MapView({
       `
 
       // Start marker
-      if (points.length > 0) {
-        Lf.marker([points[0].lat, points[0].lon], {
+      if (trackPoints.length > 0) {
+        Lf.marker([trackPoints[0].lat, trackPoints[0].lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
             html: `<div style="width:32px;height:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">${createMarkerSvg("#d82020ff")}</div>`,
@@ -138,7 +144,7 @@ export function MapView({
         })
           .addTo(map)
           .bindTooltip(
-            `<strong>Start</strong><br/>${(points[0].distance / 1000).toFixed(1)} km · ${Math.round(points[0].ele)}m`,
+            `<strong>Start</strong><br/>${(trackPoints[0].distance / 1000).toFixed(1)} km · ${Math.round(trackPoints[0].ele)}m`,
             {
               permanent: false,
               direction: "top",
@@ -148,7 +154,7 @@ export function MapView({
           )
 
         // Finish marker
-        const last = points[points.length - 5]
+        const last = trackPoints[trackPoints.length - 5]
         Lf.marker([last.lat, last.lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
@@ -216,7 +222,7 @@ export function MapView({
       setMapReady(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [is3D, points, waypoints, bounds])
+  }, [is3D, trackPoints, waypoints, bounds])
 
   // ── Toggle satellite layer (2D layer) ─────────────────────────────
   useEffect(() => {
@@ -248,15 +254,15 @@ export function MapView({
     if (hoveredPoint) {
       const marker = Lf.circleMarker([hoveredPoint.lat, hoveredPoint.lon], {
         radius: 8,
-        color: "#3B82F6",
-        fillColor: "#3B82F6",
+        color: "#fff",
+        fillColor: "#d82020ff",
         fillOpacity: 0.9,
         weight: 3,
       }).addTo(map)
 
       marker
         .bindTooltip(
-          `${(hoveredPoint.distance / 1000).toFixed(1)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(1)}%`,
+          `${(hoveredPoint.distance / 1000).toFixed(0)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%`,
           {
             permanent: true,
             direction: "top",
@@ -361,7 +367,7 @@ export function MapView({
             properties: {},
             geometry: {
               type: "LineString" as const,
-              coordinates: points.map((p) => [p.lon, p.lat, p.ele]),
+              coordinates: trackPoints.map((p) => [p.lon, p.lat, p.ele]),
             },
           },
         })
@@ -403,20 +409,20 @@ export function MapView({
         }
 
         // Start marker
-        if (points.length > 0) {
+        if (trackPoints.length > 0) {
           const startEl = document.createElement("div")
           startEl.innerHTML = createMarkerSvg3D("#d82020ff", 40)
 
           new maplibregl.Marker({ element: startEl, anchor: "bottom" })
-            .setLngLat([points[0].lon, points[0].lat])
+            .setLngLat([trackPoints[0].lon, trackPoints[0].lat])
             .setPopup(
               new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>Start</strong><br/>${(points[0].distance / 1000).toFixed(1)} km · ${Math.round(points[0].ele)}m`
+                `<strong>Start</strong><br/>${(trackPoints[0].distance / 1000).toFixed(1)} km · ${Math.round(trackPoints[0].ele)}m`
               )
             )
             .addTo(map)
 
-          const last = points[points.length - 10]
+          const last = trackPoints[trackPoints.length - 10]
           const endEl = document.createElement("div")
           endEl.innerHTML = createMarkerSvg3D("#34e02eff", 32)
 
@@ -442,6 +448,7 @@ export function MapView({
       })
 
       maplibreMapRef.current = map
+      maplibreModuleRef.current = maplibregl
     })
 
     return () => {
@@ -450,9 +457,52 @@ export function MapView({
         maplibreMapRef.current.remove()
         maplibreMapRef.current = null
       }
+      maplibreModuleRef.current = null
+      maplibreHoverMarkerRef.current = null
       setMaplibreReady(false)
     }
-  }, [is3D, isSatellite, points, waypoints, bounds])
+  }, [is3D, isSatellite, trackPoints, waypoints, bounds])
+
+  // ── Hover marker on 3D map ──────────────────────────────────────
+  useEffect(() => {
+    const map = maplibreMapRef.current
+    const ml = maplibreModuleRef.current
+    if (!map || !maplibreReady || !is3D || !ml) return
+
+    if (maplibreHoverMarkerRef.current) {
+      maplibreHoverMarkerRef.current.remove()
+      maplibreHoverMarkerRef.current = null
+    }
+
+    if (hoveredPoint) {
+      const el = document.createElement("div")
+      el.className = "hover-marker-3d"
+      el.style.width = "16px"
+      el.style.height = "16px"
+      el.style.backgroundColor = "#d82020ff"
+      el.style.border = "3px solid white"
+      el.style.borderRadius = "50%"
+      el.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)"
+
+      const marker = new ml.Marker({ element: el })
+        .setLngLat([hoveredPoint.lon, hoveredPoint.lat])
+        .setPopup(
+          new ml.Popup({
+            offset: [0, -10],
+            closeButton: false,
+            className: "hover-tooltip-3d",
+          }).setHTML(
+            `<div>
+              ${(hoveredPoint.distance / 1000).toFixed(0)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%
+            </div>`
+          )
+        )
+        .addTo(map)
+
+      marker.togglePopup()
+      maplibreHoverMarkerRef.current = marker
+    }
+  }, [hoveredPoint, maplibreReady, is3D])
 
   // ── Segment highlight on 3D map ─────────────────────────────────
   useEffect(() => {

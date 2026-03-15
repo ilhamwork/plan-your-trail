@@ -111,7 +111,7 @@
 }
 
 .hover-tooltip {
-    background: #3B82F6 !important;
+    background: #2D3436 !important;
     color: white !important;
     border: none !important;
     border-radius: 8px !important;
@@ -121,7 +121,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
 .hover-tooltip::before {
-    border-top-color: #3B82F6 !important;
+    border-top-color: #2D3436 !important;
 }
 
 /* Leaflet overrides */

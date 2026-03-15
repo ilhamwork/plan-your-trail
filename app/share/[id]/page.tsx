@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Map, BarChart3, Waypoints, CloudSun, AlertCircle } from "lucide-react"
 
 import type {
-  ParsedRoute,
+  GPXData,
   TrackPoint,
   Segment,
   WaypointSegment,
@@ -42,7 +42,7 @@ export default function SharedRoutePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = use(params)
-  const [route, setRoute] = useState<ParsedRoute | null>(null)
+  const [route, setRoute] = useState<GPXData | null>(null)
   const [routeInfo, setRouteInfo] = useState<{
     raceName: string
     userName: string
@@ -68,7 +68,7 @@ export default function SharedRoutePage({
         if (dbError) throw dbError
         if (!data) throw new Error("Route not found")
 
-        setRoute(data.route_data as ParsedRoute)
+        setRoute(data.route_data as GPXData)
         setRouteInfo({
           raceName: data.race_name,
           userName: data.user_name,
@@ -108,7 +108,7 @@ export default function SharedRoutePage({
   const mapProps = useMemo(() => {
     if (!route) return null
     return {
-      points: route.points,
+      trackPoints: route.trackPoints,
       waypoints: route.waypoints,
       bounds: route.bounds,
     }
@@ -186,7 +186,7 @@ export default function SharedRoutePage({
 
             {/* Elevation chart */}
             <ElevationChart
-              points={route.points}
+              trackPoints={route.trackPoints}
               waypoints={route.waypoints}
               onHover={setHoveredPoint}
             />
@@ -201,7 +201,7 @@ export default function SharedRoutePage({
             />
 
             {/* Gradient Distribution */}
-            <GradientDistribution points={route.points} />
+            <GradientDistribution points={route.trackPoints} />
 
             {/* Weather */}
             <WeatherForecast
