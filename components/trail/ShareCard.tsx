@@ -10,7 +10,6 @@ import {
   ReferenceDot,
 } from "recharts"
 import type { RouteStats, TrackPoint } from "@/lib/types"
-import Image from "next/image"
 
 interface ShareCardProps {
   stats: RouteStats
@@ -98,39 +97,33 @@ export function ShareCard({
           <h1 className="text-6xl leading-tight font-black tracking-tight">
             {raceName || "Untitled Trail"}
           </h1>
-          <p className="text-2xl font-medium tracking-wide opacity-70">
-            {formattedDate}
-          </p>
+          <p className="text-2xl font-bold">{formattedDate}</p>
         </div>
 
         {/* Metrics Grid */}
         <div className="flex justify-center">
           <div className="flex justify-evenly gap-8">
-            <div className="flex flex-col items-center space-y-1">
+            <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-bold tracking-tighter">
                   {(stats.totalDistance / 1000).toFixed(0)}
                 </span>
-                <span className="text-2xl font-bold opacity-70">km</span>
+                <span className="text-2xl font-bold">km</span>
               </div>
-              <p className="text-xl font-bold tracking-widest opacity-70">
-                distance
-              </p>
+              <p className="text-xl font-bold tracking-widest">distance</p>
             </div>
 
-            <div className="flex flex-col items-center space-y-1">
+            <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-bold tracking-tighter">
                   {Math.round(stats.elevationGain).toLocaleString("id-ID")}
                 </span>
-                <span className="text-2xl font-bold opacity-70">m+</span>
+                <span className="text-2xl font-bold">m+</span>
               </div>
-              <p className="text-xl font-bold tracking-widest opacity-70">
-                gain
-              </p>
+              <p className="text-xl font-bold tracking-widest">gain</p>
             </div>
 
-            <div className="flex flex-col items-center space-y-1">
+            <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-bold tracking-tighter">
                   {(
@@ -138,11 +131,9 @@ export function ShareCard({
                     stats.elevationGain * 0.01
                   ).toFixed(0)}
                 </span>
-                <span className="text-2xl font-bold opacity-70">km</span>
+                <span className="text-2xl font-bold">km</span>
               </div>
-              <p className="text-xl font-bold tracking-widest opacity-70">
-                effort
-              </p>
+              <p className="text-xl font-bold tracking-widest">effort</p>
             </div>
           </div>
         </div>
@@ -182,7 +173,7 @@ export function ShareCard({
                         fill: "white",
                         fontSize: 24,
                         fontWeight: "bold",
-                        opacity: 0.7,
+                        opacity: 1,
                       }}
                     />
                     <ReferenceDot
@@ -195,7 +186,7 @@ export function ShareCard({
                         fill: "white",
                         fontSize: 24,
                         fontWeight: "bold",
-                        opacity: 0.7,
+                        opacity: 1,
                       }}
                     />
                   </>
@@ -212,27 +203,20 @@ export function ShareCard({
               <span className="text-3xl text-[#F4A261]">▲</span>
               <span>
                 Uphill{" "}
-                <span className="ml-1 opacity-70">
-                  {gradientDistribution.uphill}%
-                </span>
+                <span className="ml-1">{gradientDistribution.uphill}%</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-3xl text-[#2A9D8F]">▬</span>
               <span>
-                Flat{" "}
-                <span className="ml-1 opacity-70">
-                  {gradientDistribution.flat}%
-                </span>
+                Flat <span className="ml-1">{gradientDistribution.flat}%</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-3xl text-[#457B9D]">▼</span>
               <span>
                 Downhill{" "}
-                <span className="ml-1 opacity-70">
-                  {gradientDistribution.downhill}%
-                </span>
+                <span className="ml-1">{gradientDistribution.downhill}%</span>
               </span>
             </div>
           </div>
@@ -255,10 +239,8 @@ export function ShareCard({
         </div>
 
         {/* Branding Overlay */}
-        <div className="mt-10 flex justify-center">
-          <span className="text-3xl font-medium tracking-tighter">
-            planyourtrail.run
-          </span>
+        <div className="mt-5 flex justify-center">
+          <span className="text-4xl font-bold">planyourtrail.run</span>
           {/* <Image
             src="/text-logo-white.png"
             alt="Text Logo"
