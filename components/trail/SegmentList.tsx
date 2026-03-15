@@ -40,7 +40,7 @@ export function SegmentList({
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
           {tab === "waypoints"
-            ? `${waypointSegments.length} segments • Based on waypoints`
+            ? `${waypointSegments.length} segments • Based on checkpoint`
             : `${segments.length} segments • Based on gradient`}
         </p>
       </div>
@@ -62,7 +62,7 @@ export function SegmentList({
                 : "bg-gray-50 text-gray-400 hover:text-gray-600"
             }`}
           >
-            Waypoints
+            Checkpoint
           </button>
         )}
         <button

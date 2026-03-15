@@ -483,7 +483,7 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
-        <Footer />
+        {route && <Footer />}
 
         {/* ── Route Details Modal ────────────────────── */}
         <ModalFormInfo
