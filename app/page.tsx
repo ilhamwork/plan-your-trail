@@ -200,11 +200,11 @@ export default function Home() {
 
         if (dbError) {
           console.error("Failed to save route telemetry:", dbError)
-          Sentry.captureException(dbError);
+          Sentry.captureException(dbError)
         }
       } catch (err) {
         console.error("Error saving to supabase:", err)
-        Sentry.captureException(err);
+        Sentry.captureException(err)
       } finally {
         setGpxData(parsed)
         setFileName(name)
@@ -250,7 +250,7 @@ export default function Home() {
         setError(
           err instanceof Error ? err.message : "Failed to parse GPX file"
         )
-        Sentry.captureException(err);
+        Sentry.captureException(err)
         setTempRoute(null)
         setTempFileName("")
       }
@@ -575,6 +575,17 @@ export default function Home() {
                   >
                     <DonationSection />
                   </motion.div>
+
+                  <motion.div
+                    key="footer"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="hidden lg:block"
+                  >
+                    <Footer runnerName={sessionRunnerName} />
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
@@ -587,6 +598,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
             exit={{ opacity: 0, y: -20 }}
+            className="block lg:hidden"
           >
             <Footer runnerName={sessionRunnerName} />
           </motion.div>
