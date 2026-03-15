@@ -55,6 +55,8 @@ export const metadata: Metadata = {
   },
 }
 
+import ErrorBoundary from "@/components/Error/ErrorBoundary"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,7 +66,7 @@ export default function RootLayout({
     <html lang="en" className={`${fontSans.variable} font-sans antialiased`}>
       <head />
       <body>
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
         <Analytics />
         <SpeedInsights />
       </body>
