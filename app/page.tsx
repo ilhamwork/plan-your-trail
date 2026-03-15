@@ -326,13 +326,19 @@ export default function Home() {
                 </motion.div>
               )}
 
-              <UploadCard
-                onFileLoaded={handleFileLoaded}
-                onError={setError}
-                fileName={fileName}
-                error={error}
-                isLoading={isSubmittingDetails}
-              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <UploadCard
+                  onFileLoaded={handleFileLoaded}
+                  onError={setError}
+                  fileName={fileName}
+                  error={error}
+                  isLoading={isSubmittingDetails}
+                />
+              </motion.div>
 
               {/* Tagline */}
               <motion.div
@@ -372,7 +378,13 @@ export default function Home() {
                 ))}
               </motion.div>
 
-              <Footer />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
+                <Footer />
+              </motion.div>
             </motion.div>
           ) : (
             /* ── Loaded state ──────────────────────── */
@@ -380,12 +392,20 @@ export default function Home() {
               key="loaded"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -20 }}
               className="grid gap-6 lg:grid-cols-[1fr_420px]"
             >
               {/* Left column (main content) */}
+
               <div className="order-2 flex flex-col gap-5 lg:order-1">
                 {/* Route Header Info */}
-                <div className="block lg:hidden">
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="block lg:hidden"
+                >
                   <HeaderInfo
                     raceName={routeDetails.raceName}
                     userName={sessionRunnerName}
@@ -393,68 +413,129 @@ export default function Home() {
                     onShare={handleShare}
                     isSharing={isGeneratingShare}
                   />
-                </div>
+                </motion.div>
 
                 {/* Metrics */}
-                <div className="block lg:hidden">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="block lg:hidden"
+                >
                   <MetricsPanel stats={route.stats} />
-                </div>
+                </motion.div>
 
                 {/* Map */}
                 {mapProps && (
-                  <MapView
-                    {...mapProps}
-                    hoveredPoint={hoveredPoint}
-                    highlightRange={highlightRange}
-                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <MapView
+                      {...mapProps}
+                      hoveredPoint={hoveredPoint}
+                      highlightRange={highlightRange}
+                    />
+                  </motion.div>
                 )}
 
                 {/* Elevation chart */}
-                <ElevationChart
-                  points={route.points}
-                  waypoints={route.waypoints}
-                  onHover={setHoveredPoint}
-                />
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <ElevationChart
+                    points={route.points}
+                    waypoints={route.waypoints}
+                    onHover={setHoveredPoint}
+                  />
+                </motion.div>
 
                 {/* Segments */}
-                <SegmentList
-                  key={fileName}
-                  segments={route.segments}
-                  waypointSegments={route.waypointSegments}
-                  onSegmentClick={handleSegmentClick}
-                  onWaypointSegmentClick={handleWaypointSegmentClick}
-                  onTabChange={() => setHighlightRange(null)}
-                />
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <SegmentList
+                    key={fileName}
+                    segments={route.segments}
+                    waypointSegments={route.waypointSegments}
+                    onSegmentClick={handleSegmentClick}
+                    onWaypointSegmentClick={handleWaypointSegmentClick}
+                    onTabChange={() => setHighlightRange(null)}
+                  />
+                </motion.div>
 
                 {/* Gradient Distribution */}
-                <GradientDistribution points={route.points} />
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <GradientDistribution points={route.points} />
+                </motion.div>
 
                 {/* Weather */}
-                <WeatherForecast
-                  center={route.center}
-                  initialDate={routeDetails.raceDate}
-                />
-                <div className="block lg:hidden">
-                  <ToolFeedback />
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <WeatherForecast
+                    center={route.center}
+                    initialDate={routeDetails.raceDate}
+                  />
+                </motion.div>
 
-                <div className="block lg:hidden">
+                {/* Tool Feedback */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="block lg:hidden"
+                >
+                  <ToolFeedback />
+                </motion.div>
+
+                {/* Donation Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="block lg:hidden"
+                >
                   <DonationSection />
-                </div>
+                </motion.div>
               </div>
 
               {/* Right column (sidebar — sticky on desktop) */}
+
               <div className="order-1 lg:order-2 lg:block">
                 <div className="flex flex-col gap-5 lg:sticky lg:top-15">
                   {/* Upload card */}
-                  <UploadCard
-                    onFileLoaded={handleFileLoaded}
-                    fileName={fileName}
-                    error={error}
-                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <UploadCard
+                      onFileLoaded={handleFileLoaded}
+                      fileName={fileName}
+                      error={error}
+                    />
+                  </motion.div>
 
                   {/* Route Header Info */}
-                  <div className="hidden lg:block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="hidden lg:block"
+                  >
                     <HeaderInfo
                       raceName={routeDetails.raceName}
                       userName={sessionRunnerName}
@@ -462,28 +543,53 @@ export default function Home() {
                       onShare={handleShare}
                       isSharing={isGeneratingShare}
                     />
-                  </div>
+                  </motion.div>
 
                   {/* Metrics */}
-                  <div className="hidden lg:block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="hidden lg:block"
+                  >
                     <MetricsPanel stats={route.stats} />
-                  </div>
+                  </motion.div>
 
                   {/* Tool Feedback prompt */}
-                  <div className="hidden lg:block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="hidden lg:block"
+                  >
                     <ToolFeedback />
-                  </div>
+                  </motion.div>
 
                   {/* Donation Section */}
-                  <div className="hidden lg:block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="hidden lg:block"
+                  >
                     <DonationSection />
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        {route && <Footer />}
+        {route && (
+          <motion.div
+            key="footer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Footer />
+          </motion.div>
+        )}
 
         {/* ── Route Details Modal ────────────────────── */}
         <ModalFormInfo
