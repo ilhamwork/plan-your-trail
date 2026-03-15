@@ -80,16 +80,17 @@ export function ElevationChart({
           </h3>
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
-          Hover over the chart to see details on the map
+          Hover, tap, or slide to see details on the map
         </p>
       </div>
 
-      <div className="p-3">
+      <div className="touch-none p-3">
         <ResponsiveContainer width="100%" height={100}>
           <AreaChart
             data={chartData}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onTouchMove={handleMouseMove}
             margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
           >
             <defs>

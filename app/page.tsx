@@ -431,6 +431,7 @@ export default function Home() {
                       {...mapProps}
                       hoveredPoint={hoveredPoint}
                       highlightRange={highlightRange}
+                      onHover={setHoveredPoint}
                     />
                   </motion.div>
                 )}

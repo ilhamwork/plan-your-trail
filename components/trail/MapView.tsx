@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react"
 import type { TrackPoint, Waypoint } from "@/lib/types"
-import { Map, Globe, Maximize2, Minimize2 } from "lucide-react"
+import { Map, Globe, Maximize2, Minimize2, BarChart3 } from "lucide-react"
 import type L from "leaflet"
 import "maplibre-gl/dist/maplibre-gl.css"
+import { ElevationChart } from "./ElevationChart"
 
 interface HighlightRange {
   startIndex: number
@@ -17,6 +18,7 @@ interface MapViewProps {
   bounds: [[number, number], [number, number]]
   hoveredPoint?: TrackPoint | null
   highlightRange?: HighlightRange | null
+  onHover?: (point: TrackPoint | null) => void
 }
 
 export function MapView({
@@ -25,6 +27,7 @@ export function MapView({
   bounds,
   hoveredPoint,
   highlightRange,
+  onHover,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
@@ -48,6 +51,7 @@ export function MapView({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mapReady, setMapReady] = useState(false)
   const [maplibreReady, setMaplibreReady] = useState(false)
+  const [showChart, setShowChart] = useState(true)
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -557,6 +561,20 @@ export function MapView({
     }
   }, [highlightRange, maplibreReady, is3D])
 
+  // ── Handle map resize on fullscreen transition & chart toggle ──
+  useEffect(() => {
+    // Wait for resizing/transitions to settle
+    const timer = setTimeout(() => {
+      if (is3D && maplibreMapRef.current) {
+        maplibreMapRef.current.resize()
+      } else if (!is3D && leafletMapRef.current) {
+        leafletMapRef.current.invalidateSize()
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [isFullscreen, is3D, maplibreReady, mapReady, showChart])
+
   return (
     <div
       className={`overflow-hidden transition-all duration-300 ${
@@ -603,8 +621,22 @@ export function MapView({
               <Maximize2 className="h-4 w-4" />
             )}
           </button>
+
+          {isFullscreen && (
+            <button
+              onClick={() => setShowChart(!showChart)}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                showChart
+                  ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
+                  : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
+              }`}
+            >
+              <BarChart3 className="h-3 w-3" />
+            </button>
+          )}
         </div>
       </div>
+
       <div
         ref={mapContainerRef}
         className={`w-full transition-all duration-300 ${
@@ -612,6 +644,20 @@ export function MapView({
         }`}
         style={{ position: "relative" }}
       />
+
+      {isFullscreen && showChart && (
+        <div className="absolute bottom-16 left-1/2 z-1000 w-[95%] -translate-x-1/2 overflow-hidden rounded-xl border border-white/20 bg-[#2D3436]/80 shadow-2xl lg:w-3/4">
+          <div className="flex flex-col gap-2">
+            <div className="h-[180px]">
+              <ElevationChart
+                trackPoints={trackPoints}
+                waypoints={waypoints}
+                onHover={onHover || (() => {})}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
