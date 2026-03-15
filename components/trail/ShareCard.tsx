@@ -88,7 +88,7 @@ export function ShareCard({
   return (
     <div
       id="share-card-content"
-      className="relative w-[1080px] overflow-hidden bg-black p-12 font-sans text-white"
+      className="relative w-[1080px] overflow-hidden bg-transparent p-12 font-sans text-white"
     >
       {/* Background - Transparent */}
 
