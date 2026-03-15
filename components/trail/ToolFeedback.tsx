@@ -5,7 +5,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 
-export function ToolFeedback() {
+interface ToolFeedbackProps {
+  runnerName?: string
+}
+
+export function ToolFeedback({ runnerName }: ToolFeedbackProps) {
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -14,7 +18,7 @@ export function ToolFeedback() {
     try {
       const { error } = await supabase
         .from("tool_feedback")
-        .insert([{ rating }])
+        .insert([{ rating, name: runnerName }])
       if (error) throw error
       setSubmitted(true)
     } catch (err) {

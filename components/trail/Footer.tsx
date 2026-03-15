@@ -1,7 +1,11 @@
 import { useState } from "react"
 import { FeedbackModal } from "./FeedbackModal"
 
-export function Footer() {
+interface FooterProps {
+  runnerName?: string
+}
+
+export function Footer({ runnerName }: FooterProps) {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
 
   return (
@@ -33,6 +37,7 @@ export function Footer() {
       <FeedbackModal
         isOpen={isFeedbackOpen}
         onClose={() => setIsFeedbackOpen(false)}
+        runnerName={runnerName}
       />
     </footer>
   )

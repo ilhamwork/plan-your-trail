@@ -382,7 +382,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
               >
-                <Footer />
+                <Footer runnerName={sessionRunnerName} />
               </motion.div>
             </motion.div>
           ) : (
@@ -498,7 +498,7 @@ export default function Home() {
                   transition={{ delay: 0.8 }}
                   className="block lg:hidden"
                 >
-                  <ToolFeedback />
+                  <ToolFeedback runnerName={sessionRunnerName} />
                 </motion.div>
 
                 {/* Donation Section */}
@@ -563,7 +563,7 @@ export default function Home() {
                     transition={{ delay: 0.5 }}
                     className="hidden lg:block"
                   >
-                    <ToolFeedback />
+                    <ToolFeedback runnerName={sessionRunnerName} />
                   </motion.div>
 
                   {/* Donation Section */}
@@ -588,7 +588,7 @@ export default function Home() {
             transition={{ delay: 1 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <Footer />
+            <Footer runnerName={sessionRunnerName} />
           </motion.div>
         )}
 
