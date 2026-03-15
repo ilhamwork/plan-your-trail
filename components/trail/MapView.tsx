@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react"
 import type { TrackPoint, Waypoint } from "@/lib/types"
-import { Map, Globe, Maximize2, Minimize2 } from "lucide-react"
+import { Map, Globe, Maximize2, Minimize2, BarChart3 } from "lucide-react"
 import type L from "leaflet"
 import "maplibre-gl/dist/maplibre-gl.css"
+import { ElevationChart } from "./ElevationChart"
 
 interface HighlightRange {
   startIndex: number
@@ -12,19 +13,21 @@ interface HighlightRange {
 }
 
 interface MapViewProps {
-  points: TrackPoint[]
+  trackPoints: TrackPoint[]
   waypoints: Waypoint[]
   bounds: [[number, number], [number, number]]
   hoveredPoint?: TrackPoint | null
   highlightRange?: HighlightRange | null
+  onHover?: (point: TrackPoint | null) => void
 }
 
 export function MapView({
-  points,
+  trackPoints,
   waypoints,
   bounds,
   hoveredPoint,
   highlightRange,
+  onHover,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
@@ -36,15 +39,19 @@ export function MapView({
   const osmLayerRef = useRef<L.TileLayer | null>(null)
   const satLayerRef = useRef<L.TileLayer | null>(null)
 
-  // ── 3D Map Refs ─────────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const maplibreMapRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const maplibreHoverMarkerRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const maplibreModuleRef = useRef<any>(null)
 
   const [is3D, setIs3D] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mapReady, setMapReady] = useState(false)
   const [maplibreReady, setMaplibreReady] = useState(false)
+  const [showChart, setShowChart] = useState(true)
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -70,8 +77,8 @@ export function MapView({
   }, [isFullscreen])
 
   // Store points in a ref so effects always have the latest array without triggering re-renders
-  const pointsRef = useRef(points)
-  pointsRef.current = points
+  const pointsRef = useRef(trackPoints)
+  pointsRef.current = trackPoints
 
   // ── Initialize 2D Leaflet map ────────────────────────────────────
   useEffect(() => {
@@ -111,7 +118,10 @@ export function MapView({
       Lf.control.scale({ position: "bottomleft" }).addTo(map)
 
       // Route polyline — ORANGE
-      const routeCoords: [number, number][] = points.map((p) => [p.lat, p.lon])
+      const routeCoords: [number, number][] = trackPoints.map((p) => [
+        p.lat,
+        p.lon,
+      ])
       Lf.polyline(routeCoords, {
         color: "#E76F51",
         weight: 4,
@@ -127,8 +137,8 @@ export function MapView({
       `
 
       // Start marker
-      if (points.length > 0) {
-        Lf.marker([points[0].lat, points[0].lon], {
+      if (trackPoints.length > 0) {
+        Lf.marker([trackPoints[0].lat, trackPoints[0].lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
             html: `<div style="width:32px;height:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">${createMarkerSvg("#d82020ff")}</div>`,
@@ -138,7 +148,7 @@ export function MapView({
         })
           .addTo(map)
           .bindTooltip(
-            `<strong>Start</strong><br/>${(points[0].distance / 1000).toFixed(1)} km · ${Math.round(points[0].ele)}m`,
+            `<strong>Start</strong><br/>${(trackPoints[0].distance / 1000).toFixed(1)} km · ${Math.round(trackPoints[0].ele)}m`,
             {
               permanent: false,
               direction: "top",
@@ -148,7 +158,7 @@ export function MapView({
           )
 
         // Finish marker
-        const last = points[points.length - 5]
+        const last = trackPoints[trackPoints.length - 5]
         Lf.marker([last.lat, last.lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
@@ -216,7 +226,7 @@ export function MapView({
       setMapReady(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [is3D, points, waypoints, bounds])
+  }, [is3D, trackPoints, waypoints, bounds])
 
   // ── Toggle satellite layer (2D layer) ─────────────────────────────
   useEffect(() => {
@@ -248,15 +258,15 @@ export function MapView({
     if (hoveredPoint) {
       const marker = Lf.circleMarker([hoveredPoint.lat, hoveredPoint.lon], {
         radius: 8,
-        color: "#3B82F6",
-        fillColor: "#3B82F6",
+        color: "#fff",
+        fillColor: "#d82020ff",
         fillOpacity: 0.9,
         weight: 3,
       }).addTo(map)
 
       marker
         .bindTooltip(
-          `${(hoveredPoint.distance / 1000).toFixed(1)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(1)}%`,
+          `${(hoveredPoint.distance / 1000).toFixed(0)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%`,
           {
             permanent: true,
             direction: "top",
@@ -361,7 +371,7 @@ export function MapView({
             properties: {},
             geometry: {
               type: "LineString" as const,
-              coordinates: points.map((p) => [p.lon, p.lat, p.ele]),
+              coordinates: trackPoints.map((p) => [p.lon, p.lat, p.ele]),
             },
           },
         })
@@ -403,20 +413,20 @@ export function MapView({
         }
 
         // Start marker
-        if (points.length > 0) {
+        if (trackPoints.length > 0) {
           const startEl = document.createElement("div")
           startEl.innerHTML = createMarkerSvg3D("#d82020ff", 40)
 
           new maplibregl.Marker({ element: startEl, anchor: "bottom" })
-            .setLngLat([points[0].lon, points[0].lat])
+            .setLngLat([trackPoints[0].lon, trackPoints[0].lat])
             .setPopup(
               new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>Start</strong><br/>${(points[0].distance / 1000).toFixed(1)} km · ${Math.round(points[0].ele)}m`
+                `<strong>Start</strong><br/>${(trackPoints[0].distance / 1000).toFixed(1)} km · ${Math.round(trackPoints[0].ele)}m`
               )
             )
             .addTo(map)
 
-          const last = points[points.length - 10]
+          const last = trackPoints[trackPoints.length - 10]
           const endEl = document.createElement("div")
           endEl.innerHTML = createMarkerSvg3D("#34e02eff", 32)
 
@@ -442,6 +452,7 @@ export function MapView({
       })
 
       maplibreMapRef.current = map
+      maplibreModuleRef.current = maplibregl
     })
 
     return () => {
@@ -450,9 +461,52 @@ export function MapView({
         maplibreMapRef.current.remove()
         maplibreMapRef.current = null
       }
+      maplibreModuleRef.current = null
+      maplibreHoverMarkerRef.current = null
       setMaplibreReady(false)
     }
-  }, [is3D, isSatellite, points, waypoints, bounds])
+  }, [is3D, isSatellite, trackPoints, waypoints, bounds])
+
+  // ── Hover marker on 3D map ──────────────────────────────────────
+  useEffect(() => {
+    const map = maplibreMapRef.current
+    const ml = maplibreModuleRef.current
+    if (!map || !maplibreReady || !is3D || !ml) return
+
+    if (maplibreHoverMarkerRef.current) {
+      maplibreHoverMarkerRef.current.remove()
+      maplibreHoverMarkerRef.current = null
+    }
+
+    if (hoveredPoint) {
+      const el = document.createElement("div")
+      el.className = "hover-marker-3d"
+      el.style.width = "16px"
+      el.style.height = "16px"
+      el.style.backgroundColor = "#d82020ff"
+      el.style.border = "3px solid white"
+      el.style.borderRadius = "50%"
+      el.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)"
+
+      const marker = new ml.Marker({ element: el })
+        .setLngLat([hoveredPoint.lon, hoveredPoint.lat])
+        .setPopup(
+          new ml.Popup({
+            offset: [0, -10],
+            closeButton: false,
+            className: "hover-tooltip-3d",
+          }).setHTML(
+            `<div>
+              ${(hoveredPoint.distance / 1000).toFixed(0)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%
+            </div>`
+          )
+        )
+        .addTo(map)
+
+      marker.togglePopup()
+      maplibreHoverMarkerRef.current = marker
+    }
+  }, [hoveredPoint, maplibreReady, is3D])
 
   // ── Segment highlight on 3D map ─────────────────────────────────
   useEffect(() => {
@@ -507,6 +561,20 @@ export function MapView({
     }
   }, [highlightRange, maplibreReady, is3D])
 
+  // ── Handle map resize on fullscreen transition & chart toggle ──
+  useEffect(() => {
+    // Wait for resizing/transitions to settle
+    const timer = setTimeout(() => {
+      if (is3D && maplibreMapRef.current) {
+        maplibreMapRef.current.resize()
+      } else if (!is3D && leafletMapRef.current) {
+        leafletMapRef.current.invalidateSize()
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [isFullscreen, is3D, maplibreReady, mapReady, showChart])
+
   return (
     <div
       className={`overflow-hidden transition-all duration-300 ${
@@ -553,8 +621,22 @@ export function MapView({
               <Maximize2 className="h-4 w-4" />
             )}
           </button>
+
+          {isFullscreen && (
+            <button
+              onClick={() => setShowChart(!showChart)}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                showChart
+                  ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
+                  : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
+              }`}
+            >
+              <BarChart3 className="h-3 w-3" />
+            </button>
+          )}
         </div>
       </div>
+
       <div
         ref={mapContainerRef}
         className={`w-full transition-all duration-300 ${
@@ -562,6 +644,20 @@ export function MapView({
         }`}
         style={{ position: "relative" }}
       />
+
+      {isFullscreen && showChart && (
+        <div className="absolute bottom-16 left-1/2 z-1000 w-[95%] -translate-x-1/2 overflow-hidden rounded-xl border border-white/20 bg-[#2D3436]/80 shadow-2xl lg:w-3/4">
+          <div className="flex flex-col gap-2">
+            <div className="h-[180px]">
+              <ElevationChart
+                trackPoints={trackPoints}
+                waypoints={waypoints}
+                onHover={onHover || (() => {})}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
