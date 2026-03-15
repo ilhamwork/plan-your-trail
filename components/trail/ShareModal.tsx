@@ -168,10 +168,16 @@ export function ShareModal({
 
             <div className="px-6 py-8">
               <div className="space-y-6">
-                <div className="space-y-2 text-center">
+                <div className="space-y-1 text-center">
                   <p className="text-sm font-medium text-gray-500">
-                    Your route stats are ready to{" "}
-                    {`${isMobile ? "share" : "save"}`}.
+                    Your route stats are ready to share
+                  </p>
+                  <p className="text-sm leading-relaxed text-gray-400">
+                    Don't forget to tag{" "}
+                    <span className="font-semibold text-[#1B4332]">
+                      @ilhamontrail
+                    </span>{" "}
+                    🏃‍♂️⛰️
                   </p>
                 </div>
 
