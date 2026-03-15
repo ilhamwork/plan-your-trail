@@ -200,11 +200,11 @@ export default function Home() {
 
         if (dbError) {
           console.error("Failed to save route telemetry:", dbError)
-          Sentry.captureException(dbError);
+          Sentry.captureException(dbError)
         }
       } catch (err) {
         console.error("Error saving to supabase:", err)
-        Sentry.captureException(err);
+        Sentry.captureException(err)
       } finally {
         setGpxData(parsed)
         setFileName(name)
@@ -250,7 +250,7 @@ export default function Home() {
         setError(
           err instanceof Error ? err.message : "Failed to parse GPX file"
         )
-        Sentry.captureException(err);
+        Sentry.captureException(err)
         setTempRoute(null)
         setTempFileName("")
       }
@@ -382,7 +382,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
               >
-                <Footer />
+                <Footer runnerName={sessionRunnerName} />
               </motion.div>
             </motion.div>
           ) : (
@@ -498,7 +498,7 @@ export default function Home() {
                   transition={{ delay: 0.8 }}
                   className="block lg:hidden"
                 >
-                  <ToolFeedback />
+                  <ToolFeedback runnerName={sessionRunnerName} />
                 </motion.div>
 
                 {/* Donation Section */}
@@ -563,7 +563,7 @@ export default function Home() {
                     transition={{ delay: 0.5 }}
                     className="hidden lg:block"
                   >
-                    <ToolFeedback />
+                    <ToolFeedback runnerName={sessionRunnerName} />
                   </motion.div>
 
                   {/* Donation Section */}
@@ -574,6 +574,17 @@ export default function Home() {
                     className="hidden lg:block"
                   >
                     <DonationSection />
+                  </motion.div>
+
+                  <motion.div
+                    key="footer"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="hidden lg:block"
+                  >
+                    <Footer runnerName={sessionRunnerName} />
                   </motion.div>
                 </div>
               </div>
@@ -587,8 +598,9 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
             exit={{ opacity: 0, y: -20 }}
+            className="block lg:hidden"
           >
-            <Footer />
+            <Footer runnerName={sessionRunnerName} />
           </motion.div>
         )}
 

@@ -10,9 +10,14 @@ import { Input } from "@/components/ui/input"
 interface FeedbackModalProps {
   isOpen: boolean
   onClose: () => void
+  runnerName?: string
 }
 
-export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
+export function FeedbackModal({
+  isOpen,
+  onClose,
+  runnerName,
+}: FeedbackModalProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
@@ -33,6 +38,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           name: name.trim() || null,
           email: email.trim() || null,
           message: message.trim(),
+          runner_name: runnerName || null,
         },
       ])
 

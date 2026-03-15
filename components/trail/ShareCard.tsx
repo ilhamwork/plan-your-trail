@@ -88,66 +88,68 @@ export function ShareCard({
   return (
     <div
       id="share-card-content"
-      className="relative w-[1080px] overflow-hidden bg-transparent p-12 font-sans text-white"
+      className="relative w-[1080px] overflow-hidden bg-black p-12 font-sans text-white"
     >
       {/* Background - Transparent */}
 
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-5">
         {/* Title & Date */}
         <div className="flex flex-col items-center space-y-1">
           <h1 className="text-6xl leading-tight font-black tracking-tight">
             {raceName || "Untitled Trail"}
           </h1>
-          <p className="text-2xl font-medium tracking-wide opacity-60">
+          <p className="text-2xl font-medium tracking-wide opacity-70">
             {formattedDate}
           </p>
         </div>
 
         {/* Metrics Grid */}
-        <div className="flex justify-evenly gap-8 py-4">
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-6xl font-black tracking-tighter">
-                {(stats.totalDistance / 1000).toFixed(0)}
-              </span>
-              <span className="text-2xl font-bold opacity-60">km</span>
+        <div className="flex justify-center">
+          <div className="flex justify-evenly gap-8">
+            <div className="flex flex-col items-center space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold tracking-tighter">
+                  {(stats.totalDistance / 1000).toFixed(0)}
+                </span>
+                <span className="text-2xl font-bold opacity-70">km</span>
+              </div>
+              <p className="text-xl font-bold tracking-widest opacity-70">
+                distance
+              </p>
             </div>
-            <p className="text-xl font-bold tracking-widest opacity-40">
-              distance
-            </p>
-          </div>
 
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-6xl font-black tracking-tighter">
-                {Math.round(stats.elevationGain).toLocaleString("id-ID")}
-              </span>
-              <span className="text-2xl font-bold opacity-60">m+</span>
+            <div className="flex flex-col items-center space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold tracking-tighter">
+                  {Math.round(stats.elevationGain).toLocaleString("id-ID")}
+                </span>
+                <span className="text-2xl font-bold opacity-70">m+</span>
+              </div>
+              <p className="text-xl font-bold tracking-widest opacity-70">
+                gain
+              </p>
             </div>
-            <p className="text-xl font-bold tracking-widest opacity-40">
-              elevation gain
-            </p>
-          </div>
 
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-6xl font-black tracking-tighter">
-                {(
-                  stats.totalDistance / 1000 +
-                  stats.elevationGain * 0.01
-                ).toFixed(0)}
-              </span>
-              <span className="text-2xl font-bold opacity-60">km</span>
+            <div className="flex flex-col items-center space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold tracking-tighter">
+                  {(
+                    stats.totalDistance / 1000 +
+                    stats.elevationGain * 0.01
+                  ).toFixed(0)}
+                </span>
+                <span className="text-2xl font-bold opacity-70">km</span>
+              </div>
+              <p className="text-xl font-bold tracking-widest opacity-70">
+                effort
+              </p>
             </div>
-            <p className="text-xl font-bold tracking-widest opacity-40">
-              total effort
-            </p>
           </div>
         </div>
 
         {/* Elevation Profile */}
         <div className="flex h-40 justify-center">
-          <div className="w-10/12">
+          <div className="w-1/2">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={chartData}
@@ -180,7 +182,7 @@ export function ShareCard({
                         fill: "white",
                         fontSize: 24,
                         fontWeight: "bold",
-                        opacity: 0.8,
+                        opacity: 0.7,
                       }}
                     />
                     <ReferenceDot
@@ -193,7 +195,7 @@ export function ShareCard({
                         fill: "white",
                         fontSize: 24,
                         fontWeight: "bold",
-                        opacity: 0.8,
+                        opacity: 0.7,
                       }}
                     />
                   </>
@@ -204,13 +206,13 @@ export function ShareCard({
         </div>
 
         {/* Terrain Breakdown */}
-        <div className="mt-5 flex flex-col items-center space-y-5">
-          <div className="flex w-10/12 items-center justify-between gap-12 text-2xl font-bold tracking-tight">
+        <div className="flex flex-col items-center space-y-5">
+          <div className="flex w-1/2 items-center justify-between gap-12 text-2xl font-bold tracking-tight">
             <div className="flex items-center gap-3">
               <span className="text-3xl text-[#F4A261]">▲</span>
               <span>
                 Uphill{" "}
-                <span className="ml-1 opacity-40">
+                <span className="ml-1 opacity-70">
                   {gradientDistribution.uphill}%
                 </span>
               </span>
@@ -219,7 +221,7 @@ export function ShareCard({
               <span className="text-3xl text-[#2A9D8F]">▬</span>
               <span>
                 Flat{" "}
-                <span className="ml-1 opacity-40">
+                <span className="ml-1 opacity-70">
                   {gradientDistribution.flat}%
                 </span>
               </span>
@@ -228,7 +230,7 @@ export function ShareCard({
               <span className="text-3xl text-[#457B9D]">▼</span>
               <span>
                 Downhill{" "}
-                <span className="ml-1 opacity-40">
+                <span className="ml-1 opacity-70">
                   {gradientDistribution.downhill}%
                 </span>
               </span>
@@ -236,7 +238,7 @@ export function ShareCard({
           </div>
 
           {/* Distribution Bar */}
-          <div className="flex h-4 w-10/12 justify-center overflow-hidden rounded-full bg-white/10">
+          <div className="flex h-4 w-1/2 justify-center overflow-hidden rounded-full bg-white/10">
             <div
               style={{ width: `${gradientDistribution.uphill}%` }}
               className="bg-[#F4A261]/80"
@@ -254,7 +256,7 @@ export function ShareCard({
 
         {/* Branding Overlay */}
         <div className="mt-10 flex justify-center">
-          <span className="text-5xl font-black tracking-tighter">
+          <span className="text-3xl font-medium tracking-tighter">
             planyourtrail.run
           </span>
           {/* <Image
