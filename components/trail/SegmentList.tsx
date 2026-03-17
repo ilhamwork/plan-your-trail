@@ -201,11 +201,11 @@ function GradientSegmentRow({
   onClick: () => void
 }) {
   const typeColors: Record<string, string> = {
-    climb: "bg-[#E76F51]/10 text-[#E76F51]",
-    uphill: "bg-[#F4A261]/10 text-[#F4A261]",
-    flat: "bg-[#2A9D8F]/10 text-[#2A9D8F]",
-    downhill: "bg-[#457B9D]/10 text-[#457B9D]",
-    descent: "bg-[#264653]/10 text-[#264653]",
+    climb: "bg-[#991B1B]/10 text-[#991B1B]",
+    uphill: "bg-[#EF4444]/10 text-[#EF4444]",
+    flat: "bg-[#FACC15]/10 text-[#EAB308]",
+    downhill: "bg-[#3B82F6]/10 text-[#3B82F6]",
+    descent: "bg-[#1E40AF]/10 text-[#1E40AF]",
   }
 
   return (

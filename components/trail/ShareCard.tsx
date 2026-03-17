@@ -200,20 +200,20 @@ export function ShareCard({
         <div className="flex flex-col items-center space-y-5">
           <div className="flex w-1/2 items-center justify-between gap-12 text-2xl font-bold tracking-tight">
             <div className="flex items-center gap-3">
-              <span className="text-3xl text-[#F4A261]">▲</span>
+              <span className="text-3xl text-[#EF4444]">▲</span>
               <span>
                 Uphill{" "}
                 <span className="ml-1">{gradientDistribution.uphill}%</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl text-[#2A9D8F]">▬</span>
+              <span className="text-3xl text-[#FACC15]">▬</span>
               <span>
                 Flat <span className="ml-1">{gradientDistribution.flat}%</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl text-[#457B9D]">▼</span>
+              <span className="text-3xl text-[#3B82F6]">▼</span>
               <span>
                 Downhill{" "}
                 <span className="ml-1">{gradientDistribution.downhill}%</span>
@@ -225,15 +225,15 @@ export function ShareCard({
           <div className="flex h-4 w-1/2 justify-center overflow-hidden rounded-full bg-white/10">
             <div
               style={{ width: `${gradientDistribution.uphill}%` }}
-              className="bg-[#F4A261]/80"
+              className="bg-[#EF4444]"
             />
             <div
               style={{ width: `${gradientDistribution.flat}%` }}
-              className="bg-[#2A9D8F]/80"
+              className="bg-[#FACC15]"
             />
             <div
               style={{ width: `${gradientDistribution.downhill}%` }}
-              className="bg-[#457B9D]/80"
+              className="bg-[#3B82F6]"
             />
           </div>
         </div>
