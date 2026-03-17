@@ -30,7 +30,7 @@ export function UploadCard({
       // Clear previous errors if parent provided onError
       if (onError) onError("")
 
-      if (!file.name.endsWith(".gpx")) {
+      if (!file.name.toLowerCase().endsWith(".gpx")) {
         if (onError) onError("Please upload a .gpx file")
         return
       }
@@ -95,7 +95,7 @@ export function UploadCard({
     >
       <div className="flex flex-col gap-4">
         <div
-          className={`relative max-w-100 cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
+          className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
             hasFile ? "p-3" : "p-10 text-center"
           } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""}`}
           onDragOver={(e) => {
@@ -185,7 +185,7 @@ export function UploadCard({
               {isLoadingExample || isLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#E76F51]/20 border-t-[#E76F51]" />
               ) : (
-                "TRY GPX EXAMPLE"
+                "Try GPX Example"
               )}
             </button>
             <p className="text-center text-[11px] font-medium text-gray-400">
