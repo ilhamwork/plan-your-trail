@@ -93,86 +93,106 @@ export function UploadCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div
-        className={`relative max-w-100 cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
-          hasFile ? "p-3" : "p-10 text-center"
-        } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""}`}
-        onDragOver={(e) => {
-          e.preventDefault()
-          setIsDragging(true)
-        }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".gpx"
-          onChange={handleChange}
-          className="hidden"
-        />
+      <div className="flex flex-col gap-4">
+        <div
+          className={`relative max-w-100 cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
+            hasFile ? "p-3" : "p-10 text-center"
+          } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".gpx"
+            onChange={handleChange}
+            className="hidden"
+          />
 
-        <AnimatePresence mode="wait">
-          {hasFile ? (
-            <motion.div
-              key="loaded"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              className="flex items-center gap-3"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/20 text-[#2A9D8F]">
-                <FileCheck className="h-5 w-5" />
-              </div>
-              <div className="max-w-9/12 min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-white">
-                  {fileName}
-                </p>
-                <p className="text-[10px] font-medium text-white/50">
-                  GPX file loaded • Tap to change (Max 10MB)
-                </p>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="flex flex-col items-center gap-4"
-            >
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-                  <FileUp className="h-6 w-6 text-white" />
+          <AnimatePresence mode="wait">
+            {hasFile ? (
+              <motion.div
+                key="loaded"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="flex items-center gap-3"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/20 text-[#2A9D8F]">
+                  <FileCheck className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="text-lg font-bold">Import GPX</p>
-                  <p className="text-sm text-white/50">
-                    Drop file or tap to browse
+                <div className="max-w-9/12 min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-white">
+                    {fileName}
                   </p>
-                  <p className="mt-1 text-[10px] font-medium text-white/30">
-                    (Max 10MB)
+                  <p className="text-[10px] font-medium text-white/50">
+                    GPX file loaded • Tap to change (Max 10MB)
                   </p>
                 </div>
-              </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="flex flex-col items-center gap-4"
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
+                    <FileUp className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">Import GPX</p>
+                    <p className="text-sm text-white/50">
+                      Drop file or tap to browse
+                    </p>
+                    <p className="mt-1 text-[10px] font-medium text-white/30">
+                      (Max 10MB)
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-              <div className="mt-2 w-full border-t border-white/10 pt-4">
-                <button
-                  onClick={handleLoadExample}
-                  disabled={isLoadingExample || isLoading}
-                  className="mx-auto flex h-9 min-w-[100px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#E76F51] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#D55A3C] active:scale-95 disabled:opacity-70"
-                >
-                  {isLoadingExample || isLoading ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  ) : (
-                    "TRY GPX"
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {!hasFile && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="flex w-full items-center gap-3">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                OR
+              </span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            <button
+              onClick={handleLoadExample}
+              disabled={isLoadingExample || isLoading}
+              className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#E76F51] bg-white px-4 py-2 text-sm font-black text-[#E76F51] shadow-sm transition-all hover:bg-[#E76F51] hover:text-white active:scale-[0.98] disabled:opacity-50"
+            >
+              {isLoadingExample || isLoading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#E76F51]/20 border-t-[#E76F51]" />
+              ) : (
+                "TRY GPX EXAMPLE"
+              )}
+            </button>
+            <p className="text-center text-[11px] font-medium text-gray-400">
+              Don&apos;t have a file? Try with our gpx example.
+            </p>
+          </motion.div>
+        )}
       </div>
 
       <AnimatePresence>
