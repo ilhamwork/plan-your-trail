@@ -94,7 +94,7 @@ export function UploadCard({
       transition={{ duration: 0.5 }}
     >
       <div
-        className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
+        className={`relative max-w-100 cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
           hasFile ? "p-3" : "p-10 text-center"
         } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""}`}
         onDragOver={(e) => {
@@ -125,7 +125,7 @@ export function UploadCard({
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/20 text-[#2A9D8F]">
                 <FileCheck className="h-5 w-5" />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="max-w-9/12 min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-white">
                   {fileName}
                 </p>

@@ -12,8 +12,8 @@ export function DonationSection() {
         </span>
       </div>
       <p className="mx-auto mb-4 max-w-md text-sm text-gray-600">
-        Planning your next adventure trail with this tool? Help keep it free for
-        the trail community.
+        Planning your next adventure trail with this tool? Help support its growth
+        for the trail community.
       </p>
       <a target="_blank" href="https://trakteer.id/ilhamontrail">
         <button className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-[#1B4332] px-8 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-[#2D5A46] active:scale-95">

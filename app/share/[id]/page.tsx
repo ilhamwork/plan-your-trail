@@ -224,7 +224,7 @@ export default function SharedRoutePage({
                 </h3>
                 <p className="mb-4 text-xs leading-relaxed text-white/70">
                   This route was analyzed using <strong>Plan Your Trail</strong>
-                  . Analyze your own GPX files for free and plan your next
+                  . Analyze your own GPX files and plan your next
                   adventure.
                 </p>
                 <a
