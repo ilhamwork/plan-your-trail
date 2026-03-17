@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { RouteStats } from "@/lib/types"
 import {
   Mountain,
@@ -36,6 +36,17 @@ function formatDistance(meters: number): string {
 
 export function MetricsPanel({ stats }: MetricsPanelProps) {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!activeTooltip) return
+
+    const handleGlobalClick = () => {
+      setActiveTooltip(null)
+    }
+
+    window.addEventListener("mousedown", handleGlobalClick)
+    return () => window.removeEventListener("mousedown", handleGlobalClick)
+  }, [activeTooltip])
 
   const cards = [
     {
@@ -109,11 +120,12 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
               {card.tooltip && (
                 <div className="relative flex items-center">
                   <button
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setActiveTooltip(
                         activeTooltip === card.label ? null : card.label
                       )
-                    }
+                    }}
                     className="flex items-center justify-center"
                   >
                     <HelpCircle className="h-3 w-3 cursor-help text-gray-400" />

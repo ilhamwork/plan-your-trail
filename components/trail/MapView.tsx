@@ -646,7 +646,7 @@ export function MapView({
       />
 
       {isFullscreen && showChart && (
-        <div className="absolute bottom-16 left-1/2 z-1000 w-[95%] -translate-x-1/2 overflow-hidden rounded-xl border border-white/20 bg-[#2D3436]/80 shadow-2xl lg:w-3/4">
+        <div className="absolute bottom-12 left-1/2 z-1000 w-[95%] -translate-x-1/2 overflow-hidden rounded-xl border border-white/20 bg-[#2D3436]/80 shadow-2xl lg:w-3/4">
           <div className="flex flex-col gap-2">
             <div className="h-[180px]">
               <ElevationChart
