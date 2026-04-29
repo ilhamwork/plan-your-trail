@@ -142,34 +142,105 @@ export function parseGPX(gpxString: string): GPXData {
 
     // Extract named waypoints from GPX
     const wptElements = doc.querySelectorAll("wpt");
-    const waypoints: Waypoint[] = [];
+    const rawWaypoints: { name: string; lat: number; lon: number; ele: number }[] = [];
 
     wptElements.forEach((wpt) => {
       const lat = parseFloat(wpt.getAttribute("lat") || "0");
       const lon = parseFloat(wpt.getAttribute("lon") || "0");
       const ele = parseFloat(wpt.querySelector("ele")?.textContent || "0");
       const name = wpt.querySelector("name")?.textContent || "Waypoint";
+      rawWaypoints.push({ name, lat, lon, ele });
+    });
 
-      // Find closest point on track
-      let minDist = Infinity;
-      let closestIdx = 0;
+    // Deduplicate raw waypoints (same name and very close physical location)
+    const uniqueRawWaypoints: typeof rawWaypoints = [];
+    for (const rw of rawWaypoints) {
+      const isDuplicate = uniqueRawWaypoints.some(
+        (urw) => urw.name === rw.name && haversineDistance(urw.lat, urw.lon, rw.lat, rw.lon) < 50
+      );
+      if (!isDuplicate) {
+        uniqueRawWaypoints.push(rw);
+      }
+    }
+
+    const waypoints: Waypoint[] = [];
+    const THRESHOLD_ENTER = 500;  // meters
+    const THRESHOLD_EXIT = 500;   // meters
+    const MIN_TRACK_DIST_BETWEEN_PASSES = 1000; // meters
+
+    for (const wpt of uniqueRawWaypoints) {
+      let inPass = false;
+      let currentPassMinDist = Infinity;
+      let currentPassIdx = -1;
+      const passIndices: number[] = [];
+
+      let absoluteMinDist = Infinity;
+      let absoluteMinIdx = 0;
 
       for (let i = 0; i < trackPoints.length; i++) {
-        const d = haversineDistance(lat, lon, trackPoints[i].lat, trackPoints[i].lon);
-        if (d < minDist) {
-          minDist = d;
-          closestIdx = i;
+        const d = haversineDistance(wpt.lat, wpt.lon, trackPoints[i].lat, trackPoints[i].lon);
+        
+        if (d < absoluteMinDist) {
+          absoluteMinDist = d;
+          absoluteMinIdx = i;
+        }
+
+        if (!inPass && d < THRESHOLD_ENTER) {
+          inPass = true;
+          currentPassMinDist = d;
+          currentPassIdx = i;
+        } else if (inPass) {
+          if (d < currentPassMinDist) {
+            currentPassMinDist = d;
+            currentPassIdx = i;
+          }
+          if (d > THRESHOLD_EXIT) {
+            passIndices.push(currentPassIdx);
+            inPass = false;
+          }
+        }
+      }
+      
+      if (inPass) {
+        passIndices.push(currentPassIdx);
+      }
+
+      if (passIndices.length === 0) {
+        passIndices.push(absoluteMinIdx);
+      }
+
+      // Filter passes that are too close along the track to prevent GPS drift duplicates
+      const filteredPassIndices: number[] = [];
+      for (const idx of passIndices) {
+        if (filteredPassIndices.length === 0) {
+          filteredPassIndices.push(idx);
+        } else {
+          const lastIdx = filteredPassIndices[filteredPassIndices.length - 1];
+          const distDiff = Math.abs(trackPoints[idx].distance - trackPoints[lastIdx].distance);
+          if (distDiff > MIN_TRACK_DIST_BETWEEN_PASSES) {
+            filteredPassIndices.push(idx);
+          } else {
+            // If they are close on the track, keep the one that is physically closer to the waypoint
+            const d1 = haversineDistance(wpt.lat, wpt.lon, trackPoints[idx].lat, trackPoints[idx].lon);
+            const d2 = haversineDistance(wpt.lat, wpt.lon, trackPoints[lastIdx].lat, trackPoints[lastIdx].lon);
+            if (d1 < d2) {
+              filteredPassIndices[filteredPassIndices.length - 1] = idx;
+            }
+          }
         }
       }
 
-      waypoints.push({
-        name,
-        lat,
-        lon,
-        ele,
-        distance: trackPoints[closestIdx].distance,
-      });
-    });
+      // Add a waypoint for each valid pass
+      for (const idx of filteredPassIndices) {
+        waypoints.push({
+          name: wpt.name,
+          lat: wpt.lat,
+          lon: wpt.lon,
+          ele: wpt.ele,
+          distance: trackPoints[idx].distance,
+        });
+      }
+    }
 
     // Sort waypoints by distance
     waypoints.sort((a, b) => a.distance - b.distance);
