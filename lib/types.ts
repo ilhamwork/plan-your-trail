@@ -7,6 +7,8 @@ export interface TrackPoint {
 }
 
 export interface Waypoint {
+  id?: string;
+  isFromGpx?: boolean;
   name: string;
   lat: number;
   lon: number;

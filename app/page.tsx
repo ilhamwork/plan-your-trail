@@ -2,11 +2,20 @@
 
 import * as Sentry from "@sentry/nextjs"
 import { useState, useCallback, useMemo } from "react"
+import { buildWaypointSegments } from "@/lib/segment-analysis"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
 import { Map, BarChart3, Waypoints, CloudSun } from "lucide-react"
 
-import type { GPXData, TrackPoint, Segment, WaypointSegment } from "@/lib/types"
+import { WaypointPanel } from "@/components/trail/WaypointPanel"
+
+import type {
+  GPXData,
+  TrackPoint,
+  Segment,
+  WaypointSegment,
+  Waypoint,
+} from "@/lib/types"
 import { parseGPX } from "@/lib/gpx-parser"
 import { supabase } from "@/lib/supabase"
 
@@ -122,6 +131,72 @@ export default function Home() {
   const [gpxData, setGpxData] = useState<GPXData | null>(null)
   const [fileName, setFileName] = useState<string>("")
   const [error, setError] = useState<string>("")
+  const [waypoints, setWaypoints] = useState<Waypoint[]>([])
+
+  const interpolateCoordinatesForDistance = useCallback(
+    (targetDistMeters: number) => {
+      if (!gpxData) return { lat: 0, lon: 0, ele: 0 }
+      const pts = gpxData.trackPoints
+      let idx = pts.findIndex((p) => p.distance >= targetDistMeters)
+      if (idx < 0) idx = pts.length - 1
+      if (idx === 0) idx = 1
+      const p0 = pts[idx - 1]
+      const p1 = pts[idx]
+      const span = p1.distance - p0.distance
+      const t = span > 0 ? (targetDistMeters - p0.distance) / span : 0
+      return {
+        lat: p0.lat + t * (p1.lat - p0.lat),
+        lon: p0.lon + t * (p1.lon - p0.lon),
+        ele: p0.ele + t * (p1.ele - p0.ele),
+      }
+    },
+    [gpxData]
+  )
+
+  const handleAddWaypoint = useCallback(
+    (name: string, distanceKm: number) => {
+      const distMeters = distanceKm * 1000
+      const coords = interpolateCoordinatesForDistance(distMeters)
+      const newWp: Waypoint = {
+        id: crypto.randomUUID(),
+        name,
+        distance: distMeters,
+        isFromGpx: false,
+        ...coords,
+      }
+      setWaypoints((prev) => [...prev, newWp])
+    },
+    [interpolateCoordinatesForDistance]
+  )
+
+  const handleEditWaypoint = useCallback(
+    (id: string, name: string, distanceKm: number) => {
+      const distMeters = distanceKm * 1000
+      setWaypoints((prev) =>
+        prev.map((wp) => {
+          if (wp.id === id) {
+            const distChanged = Math.abs(wp.distance - distMeters) > 1
+            const coords = distChanged
+              ? interpolateCoordinatesForDistance(distMeters)
+              : { lat: wp.lat, lon: wp.lon, ele: wp.ele }
+            return {
+              ...wp,
+              name,
+              distance: distMeters,
+              ...coords,
+            }
+          }
+          return wp
+        })
+      )
+    },
+    [interpolateCoordinatesForDistance]
+  )
+
+  const handleRemoveWaypoint = useCallback((id: string) => {
+    setWaypoints((prev) => prev.filter((wp) => wp.id !== id))
+  }, [])
+
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
   const [highlightRange, setHighlightRange] = useState<{
     startIndex: number
@@ -204,6 +279,12 @@ export default function Home() {
       } finally {
         setGpxData(parsed)
         setFileName(name)
+        const initialWps = parsed.waypoints.map((wp) => ({
+          ...wp,
+          id: wp.id || crypto.randomUUID(),
+          isFromGpx: true,
+        }))
+        setWaypoints(initialWps)
         setShowDetailsModal(false)
         setTempRoute(null)
         setTempFileName("")
@@ -284,15 +365,26 @@ export default function Home() {
     )
   }, [])
 
+  // Sort waypoints by distance
+  const sortedWaypoints = useMemo(() => {
+    return [...waypoints].sort((a, b) => a.distance - b.distance)
+  }, [waypoints])
+
+  // Rebuild waypoint segments from merged waypoints
+  const mergedWaypointSegments = useMemo(() => {
+    if (!gpxData) return []
+    return buildWaypointSegments(gpxData.trackPoints, sortedWaypoints)
+  }, [gpxData, sortedWaypoints])
+
   // Memoize to avoid unnecessary re-renders
   const mapProps = useMemo(() => {
     if (!gpxData) return null
     return {
       trackPoints: gpxData.trackPoints,
-      waypoints: gpxData.waypoints,
+      waypoints: sortedWaypoints,
       bounds: gpxData.bounds,
     }
-  }, [gpxData])
+  }, [gpxData, sortedWaypoints])
 
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
@@ -444,22 +536,37 @@ export default function Home() {
                 >
                   <ElevationChart
                     trackPoints={gpxData.trackPoints}
-                    waypoints={gpxData.waypoints}
+                    waypoints={sortedWaypoints}
                     onHover={setHoveredPoint}
                   />
                 </motion.div>
 
-                {/* Segments */}
+                {/* Manual Waypoints — mobile */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55 }}
+                  className="block lg:hidden"
+                >
+                  <WaypointPanel
+                    totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                    waypoints={waypoints}
+                    onAdd={handleAddWaypoint}
+                    onEdit={handleEditWaypoint}
+                    onRemove={handleRemoveWaypoint}
+                  />
+                </motion.div>
 
+                {/* Segments */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                 >
                   <SegmentList
-                    key={fileName}
+                    key={`${fileName}-${waypoints.length}-${waypoints.map((w) => w.name + w.distance).join("-")}`}
                     segments={gpxData.segments}
-                    waypointSegments={gpxData.waypointSegments}
+                    waypointSegments={mergedWaypointSegments}
                     onSegmentClick={handleSegmentClick}
                     onWaypointSegmentClick={handleWaypointSegmentClick}
                     onTabChange={() => setHighlightRange(null)}
@@ -540,6 +647,22 @@ export default function Home() {
                     className="hidden lg:block"
                   >
                     <MetricsPanel stats={gpxData.stats} />
+                  </motion.div>
+
+                  {/* Manual Waypoints */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.45 }}
+                    className="hidden lg:block"
+                  >
+                    <WaypointPanel
+                      totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                      waypoints={waypoints}
+                      onAdd={handleAddWaypoint}
+                      onEdit={handleEditWaypoint}
+                      onRemove={handleRemoveWaypoint}
+                    />
                   </motion.div>
 
                   {/* Donation Section */}
