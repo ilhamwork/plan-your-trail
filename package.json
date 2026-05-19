@@ -1,6 +1,6 @@
 {
-  "name": "trail-analyzer",
-  "version": "1.0.0",
+  "name": "plan-your-trail",
+  "version": "1.1.0",
   "type": "module",
   "private": true,
   "scripts": {
