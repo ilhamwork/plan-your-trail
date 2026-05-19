@@ -1,22 +1,18 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import {
-  CloudSun,
-  Droplets,
-  Wind,
-  Thermometer,
-  Sun,
-  Eye,
-  MapPin,
-  Search,
-  X,
-} from "lucide-react"
+import { CloudSun, MapPin, Search, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface WeatherForecastProps {
   center: [number, number] // [lat, lon] — route default
   initialDate?: string
+}
+
+interface WeatherPeriod {
+  name: string
+  temperature: number
+  weatherCode: number
 }
 
 interface WeatherData {
@@ -35,14 +31,7 @@ interface WeatherData {
   feelsLikeMin: number
   sunrise: string
   sunset: string
-}
-
-interface HistoricalWeather {
-  year: number
-  temperatureMax: number
-  temperatureMin: number
-  weatherCode: number
-  weatherDescription: string
+  periods?: WeatherPeriod[]
 }
 
 interface GeoResult {
@@ -111,26 +100,15 @@ function formatDate(dateStr: string): string {
 // Format a Nominatim display_name to Kecamatan, Kabupaten/Kota, Provinsi
 function shortName(display_name: string): string {
   const parts = display_name.split(",").map((s) => s.trim())
-
-  // Format target: Kecamatan (suburb/village), Kabupaten/Kota (city/county), Provinsi (state/region)
-  // Nominatim display_name format in Indonesia usually:
-  // [Village/Neighbourhood], [Kecamatan], [Kabupaten/Kota], [Provinsi], [Postcode], [Negara]
-  // We want to extract the 3 parts before the postcode/country if possible.
-
   if (parts.length >= 4) {
-    // Usually the last two are Postcode and Country.
-    // The three before that are usually Kecamatan, City/Regency, Province
     const relevantParts = parts.slice(
       Math.max(0, parts.length - 6),
       parts.length - 3
     )
-    // If we have at least 2 relevant parts, return them
     if (relevantParts.length >= 2) {
       return relevantParts.join(", ")
     }
   }
-
-  // Fallback to the first 2 parts if it's too short
   if (parts.length >= 2) return `${parts[0]}, ${parts[1]}`
   return parts[0]
 }
@@ -138,7 +116,6 @@ function shortName(display_name: string): string {
 export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
   const [date, setDate] = useState(initialDate || "")
 
-  // Update date if initialDate prop changes
   useEffect(() => {
     if (initialDate) {
       setDate(initialDate)
@@ -146,8 +123,6 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
   }, [initialDate])
 
   const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [history, setHistory] = useState<HistoricalWeather[]>([])
-  const [isHistoricalMode, setIsHistoricalMode] = useState(false)
   const [isPastDateMode, setIsPastDateMode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -164,7 +139,6 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
   const [geoError, setGeoError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Auto reverse-geocode the GPX center on mount
   useEffect(() => {
     let cancelled = false
     async function reverseGeocode() {
@@ -178,18 +152,15 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
         setLocationQuery(name)
         setSelectedLocation({ name, lat: center[0], lon: center[1] })
       } catch {
-        // silent — fall back to coords
+        // silent
       }
     }
     reverseGeocode()
     return () => {
       cancelled = true
     }
-    // Only run when the GPX file changes (center changes)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center[0], center[1]])
 
-  // Active coords: use selected location or fall back to route center
   const activeLat = selectedLocation?.lat ?? center[0]
   const activeLon = selectedLocation?.lon ?? center[1]
   const activeLocationName = selectedLocation?.name ?? "Route center"
@@ -252,9 +223,9 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
 
     setLoading(true)
     setError(null)
+    setWeather(null)
 
     try {
-      // 1. Determine date mode: Future (>14 days), Past (<0 days), or Forecast (0-14 days)
       const targetDate = new Date(date)
       const today = new Date()
       today.setHours(0, 0, 0, 0)
@@ -264,14 +235,17 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
       const futureHistoricalOnly = diffDays > 14
       const pastDateOnly = diffDays < 0
 
-      setIsHistoricalMode(futureHistoricalOnly)
       setIsPastDateMode(pastDateOnly)
+
+      if (futureHistoricalOnly) {
+        throw new Error(
+          "Forecasts are only available up to 14 days in advance."
+        )
+      }
 
       let forecastData: WeatherData | null = null
 
-      // 2. Fetch specific weather data (Forecast for future/today, Archive for past)
       if (pastDateOnly) {
-        // Fetch EXACT historical data for the past date
         const historyUrl = new URL(
           "https://archive-api.open-meteo.com/v1/archive"
         )
@@ -281,7 +255,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
           "daily",
           "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,apparent_temperature_max,apparent_temperature_min"
         )
-        // No UV or hourly humidity in basic archive sometimes, but we try
+        historyUrl.searchParams.set("hourly", "temperature_2m,weather_code")
         historyUrl.searchParams.set("start_date", date)
         historyUrl.searchParams.set("end_date", date)
         historyUrl.searchParams.set("timezone", "auto")
@@ -291,27 +265,54 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
           const rawPast = await resPast.json()
           if (rawPast.daily && rawPast.daily.time.length > 0) {
             const d = rawPast.daily
+            const h = rawPast.hourly
+            let periods: WeatherPeriod[] | undefined
+            if (h && h.temperature_2m && h.temperature_2m.length >= 24) {
+              periods = [
+                {
+                  name: "Morning",
+                  temperature: h.temperature_2m[8],
+                  weatherCode: h.weather_code[8],
+                },
+                {
+                  name: "Afternoon",
+                  temperature: h.temperature_2m[14],
+                  weatherCode: h.weather_code[14],
+                },
+                {
+                  name: "Evening",
+                  temperature: h.temperature_2m[19],
+                  weatherCode: h.weather_code[19],
+                },
+                {
+                  name: "Night",
+                  temperature: h.temperature_2m[23],
+                  weatherCode: h.weather_code[23],
+                },
+              ]
+            }
+
             forecastData = {
               date: d.time[0],
               temperatureMax: d.temperature_2m_max[0],
               temperatureMin: d.temperature_2m_min[0],
               weatherCode: d.weather_code[0],
               weatherDescription: WMO_CODES[d.weather_code[0]] || "Unknown",
-              rainProbability: 0, // Not available in archive
+              rainProbability: 0,
               precipitation: d.precipitation_sum[0],
               windSpeed: d.wind_speed_10m_max[0],
               windDirection: degToDirection(d.wind_direction_10m_dominant[0]),
-              humidity: 0, // Not available in archive
-              uvIndex: 0, // Not available in archive
+              humidity: 0,
+              uvIndex: 0,
               feelsLikeMax: d.apparent_temperature_max[0],
               feelsLikeMin: d.apparent_temperature_min[0],
               sunrise: d.sunrise[0]?.split("T")[1] || "",
               sunset: d.sunset[0]?.split("T")[1] || "",
+              periods,
             }
           }
         }
-      } else if (!futureHistoricalOnly && diffDays >= 0) {
-        // Standard forecast for today up to 14 days
+      } else {
         const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast")
         forecastUrl.searchParams.set("latitude", activeLat.toFixed(4))
         forecastUrl.searchParams.set("longitude", activeLon.toFixed(4))
@@ -319,7 +320,10 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
           "daily",
           "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,uv_index_max,apparent_temperature_max,apparent_temperature_min"
         )
-        forecastUrl.searchParams.set("hourly", "relative_humidity_2m")
+        forecastUrl.searchParams.set(
+          "hourly",
+          "relative_humidity_2m,temperature_2m,weather_code"
+        )
         forecastUrl.searchParams.set("start_date", date)
         forecastUrl.searchParams.set("end_date", date)
         forecastUrl.searchParams.set("timezone", "auto")
@@ -329,14 +333,41 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
           const rawForecast = await resForecast.json()
           if (rawForecast.daily && rawForecast.daily.time.length > 0) {
             const d = rawForecast.daily
-            const avgHumidity = rawForecast.hourly?.relative_humidity_2m
+            const h = rawForecast.hourly
+            const avgHumidity = h?.relative_humidity_2m
               ? Math.round(
-                  rawForecast.hourly.relative_humidity_2m.reduce(
+                  h.relative_humidity_2m.reduce(
                     (a: number, b: number) => a + b,
                     0
-                  ) / rawForecast.hourly.relative_humidity_2m.length
+                  ) / h.relative_humidity_2m.length
                 )
               : 0
+
+            let periods: WeatherPeriod[] | undefined
+            if (h && h.temperature_2m && h.temperature_2m.length >= 24) {
+              periods = [
+                {
+                  name: "Morning",
+                  temperature: h.temperature_2m[8],
+                  weatherCode: h.weather_code[8],
+                },
+                {
+                  name: "Afternoon",
+                  temperature: h.temperature_2m[14],
+                  weatherCode: h.weather_code[14],
+                },
+                {
+                  name: "Evening",
+                  temperature: h.temperature_2m[19],
+                  weatherCode: h.weather_code[19],
+                },
+                {
+                  name: "Night",
+                  temperature: h.temperature_2m[23],
+                  weatherCode: h.weather_code[23],
+                },
+              ]
+            }
 
             forecastData = {
               date: d.time[0],
@@ -354,65 +385,16 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
               feelsLikeMin: d.apparent_temperature_min[0],
               sunrise: d.sunrise[0]?.split("T")[1] || "",
               sunset: d.sunset[0]?.split("T")[1] || "",
+              periods,
             }
           }
         }
       }
 
-      // 3. Fetch Historical Data (Last 2 years)
-      const pastYearsData: HistoricalWeather[] = []
-      const currentYear = targetDate.getFullYear()
-
-      for (let i = 1; i <= 2; i++) {
-        const pastDate = new Date(targetDate)
-        pastDate.setFullYear(currentYear - i)
-        const pastDateStr = pastDate.toISOString().split("T")[0]
-
-        const historyUrl = new URL(
-          "https://archive-api.open-meteo.com/v1/archive"
-        )
-        historyUrl.searchParams.set("latitude", activeLat.toFixed(4))
-        historyUrl.searchParams.set("longitude", activeLon.toFixed(4))
-        historyUrl.searchParams.set(
-          "daily",
-          "weather_code,temperature_2m_max,temperature_2m_min"
-        )
-        historyUrl.searchParams.set("start_date", pastDateStr)
-        historyUrl.searchParams.set("end_date", pastDateStr)
-        historyUrl.searchParams.set("timezone", "auto")
-
-        try {
-          const resHistory = await fetch(historyUrl.toString())
-          if (resHistory.ok) {
-            const rawHistory = await resHistory.json()
-            if (rawHistory.daily && rawHistory.daily.time.length > 0) {
-              const dh = rawHistory.daily
-              pastYearsData.push({
-                year: currentYear - i,
-                temperatureMax: dh.temperature_2m_max[0],
-                temperatureMin: dh.temperature_2m_min[0],
-                weatherCode: dh.weather_code[0],
-                weatherDescription: WMO_CODES[dh.weather_code[0]] || "Unknown",
-              })
-            }
-          }
-        } catch (e) {
-          console.error("Failed to fetch historical data for", pastDateStr)
-        }
-      }
-
-      setWeather(forecastData)
-      setHistory(pastYearsData)
-
-      if (futureHistoricalOnly && pastYearsData.length === 0) {
-        throw new Error("No historical weather data available for this date")
-      } else if (
-        !futureHistoricalOnly &&
-        !forecastData &&
-        pastYearsData.length === 0
-      ) {
+      if (!forecastData) {
         throw new Error("No weather data available for this date")
       }
+      setWeather(forecastData)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch weather")
     } finally {
@@ -420,21 +402,17 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
     }
   }, [date, activeLat, activeLon])
 
-  // Auto fetch weather strictly once when initialDate is injected via form submission.
   useEffect(() => {
     if (initialDate && activeLat && activeLon) {
-      // Small timeout to allow state to settle
       const t = setTimeout(() => {
         fetchWeather()
       }, 300)
       return () => clearTimeout(t)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDate, activeLat, activeLon])
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-      {/* Header */}
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <CloudSun className="h-4 w-4 text-[#457B9D]" />
@@ -446,7 +424,6 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
       </div>
 
       <div className="grid lg:grid-cols-2">
-        {/* Location input */}
         <div className="px-4 pt-3 pb-2">
           <p className="mb-1.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
             Location
@@ -474,7 +451,6 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
               )}
             </div>
 
-            {/* Dropdown results */}
             <AnimatePresence>
               {geoResults.length > 0 && (
                 <motion.ul
@@ -500,13 +476,11 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
               )}
             </AnimatePresence>
 
-            {/* Geo error */}
             {geoError && !geoLoading && locationQuery && (
               <p className="mt-1 text-xs text-red-400">{geoError}</p>
             )}
           </div>
 
-          {/* Active location badge */}
           <div className="mt-2 flex items-center gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-[#1B4332]/8 px-2 py-0.5">
               <MapPin className="h-2.5 w-2.5 text-[#1B4332]" />
@@ -520,7 +494,6 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
           </div>
         </div>
 
-        {/* Date input */}
         <div className="flex items-center gap-2 px-4 py-2">
           <input
             type="date"
@@ -538,190 +511,59 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="px-4 pb-3">
           <p className="text-xs text-red-500">{error}</p>
         </div>
       )}
 
-      {/* Historical Warning (Only if > 14 days) */}
-      {isHistoricalMode && !error && history.length > 0 && (
-        <div className="mx-4 mb-3 rounded-lg border border-orange-100 bg-orange-50 p-3">
-          <p className="text-xs leading-relaxed text-orange-800">
-            <strong className="font-semibold">Note:</strong> Forecasts are only
-            available up to 14 days in advance. The data shown below is based on{" "}
-            <strong>historical weather averages</strong> from this exact date in
-            previous years.
-          </p>
-        </div>
-      )}
-
-      {/* Past Date Warning */}
       {isPastDateMode && !error && weather && (
         <div className="mx-4 mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
           <p className="text-xs leading-relaxed text-blue-800">
             <strong className="font-semibold">Note:</strong> Viewing actual
-            historical weather records for {weather.date}. Some specific metrics
-            like UV Index or Hourly Humidity might not be fully available.
+            historical weather records for {formatDate(weather.date)}.
           </p>
         </div>
       )}
 
-      {/* Weather results */}
       <AnimatePresence>
-        {(weather || history.length > 0) && (
+        {weather && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            {/* Main Full Forecast/Past Card (Only if <= 14 days or Past Mode) */}
-            {weather && !isHistoricalMode && (
-              <>
-                <div className="mx-4 mb-3 rounded-xl bg-[#1B4332] p-4 text-white">
-                  <p className="text-xs text-white/60">
-                    {formatDate(weather.date)}
-                  </p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <div>
-                      <span className="text-3xl">
-                        {getWeatherEmoji(weather.weatherCode)}
-                      </span>
-                      <p className="mt-1 text-sm font-medium">
-                        {weather.weatherDescription}
-                      </p>
-                      <p className="text-xs text-white/60">
-                        Feels like {weather.feelsLikeMax}° /{" "}
-                        {weather.feelsLikeMin}°C
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold">
-                        {Math.round(weather.temperatureMax)}°
-                      </p>
-                      <p className="text-sm text-white/60">
-                        / {Math.round(weather.temperatureMin)}°C
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Detail grid */}
-                <div className="grid grid-cols-2 gap-2 px-4 pb-3 lg:grid-cols-3">
-                  <WeatherDetailCard
-                    icon={<Droplets className="h-3.5 w-3.5 text-blue-400" />}
-                    label="Rain Probability"
-                    value={`${weather.rainProbability}%`}
-                  />
-                  <WeatherDetailCard
-                    icon={<Droplets className="h-3.5 w-3.5 text-blue-500" />}
-                    label="Precipitation"
-                    value={`${weather.precipitation} mm`}
-                  />
-                  <WeatherDetailCard
-                    icon={<Wind className="h-3.5 w-3.5 text-teal-500" />}
-                    label="Wind"
-                    value={`${weather.windSpeed} km/h ${weather.windDirection}`}
-                  />
-                  <WeatherDetailCard
-                    icon={<Eye className="h-3.5 w-3.5 text-blue-400" />}
-                    label="Humidity"
-                    value={`${weather.humidity}%`}
-                  />
-                  <WeatherDetailCard
-                    icon={<Sun className="h-3.5 w-3.5 text-yellow-500" />}
-                    label="UV Index"
-                    value={`${weather.uvIndex}`}
-                  />
-                  <WeatherDetailCard
-                    icon={<Thermometer className="h-3.5 w-3.5 text-red-400" />}
-                    label="Feels Like"
-                    value={`${weather.feelsLikeMax}°C`}
-                  />
-                </div>
-
-                {/* Sunrise / Sunset */}
-                <div className="mb-3 flex items-center justify-between border-t border-gray-100 px-4 pt-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🌅</span>
-                    <span className="text-xs font-medium text-[#2D3436]">
-                      {weather.sunrise}
+            {/* Daily Periods */}
+            {weather.periods && weather.periods.length > 0 && (
+              <div className="mx-4 mb-3 grid grid-cols-4 gap-2">
+                {weather.periods.map((p, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col items-center rounded-lg border border-gray-100 bg-gray-50 p-2 text-center"
+                  >
+                    <span className="text-[10px] font-semibold text-gray-500">
+                      {p.name}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🌇</span>
-                    <span className="text-xs font-medium text-[#2D3436]">
-                      {weather.sunset}
-                    </span>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Historical 2-Year Summary */}
-            {history.length > 0 && (
-              <div className="mx-4 mb-4 border-t border-gray-100 pt-3">
-                <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400">
-                  Historical Records for{" "}
-                  {new Date(date).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "long",
-                  })}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {history.map((h) => (
-                    <div
-                      key={h.year}
-                      className="rounded-lg border border-gray-100 bg-gray-50 p-3"
+                    <span
+                      className="my-1 text-2xl"
+                      title={WMO_CODES[p.weatherCode]}
                     >
-                      <p className="mb-1 text-xs font-bold text-gray-500">
-                        {h.year}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl" title={h.weatherDescription}>
-                          {getWeatherEmoji(h.weatherCode)}
-                        </span>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-[#2D3436]">
-                            {Math.round(h.temperatureMax)}°
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            / {Math.round(h.temperatureMin)}°C
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      {getWeatherEmoji(p.weatherCode)}
+                    </span>
+                    <span className="text-sm font-bold text-[#2D3436]">
+                      {Math.round(p.temperature)}°
+                    </span>
+                    <span className="mt-1 text-[10px] leading-tight text-gray-500">
+                      {WMO_CODES[p.weatherCode] || "Unknown"}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  )
-}
-
-function WeatherDetailCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-}) {
-  return (
-    <div className="rounded-lg border border-gray-100 p-2.5">
-      <div className="flex items-center gap-1.5">
-        {icon}
-        <span className="text-[10px] font-medium tracking-wider text-gray-400">
-          {label}
-        </span>
-      </div>
-      <p className="mt-1 text-sm font-bold text-[#2D3436]">{value}</p>
     </div>
   )
 }

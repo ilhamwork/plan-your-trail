@@ -80,11 +80,7 @@ const ShareModal = dynamic(
   () => import("@/components/trail/ShareModal").then((mod) => mod.ShareModal),
   { ssr: false }
 )
-const ToolFeedback = dynamic(
-  () =>
-    import("@/components/trail/ToolFeedback").then((mod) => mod.ToolFeedback),
-  { ssr: false }
-)
+
 const Footer = dynamic(
   () => import("@/components/trail/Footer").then((mod) => mod.Footer),
   { ssr: false }
@@ -491,16 +487,6 @@ export default function Home() {
                   />
                 </motion.div>
 
-                {/* Tool Feedback */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="block lg:hidden"
-                >
-                  <ToolFeedback runnerName={sessionRunnerName} />
-                </motion.div>
-
                 {/* Donation Section */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -554,16 +540,6 @@ export default function Home() {
                     className="hidden lg:block"
                   >
                     <MetricsPanel stats={gpxData.stats} />
-                  </motion.div>
-
-                  {/* Tool Feedback prompt */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="hidden lg:block"
-                  >
-                    <ToolFeedback runnerName={sessionRunnerName} />
                   </motion.div>
 
                   {/* Donation Section */}
