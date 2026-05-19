@@ -266,7 +266,7 @@ export function MapView({
 
       marker
         .bindTooltip(
-          `${(hoveredPoint.distance / 1000).toFixed(0)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%`,
+          `${(hoveredPoint.distance / 1000).toFixed(1)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%`,
           {
             permanent: true,
             direction: "top",
@@ -497,7 +497,7 @@ export function MapView({
             className: "hover-tooltip-3d",
           }).setHTML(
             `<div>
-              ${(hoveredPoint.distance / 1000).toFixed(0)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%
+              ${(hoveredPoint.distance / 1000).toFixed(1)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%
             </div>`
           )
         )

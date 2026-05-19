@@ -31,7 +31,7 @@ const item = {
 }
 
 function formatDistance(meters: number): string {
-  return (meters / 1000).toFixed(2)
+  return (meters / 1000).toFixed(1)
 }
 
 export function MetricsPanel({ stats }: MetricsPanelProps) {

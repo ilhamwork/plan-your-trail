@@ -102,7 +102,7 @@ export function ElevationChart({
             <XAxis
               dataKey="distance"
               tick={{ fontSize: 10, fill: "#9CA3AF" }}
-              tickFormatter={(v: number) => `${v.toFixed(0)} km`}
+              tickFormatter={(v: number) => `${v.toFixed(1)} km`}
               axisLine={{ stroke: "#E5E7EB" }}
               tickLine={false}
               type="number"
@@ -123,7 +123,7 @@ export function ElevationChart({
                 const data = payload[0].payload
                 return (
                   <div className="pointer-events-none rounded-lg bg-[#2D3436] px-3 py-2 text-xs text-white shadow-lg">
-                    <p>Distance: {data.distance.toFixed(0)} km</p>
+                    <p>Distance: {data.distance.toFixed(1)} km</p>
                     <p>Altitude: {data.elevation} m</p>
                     <p>Gradient: {data.gradient.toFixed(0)}%</p>
                   </div>
