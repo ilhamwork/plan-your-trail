@@ -19,13 +19,6 @@ interface ElevationChartProps {
   onHover: (point: TrackPoint | null) => void
 }
 
-interface ChartDataPoint {
-  distance: number
-  elevation: number
-  gradient: number
-  original: TrackPoint
-}
-
 export function ElevationChart({
   trackPoints,
   waypoints = [],

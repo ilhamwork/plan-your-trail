@@ -206,7 +206,7 @@ export function parseGPX(gpxString: string): GPXData {
       }
 
       if (passIndices.length === 0) {
-        passIndices.push(absoluteMinIdx);
+        continue;
       }
 
       // Filter passes that are too close along the track to prevent GPS drift duplicates
