@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   Plus,
   MapPin,
@@ -9,13 +9,17 @@ import {
   Pencil,
   X,
   Check,
+  Download,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import type { Waypoint } from "@/lib/types"
+import type { Waypoint, TrackPoint } from "@/lib/types"
+import { downloadGPX } from "@/lib/gpx-export"
 
 interface WaypointPanelProps {
   totalDistanceKm: number
   waypoints: Waypoint[]
+  trackPoints: TrackPoint[]
+  fileName?: string
   onAdd: (name: string, distanceKm: number) => void
   onEdit: (id: string, name: string, distanceKm: number) => void
   onRemove: (id: string) => void
@@ -24,6 +28,8 @@ interface WaypointPanelProps {
 export function WaypointPanel({
   totalDistanceKm,
   waypoints,
+  trackPoints,
+  fileName,
   onAdd,
   onEdit,
   onRemove,
@@ -32,6 +38,20 @@ export function WaypointPanel({
   const [distanceStr, setDistanceStr] = useState("")
   const [error, setError] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const routeName = fileName
+    ? fileName.replace(/\.gpx$/i, "")
+    : "route"
+
+  const handleDownload = () => {
+    setIsDownloading(true)
+    try {
+      downloadGPX(trackPoints, waypoints, routeName)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   // Populate inputs when entering edit mode
   const handleStartEdit = (wp: Waypoint) => {
@@ -101,11 +121,26 @@ export function WaypointPanel({
     <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
       {/* Header */}
       <div className="border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-[#E76F51]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">
-            {editingId ? "Edit Waypoint" : "Route Waypoints"}
-          </h3>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-[#E76F51]" />
+            <h3 className="text-sm font-bold text-[#2D3436]">
+              {editingId ? "Edit Waypoint" : "Route Waypoints"}
+            </h3>
+          </div>
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading || trackPoints.length === 0}
+            title="Download GPX with waypoints"
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 shadow-sm transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isDownloading ? (
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-current/20 border-t-current" />
+            ) : (
+              <Download className="h-3 w-3" />
+            )}
+            Download GPX
+          </button>
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
           {editingId
