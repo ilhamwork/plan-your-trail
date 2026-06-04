@@ -551,6 +551,8 @@ export default function Home() {
                   <WaypointPanel
                     totalDistanceKm={gpxData.stats.totalDistance / 1000}
                     waypoints={waypoints}
+                    trackPoints={gpxData.trackPoints}
+                    fileName={fileName}
                     onAdd={handleAddWaypoint}
                     onEdit={handleEditWaypoint}
                     onRemove={handleRemoveWaypoint}
@@ -659,6 +661,8 @@ export default function Home() {
                     <WaypointPanel
                       totalDistanceKm={gpxData.stats.totalDistance / 1000}
                       waypoints={waypoints}
+                      trackPoints={gpxData.trackPoints}
+                      fileName={fileName}
                       onAdd={handleAddWaypoint}
                       onEdit={handleEditWaypoint}
                       onRemove={handleRemoveWaypoint}
