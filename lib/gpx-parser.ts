@@ -84,7 +84,7 @@ export function parseGPX(gpxString: string): GPXData {
     }
 
     // Smooth elevation data
-    const smoothedEle = smoothElevation(rawPoints.map((p) => p.ele));
+    const smoothedEle = smoothElevation(rawPoints.map((p) => p.ele), 10);
 
     // Build track points with cumulative distance and gradient
     const trackPoints: TrackPoint[] = [];
@@ -124,19 +124,27 @@ export function parseGPX(gpxString: string): GPXData {
     }
 
     // Calculate stats
+    // Use a minimum threshold to filter out GPS noise / micro-jitter.
+    // Changes smaller than this value are ignored when accumulating gain/loss.
+    const ELEVATION_NOISE_THRESHOLD = 5; // meters
+
     let elevationGain = 0;
     let elevationLoss = 0;
     let highestPoint = -Infinity;
     let lowestPoint = Infinity;
+    let pendingEle = trackPoints[0]?.ele ?? 0; // track "last confirmed" elevation
 
     for (let i = 0; i < trackPoints.length; i++) {
       if (trackPoints[i].ele > highestPoint) highestPoint = trackPoints[i].ele;
       if (trackPoints[i].ele < lowestPoint) lowestPoint = trackPoints[i].ele;
 
       if (i > 0) {
-        const diff = trackPoints[i].ele - trackPoints[i - 1].ele;
-        if (diff > 0) elevationGain += diff;
-        else elevationLoss += Math.abs(diff);
+        const diff = trackPoints[i].ele - pendingEle;
+        if (Math.abs(diff) >= ELEVATION_NOISE_THRESHOLD) {
+          if (diff > 0) elevationGain += diff;
+          else elevationLoss += Math.abs(diff);
+          pendingEle = trackPoints[i].ele;
+        }
       }
     }
 
