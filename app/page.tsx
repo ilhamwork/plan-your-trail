@@ -1,13 +1,17 @@
 "use client"
 
 import * as Sentry from "@sentry/nextjs"
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { buildWaypointSegments } from "@/lib/segment-analysis"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
-import { Map, BarChart3, Waypoints, CloudSun } from "lucide-react"
+import { Map, BarChart3, Waypoints, CloudSun, Share2, Lock } from "lucide-react"
 
 import { WaypointPanel } from "@/components/trail/WaypointPanel"
+import { ProGate } from "@/components/pro/ProGate"
+import { UpgradePrompt } from "@/components/pro/UpgradePrompt"
+import { AnonymousNudge } from "@/components/pro/AnonymousNudge"
+import { useAuth } from "@/contexts/AuthContext"
 
 import type {
   GPXData,
@@ -63,13 +67,13 @@ const GradientDistribution = dynamic(
   { ssr: false }
 )
 
-const DonationSection = dynamic(
-  () =>
-    import("@/components/trail/DonationSection").then(
-      (mod) => mod.DonationSection
-    ),
-  { ssr: false }
-)
+// const DonationSection = dynamic(
+//   () =>
+//     import("@/components/trail/DonationSection").then(
+//       (mod) => mod.DonationSection
+//     ),
+//   { ssr: false }
+// )
 
 const ModalFormInfo = dynamic(
   () =>
@@ -128,6 +132,8 @@ const FEATURES = [
 ]
 
 export default function Home() {
+  const { tier, pendingGpxData } = useAuth()
+
   const [gpxData, setGpxData] = useState<GPXData | null>(null)
   const [fileName, setFileName] = useState<string>("")
   const [error, setError] = useState<string>("")
@@ -239,6 +245,27 @@ export default function Home() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareId, setShareId] = useState<string | null>(null)
   const [isGeneratingShare, setIsGeneratingShare] = useState(false)
+  // Share upgrade sheet for non-Pro users (Req 3.12)
+  const [showShareUpgradeSheet, setShowShareUpgradeSheet] = useState(false)
+
+  // ── Stage pending GPX data for anonymous-to-free auto-save (Req 7.3) ─────
+  // When an anonymous user has completed analysis, write the route payload
+  // into the AuthContext pendingGpxData ref so AuthContext can auto-POST it
+  // to /api/routes on SIGNED_IN without requiring re-upload.
+  useEffect(() => {
+    if (tier === 'anonymous' && gpxData) {
+      pendingGpxData.current = {
+        file_name: fileName,
+        race_name: routeDetails.raceName || undefined,
+        race_date: routeDetails.raceDate || undefined,
+        route_data: gpxData,
+        file_size_bytes: 0, // size not tracked client-side; API accepts 0 gracefully
+      }
+    } else {
+      // Clear if user is authenticated or analysis is gone
+      pendingGpxData.current = null
+    }
+  }, [tier, gpxData, fileName, routeDetails, pendingGpxData])
 
   const handleShare = async () => {
     if (!gpxData) return
@@ -493,12 +520,11 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="block lg:hidden"
                 >
+                  {/* Route header info */}
                   <HeaderInfo
                     raceName={routeDetails.raceName}
                     userName={sessionRunnerName}
                     raceDate={routeDetails.raceDate}
-                    onShare={handleShare}
-                    isSharing={isGeneratingShare}
                   />
                 </motion.div>
 
@@ -510,6 +536,67 @@ export default function Home() {
                   className="block lg:hidden"
                 >
                   <MetricsPanel stats={gpxData.stats} />
+                </motion.div>
+
+                {/* Share — between metrics and map (mobile) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="block lg:hidden"
+                >
+                  <ProGate
+                    feature="share"
+                    tier={tier}
+                    fallback={
+                      <>
+                        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                          <div className="px-4 pt-4 pb-3">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[#2A9D8F]">Share your route</p>
+                            <p className="mt-1 text-base font-bold text-[#1B4332]">Let your crew know what they're in for</p>
+                            <p className="mt-1 text-xs text-gray-500">One link. Instant preview. No app needed.</p>
+                          </div>
+                          <div className="px-4 pb-4">
+                            <button
+                              onClick={() => setShowShareUpgradeSheet(true)}
+                              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#1B4332]/90 active:scale-[0.98]"
+                            >
+                              <Share2 className="h-4 w-4" />
+                              Share Route
+                            </button>
+                          </div>
+                        </div>
+                        {showShareUpgradeSheet && (
+                          <UpgradePrompt
+                            variant="sheet"
+                            feature="share_link"
+                            open={showShareUpgradeSheet}
+                            title="Share Links — Pro Feature"
+                            description="Upgrade to Pro to generate public share links for your routes."
+                            onUpgrade={() => setShowShareUpgradeSheet(false)}
+                          />
+                        )}
+                      </>
+                    }
+                  >
+                    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                      <div className="px-4 pt-4 pb-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[#2A9D8F]">Share your route</p>
+                        <p className="mt-1 text-base font-bold text-[#1B4332]">Let your crew know what they're in for</p>
+                        <p className="mt-1 text-xs text-gray-500">One link. Instant preview. No app needed.</p>
+                      </div>
+                      <div className="px-4 pb-4">
+                        <button
+                          onClick={handleShare}
+                          disabled={isGeneratingShare}
+                          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#1B4332]/90 active:scale-[0.98] disabled:opacity-50"
+                        >
+                          <Share2 className="h-4 w-4" />
+                          {isGeneratingShare ? "Generating link..." : "Share Route"}
+                        </button>
+                      </div>
+                    </div>
+                  </ProGate>
                 </motion.div>
 
                 {/* Map */}
@@ -553,6 +640,7 @@ export default function Home() {
                     waypoints={waypoints}
                     trackPoints={gpxData.trackPoints}
                     fileName={fileName}
+                    tier={tier}
                     onAdd={handleAddWaypoint}
                     onEdit={handleEditWaypoint}
                     onRemove={handleRemoveWaypoint}
@@ -584,6 +672,58 @@ export default function Home() {
                   <GradientDistribution points={gpxData.trackPoints} />
                 </motion.div>
 
+                {/* Pace estimator — Pro-gated (Req 4.3); only shown after analysis loaded */}
+                {tier !== "pro" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.65 }}
+                  >
+                    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                      <div className="border-b border-gray-100 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-[#2D3436]">Pace & Cutoff Estimator</h3>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                            <Lock className="h-2.5 w-2.5" />
+                            Pro
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-gray-400">Estimate your pace, finish time, and cutoff windows per segment</p>
+                      </div>
+                      {/* Inline upgrade prompt (Req 4.3, 4.4) */}
+                      <div className="px-4 pt-3 pb-4">
+                        <UpgradePrompt
+                          variant="inline"
+                          feature="pace_estimator"
+                          title="Pace Estimator is a Pro feature."
+                          description="Upgrade to unlock pace and cutoff estimates for each segment."
+                        />
+                        {/* Placeholder table with — cells */}
+                        <div className="mt-2 overflow-x-auto rounded-lg border border-gray-100">
+                          <table className="min-w-full text-xs   text-gray-400">
+                            <thead>
+                              <tr className="border-b border-gray-100 bg-gray-50/60">
+                                {["Segment", "Distance", "Est. Pace", "Finish Time", "Cutoff"].map((h) => (
+                                  <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[1, 2, 3].map((i) => (
+                                <tr key={i} className="border-b border-gray-50">
+                                  {[...Array(5)].map((_, j) => (
+                                    <td key={j} className="px-3 py-2 text-center text-gray-300">—</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Weather */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -603,7 +743,7 @@ export default function Home() {
                   transition={{ delay: 0.9 }}
                   className="block lg:hidden"
                 >
-                  <DonationSection />
+                  {/* <DonationSection /> */}
                 </motion.div>
               </div>
 
@@ -636,8 +776,6 @@ export default function Home() {
                       raceName={routeDetails.raceName}
                       userName={sessionRunnerName}
                       raceDate={routeDetails.raceDate}
-                      onShare={handleShare}
-                      isSharing={isGeneratingShare}
                     />
                   </motion.div>
 
@@ -649,6 +787,67 @@ export default function Home() {
                     className="hidden lg:block"
                   >
                     <MetricsPanel stats={gpxData.stats} />
+                  </motion.div>
+
+                  {/* Share — between metrics and waypoints (desktop sidebar) */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.43 }}
+                    className="hidden lg:block"
+                  >
+                    <ProGate
+                      feature="share"
+                      tier={tier}
+                      fallback={
+                        <>
+                          <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                            <div className="px-4 pt-4 pb-3">
+                              <p className="text-xs font-semibold uppercase tracking-wider text-[#2A9D8F]">Share your route</p>
+                              <p className="mt-1 text-base font-bold text-[#1B4332]">Let your crew know what they're in for</p>
+                              <p className="mt-1 text-xs text-gray-500">One link. Instant preview. No app needed.</p>
+                            </div>
+                            <div className="px-4 pb-4">
+                              <button
+                                onClick={() => setShowShareUpgradeSheet(true)}
+                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#1B4332]/90 active:scale-[0.98]"
+                              >
+                                <Share2 className="h-4 w-4" />
+                                Share Route
+                              </button>
+                            </div>
+                          </div>
+                          {showShareUpgradeSheet && (
+                            <UpgradePrompt
+                              variant="sheet"
+                              feature="share_link"
+                              open={showShareUpgradeSheet}
+                              title="Share Links — Pro Feature"
+                              description="Upgrade to Pro to generate public share links for your routes."
+                              onUpgrade={() => setShowShareUpgradeSheet(false)}
+                            />
+                          )}
+                        </>
+                      }
+                    >
+                      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                        <div className="px-4 pt-4 pb-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-[#2A9D8F]">Share your route</p>
+                          <p className="mt-1 text-base font-bold text-[#1B4332]">Let your crew know what they're in for</p>
+                          <p className="mt-1 text-xs text-gray-500">One link. Instant preview. No app needed.</p>
+                        </div>
+                        <div className="px-4 pb-4">
+                          <button
+                            onClick={handleShare}
+                            disabled={isGeneratingShare}
+                            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#1B4332]/90 active:scale-[0.98] disabled:opacity-50"
+                          >
+                            <Share2 className="h-4 w-4" />
+                            {isGeneratingShare ? "Generating link..." : "Share Route"}
+                          </button>
+                        </div>
+                      </div>
+                    </ProGate>
                   </motion.div>
 
                   {/* Manual Waypoints */}
@@ -663,6 +862,7 @@ export default function Home() {
                       waypoints={waypoints}
                       trackPoints={gpxData.trackPoints}
                       fileName={fileName}
+                      tier={tier}
                       onAdd={handleAddWaypoint}
                       onEdit={handleEditWaypoint}
                       onRemove={handleRemoveWaypoint}
@@ -676,7 +876,7 @@ export default function Home() {
                     transition={{ delay: 0.6 }}
                     className="hidden lg:block"
                   >
-                    <DonationSection />
+                    {/* <DonationSection /> */}
                   </motion.div>
 
                   <motion.div
@@ -734,6 +934,13 @@ export default function Home() {
           userName={sessionRunnerName}
           raceDate={routeDetails.raceDate}
         />
+
+        {/* ── Anonymous conversion nudge (Req 7.1, 7.2) ────────────────── */}
+        {/* Only rendered for anonymous users after analysis is complete.     */}
+        {/* Non-blocking sticky bar; dismissal stored in sessionStorage.      */}
+        {tier === 'anonymous' && (
+          <AnonymousNudge analysisComplete={gpxData !== null} />
+        )}
       </main>
     </div>
   )

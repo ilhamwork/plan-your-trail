@@ -55,7 +55,9 @@ export const metadata: Metadata = {
   },
 }
 
+import Script from "next/script"
 import ErrorBoundary from "@/components/Error/ErrorBoundary"
+import { AuthProvider } from "@/contexts/AuthContext"
 
 export default function RootLayout({
   children,
@@ -66,9 +68,17 @@ export default function RootLayout({
     <html lang="en" className={`${fontSans.variable} font-sans antialiased`}>
       <head />
       <body>
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <AuthProvider>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </AuthProvider>
         <Analytics />
         <SpeedInsights />
+        {/* Midtrans Snap client SDK — loaded lazily so it doesn't block page render */}
+        <Script
+          src="https://app.sandbox.midtrans.com/snap/snap.js"
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   )
