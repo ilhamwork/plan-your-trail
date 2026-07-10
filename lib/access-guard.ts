@@ -20,6 +20,7 @@ export interface TierContext {
  */
 export type ProFeature =
   | 'waypoints'
+  | 'gpx_export'
   | 'weather'
   | 'weather_hourly'
   | 'pace_estimator'
@@ -169,6 +170,7 @@ export function requireFeature(ctx: TierContext, feature: ProFeature): void {
   // All named features require Pro — the mapping is explicit for forward extensibility
   const featureTierMap: Record<ProFeature, 'free' | 'pro'> = {
     waypoints: 'pro',
+    gpx_export: 'pro',
     weather: 'free',
     weather_hourly: 'free',
     pace_estimator: 'pro',

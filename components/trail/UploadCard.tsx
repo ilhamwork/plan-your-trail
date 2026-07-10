@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion"
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 interface UploadCardProps {
-  onFileLoaded: (content: string, fileName: string) => void
+  onFileLoaded: (content: string, fileName: string, fileSizeBytes: number) => void
   onError?: (message: string) => void
   fileName?: string
   error?: string
@@ -43,7 +43,7 @@ export function UploadCard({
       const reader = new FileReader()
       reader.onload = (e) => {
         const content = e.target?.result as string
-        onFileLoaded(content, file.name)
+        onFileLoaded(content, file.name, file.size)
       }
       reader.readAsText(file)
     },
@@ -75,7 +75,7 @@ export function UploadCard({
       try {
         const response = await fetch("/Rinjani-162K-2025.gpx")
         const content = await response.text()
-        onFileLoaded(content, "Rinjani-162K-2025.gpx")
+        onFileLoaded(content, "Rinjani-162K-2025.gpx", new Blob([content]).size)
       } catch (err) {
         console.error("Failed to load example:", err)
       } finally {

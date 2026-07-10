@@ -85,10 +85,13 @@ export async function recordUpload(
   identifierType: 'ip' | 'user',
 ): Promise<void> {
   const supabase = createSupabaseAdminClient()
-  await supabase.from('rate_limit_windows').insert({
+  const { error } = await supabase.from('rate_limit_windows').insert({
     identifier,
     identifier_type: identifierType,
     window_start: new Date().toISOString(),
     count: 1,
   })
+  if (error) {
+    console.error('[rate-limiter] recordUpload failed:', error)
+  }
 }

@@ -30,6 +30,20 @@ import { MetricsPanel } from "@/components/trail/MetricsPanel"
 import { SegmentList } from "@/components/trail/SegmentList"
 import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
 
+// ─── Browser-safe UUID helper ──────────────────────────────────────
+// crypto.randomUUID() is unavailable on older mobile browsers (iOS < 15.4)
+function generateId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID()
+  }
+  // Fallback: RFC-4122 v4 UUID using Math.random
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 // ─── Dynamic Component Imports ─────────────────────────────────────
 const MapView = dynamic(
   () => import("@/components/trail/MapView").then((mod) => mod.MapView),
@@ -164,7 +178,7 @@ export default function Home() {
       const distMeters = distanceKm * 1000
       const coords = interpolateCoordinatesForDistance(distMeters)
       const newWp: Waypoint = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name,
         distance: distMeters,
         isFromGpx: false,
@@ -308,7 +322,7 @@ export default function Home() {
         setFileName(name)
         const initialWps = parsed.waypoints.map((wp) => ({
           ...wp,
-          id: wp.id || crypto.randomUUID(),
+          id: wp.id || generateId(),
           isFromGpx: true,
         }))
         setWaypoints(initialWps)
@@ -322,9 +336,33 @@ export default function Home() {
   )
 
   const handleFileLoaded = useCallback(
-    (content: string, name: string) => {
+    async (content: string, name: string, fileSizeBytes: number) => {
+      console.log('[handleFileLoaded] called', { name, fileSizeBytes })
       try {
         setError("")
+
+        // ── 1. Hit server: rate limit check + record ──────────────────
+        // Example file bypasses rate limiting (it's a demo, not a user upload)
+        if (name !== "Rinjani-162K-2025.gpx") {
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileName: name, fileSizeBytes }),
+          })
+
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}))
+            const msg =
+              body?.error?.message ??
+              (res.status === 429
+                ? "Upload limit reached. Create a free account to get more uploads."
+                : "Upload failed. Please try again.")
+            setError(msg)
+            return
+          }
+        }
+
+        // ── 2. Parse GPX client-side ──────────────────────────────────
         const parsed = parseGPX(content)
         const today = new Date().toISOString().split("T")[0]
 

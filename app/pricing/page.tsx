@@ -79,6 +79,7 @@ const FREE_FEATURES = [
   "Elevation profile",
   "Segment breakdown",
   "Gradient distribution",
+  "Weather forecast along route",
   "Save up to 3 routes",
   "10 MB max file size",
 ]
@@ -88,7 +89,7 @@ const PRO_MONTHLY_FEATURES = [
   "Unlimited saved routes",
   "25 MB max file size",
   "Custom waypoints",
-  "Weather forecast along route",
+  "Download GPX with custom waypoints",
   "Waypoint labels on elevation chart",
   "Pace & cutoff estimator",
   "PDF export",
@@ -109,7 +110,7 @@ const PRO_ANNUAL_FEATURES = [
 export const metadata = {
   title: "Pricing — PlanYourTrail",
   description:
-    "Upgrade to Pro for unlimited routes, weather forecasts, pace estimator, PDF export, and more.",
+    "Upgrade to Pro for unlimited routes, custom waypoints, GPX export, pace estimator, PDF export, and more. Weather forecast is free for everyone.",
 }
 
 // ---------------------------------------------------------------------------
