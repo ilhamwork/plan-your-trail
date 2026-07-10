@@ -10,16 +10,20 @@ import {
   X,
   Check,
   Download,
+  Lock,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { Waypoint, TrackPoint } from "@/lib/types"
+import type { UserTier } from "@/lib/access-guard"
 import { downloadGPX } from "@/lib/gpx-export"
+import { UpgradePrompt } from "@/components/pro/UpgradePrompt"
 
 interface WaypointPanelProps {
   totalDistanceKm: number
   waypoints: Waypoint[]
   trackPoints: TrackPoint[]
   fileName?: string
+  tier?: UserTier
   onAdd: (name: string, distanceKm: number) => void
   onEdit: (id: string, name: string, distanceKm: number) => void
   onRemove: (id: string) => void
@@ -30,21 +34,28 @@ export function WaypointPanel({
   waypoints,
   trackPoints,
   fileName,
+  tier = "free",
   onAdd,
   onEdit,
   onRemove,
 }: WaypointPanelProps) {
+  const isPro = tier === "pro"
   const [name, setName] = useState("")
   const [distanceStr, setDistanceStr] = useState("")
   const [error, setError] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [showUpgradeSheet, setShowUpgradeSheet] = useState(false)
 
   const routeName = fileName
     ? fileName.replace(/\.gpx$/i, "")
     : "route"
 
   const handleDownload = () => {
+    if (!isPro) {
+      setShowUpgradeSheet(true)
+      return
+    }
     setIsDownloading(true)
     try {
       downloadGPX(trackPoints, waypoints, routeName)
@@ -127,6 +138,12 @@ export function WaypointPanel({
             <h3 className="text-sm font-bold text-[#2D3436]">
               {editingId ? "Edit Waypoint" : "Route Waypoints"}
             </h3>
+            {!isPro && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                <Lock className="h-2.5 w-2.5" />
+                Pro
+              </span>
+            )}
           </div>
           <button
             onClick={handleDownload}
@@ -161,7 +178,8 @@ export function WaypointPanel({
             }}
             onKeyDown={handleKeyDown}
             placeholder="Waypoint name"
-            className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
+            disabled={!isPro}
+            className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
           />
           <div className="relative w-24 shrink-0">
             <input
@@ -176,7 +194,8 @@ export function WaypointPanel({
               min={0}
               max={totalDistanceKm}
               step={0.01}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-7 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
+              disabled={!isPro}
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-7 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
             />
             <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] font-semibold text-gray-400">
               km
@@ -187,9 +206,10 @@ export function WaypointPanel({
             {editingId ? (
               <>
                 <button
-                  onClick={handleSubmit}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
-                  title="Save changes"
+                  onClick={isPro ? handleSubmit : () => setShowUpgradeSheet(true)}
+                  disabled={isDownloading}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  title={isPro ? "Save changes" : "Upgrade to Pro to edit waypoints"}
                 >
                   <Check className="h-4 w-4" />
                 </button>
@@ -203,9 +223,9 @@ export function WaypointPanel({
               </>
             ) : (
               <button
-                onClick={handleSubmit}
+                onClick={isPro ? handleSubmit : () => setShowUpgradeSheet(true)}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1B4332] text-white shadow-sm transition hover:bg-[#1B4332]/80 active:scale-95"
-                title="Add waypoint"
+                title={isPro ? "Add waypoint" : "Upgrade to Pro to add waypoints"}
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -276,21 +296,28 @@ export function WaypointPanel({
 
                   <div className="ml-2 flex shrink-0 items-center gap-1">
                     <button
-                      onClick={() => handleStartEdit(wp)}
+                      onClick={() => isPro ? handleStartEdit(wp) : setShowUpgradeSheet(true)}
                       disabled={isEditingThis}
                       className={`rounded p-1 transition ${
                         isEditingThis
                           ? "text-emerald-500"
-                          : "text-gray-300 hover:bg-gray-100 hover:text-gray-600"
+                          : isPro
+                            ? "text-gray-300 hover:bg-gray-100 hover:text-gray-600"
+                            : "text-gray-300 hover:bg-gray-100 hover:text-gray-600"
                       }`}
-                      title="Edit waypoint"
+                      title={isPro ? "Edit waypoint" : "Upgrade to Pro to edit waypoints"}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                     <button
-                      onClick={() => wp.id && onRemove(wp.id)}
-                      className="rounded p-1 text-gray-300 transition hover:bg-red-50 hover:text-red-400"
-                      title="Remove waypoint"
+                      onClick={() => isPro && wp.id ? onRemove(wp.id) : setShowUpgradeSheet(true)}
+                      disabled={isEditingThis}
+                      className={`rounded p-1 transition ${
+                        isPro
+                          ? "text-gray-300 hover:bg-red-50 hover:text-red-400"
+                          : "text-gray-300 hover:bg-gray-100 hover:text-gray-600"
+                      }`}
+                      title={isPro ? "Remove waypoint" : "Upgrade to Pro to remove waypoints"}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -305,6 +332,19 @@ export function WaypointPanel({
           )}
         </AnimatePresence>
       </div>
+      {/* Pro upgrade sheet — shown when any waypoint/download action is triggered by non-Pro */}
+      <AnimatePresence>
+        {showUpgradeSheet && (
+          <UpgradePrompt
+            variant="sheet"
+            feature="waypoints"
+            open={showUpgradeSheet}
+            title="Waypoints — Pro Feature"
+            description="Upgrade to Pro to add, edit, and download waypoints on your routes."
+            onUpgrade={() => setShowUpgradeSheet(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

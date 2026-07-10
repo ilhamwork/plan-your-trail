@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   ReferenceDot,
 } from "recharts"
+import type { CategoricalChartFunc } from "recharts/types/chart/types"
 import type { TrackPoint, Waypoint } from "@/lib/types"
 import { BarChart3 } from "lucide-react"
 
@@ -17,12 +18,14 @@ interface ElevationChartProps {
   trackPoints: TrackPoint[]
   waypoints: Waypoint[]
   onHover: (point: TrackPoint | null) => void
+  showWaypointLabels?: boolean
 }
 
 export function ElevationChart({
   trackPoints,
   waypoints = [],
   onHover,
+  showWaypointLabels = true,
 }: ElevationChartProps) {
   // Downsample points for chart performance and stabilize reference
   const chartData = useMemo(() => {
@@ -37,10 +40,11 @@ export function ElevationChart({
       }))
   }, [trackPoints])
 
-  const handleMouseMove = useCallback(
-    (data: any) => {
-      if (data && data.activeTooltipIndex !== undefined) {
-        const point = chartData[data.activeTooltipIndex]?.original
+  const handleMouseMove = useCallback<CategoricalChartFunc>(
+    (data) => {
+      if (data && data.activeTooltipIndex != null) {
+        const idx = typeof data.activeTooltipIndex === 'number' ? data.activeTooltipIndex : undefined
+        const point = idx !== undefined ? chartData[idx]?.original : undefined
         if (point) {
           onHover?.(point)
         }
@@ -155,10 +159,9 @@ export function ElevationChart({
                   fill="#E76F51"
                   stroke="white"
                   strokeWidth={2}
-                  label={{
-                    position: "top",
-                    fontSize: 10,
-                  }}
+                  {...(showWaypointLabels
+                    ? { label: { position: "top", fontSize: 10 } }
+                    : {})}
                 />
               )
             })}

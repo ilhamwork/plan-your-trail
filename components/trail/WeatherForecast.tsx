@@ -423,6 +423,7 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
         </p>
       </div>
 
+      {/* Location + date inputs — always visible */}
       <div className="grid lg:grid-cols-2">
         <div className="px-4 pt-3 pb-2">
           <p className="mb-1.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
