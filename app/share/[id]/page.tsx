@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo, use } from "react"
 import dynamic from "next/dynamic"
+import Link from "next/link"
 import { motion } from "framer-motion"
-import { Map, BarChart3, Waypoints, CloudSun, AlertCircle } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 
 import type {
   GPXData,
@@ -20,7 +21,7 @@ import { ElevationChart } from "@/components/trail/ElevationChart"
 import { SegmentList } from "@/components/trail/SegmentList"
 import { WeatherForecast } from "@/components/trail/WeatherForecast"
 import { GradientDistribution } from "@/components/trail/GradientDistribution"
-import { DonationSection } from "@/components/trail/DonationSection"
+// import { DonationSection } from "@/components/trail/DonationSection"
 import { Footer } from "@/components/trail/Footer"
 
 // Dynamic import for MapView
@@ -137,12 +138,12 @@ export default function SharedRoutePage({
             </div>
             <h2 className="mb-2 text-xl font-bold text-gray-900">Oops!</h2>
             <p className="text-gray-500">{error || "Something went wrong"}</p>
-            <a
+            <Link
               href="/"
               className="mt-6 inline-block rounded-xl bg-[#1B4332] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#2D5A46]"
             >
               Analyze Your Own Route
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -209,7 +210,7 @@ export default function SharedRoutePage({
               initialDate={routeInfo.raceDate}
             />
 
-            <DonationSection />
+            {/* <DonationSection /> */}
 
             <Footer />
           </div>
@@ -227,12 +228,12 @@ export default function SharedRoutePage({
                   . Analyze your own GPX files and plan your next
                   adventure.
                 </p>
-                <a
+                <Link
                   href="/"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#FAF6F1]"
                 >
                   Plan Your Trail
-                </a>
+                </Link>
               </div>
 
               {/* Route Header Info Desktop */}
