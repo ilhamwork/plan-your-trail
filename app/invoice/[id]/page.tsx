@@ -130,9 +130,9 @@ export default function InvoicePreview({ params }: { params: Promise<{ id: strin
               </Button>
             </Link>
             <Button onClick={handleSave} disabled={isSaving}>
-                <Download className="mr-2 h-4 w-4" />
-                {isSaving ? "Saving..." : "Save to Device"}
-              </Button>
+              <Download className="mr-2 h-4 w-4" />
+              {isSaving ? "Saving..." : "Save to Device"}
+            </Button>
           </div>
         </div>
       </div>
@@ -148,7 +148,6 @@ export default function InvoicePreview({ params }: { params: Promise<{ id: strin
             </div>
             <div className="text-right">
               <h2 className="text-xl font-bold text-gray-800">@ilhamontrail</h2>
-              <p className="text-gray-500 text-sm mt-1">Endorsement & Content Creation</p>
               <p className="text-gray-500 text-sm">ilhamontrail@gmail.com</p>
             </div>
           </div>
