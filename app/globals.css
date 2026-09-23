@@ -94,6 +94,23 @@
     html {
         @apply font-sans scroll-smooth;
     }
+    button,
+    [role="button"],
+    [type="button"],
+    [type="reset"],
+    [type="submit"],
+    a,
+    select,
+    summary {
+        cursor: pointer;
+    }
+    button:disabled,
+    [role="button"][aria-disabled="true"],
+    [type="button"]:disabled,
+    [type="reset"]:disabled,
+    [type="submit"]:disabled {
+        cursor: not-allowed;
+    }
 }
 
 /* Leaflet tooltip styles */
