@@ -158,7 +158,7 @@ export function MapView({
           )
 
         // Finish marker
-        const last = trackPoints[trackPoints.length - 5]
+        const last = trackPoints[trackPoints.length - 1]
         Lf.marker([last.lat, last.lon], {
           icon: Lf.divIcon({
             className: "custom-marker",
@@ -426,7 +426,7 @@ export function MapView({
             )
             .addTo(map)
 
-          const last = trackPoints[trackPoints.length - 10]
+          const last = trackPoints[trackPoints.length - 1]
           const endEl = document.createElement("div")
           endEl.innerHTML = createMarkerSvg3D("#34e02eff", 32)
 
