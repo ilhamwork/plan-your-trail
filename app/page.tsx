@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { buildWaypointSegments } from "@/lib/segment-analysis"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
@@ -207,16 +207,14 @@ export default function Home() {
   const [showSessionModal, setShowSessionModal] = useState(false)
 
   // Load session name on mount
-  useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = sessionStorage.getItem("runnerName")
-      if (saved) {
-        setSessionRunnerName(saved)
-      } else {
-        setShowSessionModal(true)
-      }
+  useEffect(() => {
+    const saved = sessionStorage.getItem("runnerName")
+    if (saved) {
+      setSessionRunnerName(saved)
+    } else {
+      setShowSessionModal(true)
     }
-  })
+  }, [])
 
   const handleSessionNameSubmit = (name: string) => {
     setSessionRunnerName(name)
