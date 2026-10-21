@@ -327,13 +327,17 @@ export function MapView({
           sources: {
             osm: {
               type: "raster" as const,
-              tiles: isSatellite
-                ? [
-                    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-                  ]
-                : ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
               tileSize: 256,
-              attribution: isSatellite ? "&copy; Esri" : "&copy; OpenStreetMap",
+              attribution: "&copy; OpenStreetMap",
+            },
+            satellite: {
+              type: "raster" as const,
+              tiles: [
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              ],
+              tileSize: 256,
+              attribution: "&copy; Esri",
             },
             terrain: {
               type: "raster-dem" as const,
@@ -344,7 +348,20 @@ export function MapView({
               encoding: "terrarium",
             },
           },
-          layers: [{ id: "osm", type: "raster" as const, source: "osm" }],
+          layers: [
+            {
+              id: "osm",
+              type: "raster" as const,
+              source: "osm",
+              layout: { visibility: isSatellite ? "none" : "visible" },
+            },
+            {
+              id: "satellite",
+              type: "raster" as const,
+              source: "satellite",
+              layout: { visibility: isSatellite ? "visible" : "none" },
+            },
+          ],
           terrain: { source: "terrain", exaggeration: 1.5 },
         },
         center: [
@@ -465,7 +482,29 @@ export function MapView({
       maplibreHoverMarkerRef.current = null
       setMaplibreReady(false)
     }
-  }, [is3D, isSatellite, trackPoints, waypoints, bounds])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [is3D, trackPoints, waypoints, bounds])
+
+  // ── Toggle satellite layer (3D layer) ─────────────────────────────
+  useEffect(() => {
+    const map = maplibreMapRef.current
+    if (!map || !maplibreReady || !is3D) return
+
+    if (map.getLayer("osm")) {
+      map.setLayoutProperty(
+        "osm",
+        "visibility",
+        isSatellite ? "none" : "visible"
+      )
+    }
+    if (map.getLayer("satellite")) {
+      map.setLayoutProperty(
+        "satellite",
+        "visibility",
+        isSatellite ? "visible" : "none"
+      )
+    }
+  }, [isSatellite, maplibreReady, is3D])
 
   // ── Hover marker on 3D map ──────────────────────────────────────
   useEffect(() => {
