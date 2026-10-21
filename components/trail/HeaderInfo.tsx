@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Flag, User, Calendar, Share2 } from "lucide-react"
 
 interface HeaderInfoProps {
@@ -8,7 +9,7 @@ interface HeaderInfoProps {
   isSharing?: boolean
 }
 
-export function HeaderInfo({
+export const HeaderInfo = memo(function HeaderInfo({
   raceName,
   userName,
   raceDate,
@@ -53,4 +54,4 @@ export function HeaderInfo({
       </div>
     </div>
   )
-}
+})
