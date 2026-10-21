@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { memo, useState, useEffect } from "react"
 import type { RouteStats } from "@/lib/types"
 import {
   Mountain,
@@ -34,7 +34,7 @@ function formatDistance(meters: number): string {
   return (meters / 1000).toFixed(1)
 }
 
-export function MetricsPanel({ stats }: MetricsPanelProps) {
+export const MetricsPanel = memo(function MetricsPanel({ stats }: MetricsPanelProps) {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
 
   useEffect(() => {
@@ -147,4 +147,4 @@ export function MetricsPanel({ stats }: MetricsPanelProps) {
       ))}
     </motion.div>
   )
-}
+})

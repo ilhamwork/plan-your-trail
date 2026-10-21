@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { memo, useMemo } from "react"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
 import type { TrackPoint } from "@/lib/types"
 
@@ -21,7 +21,7 @@ function classify(gradient: number): "uphill" | "flat" | "downhill" {
   return "flat"
 }
 
-export function GradientDistribution({ points }: GradientDistributionProps) {
+export const GradientDistribution = memo(function GradientDistribution({ points }: GradientDistributionProps) {
   const { uphillDist, flatDist, downhillDist, total } = useMemo(() => {
     let uphillDist = 0
     let flatDist = 0
@@ -135,4 +135,4 @@ export function GradientDistribution({ points }: GradientDistributionProps) {
       </div>
     </div>
   )
-}
+})

@@ -1,31 +1,12 @@
 "use client"
 
 import { useEffect, useState, use, useRef } from "react"
-import { supabase } from "@/lib/supabase"
+import { getInvoiceByIdAction, type InvoiceDetail } from "@/app/invoice/actions"
 import { Header } from "@/components/trail/Header"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft, Download, Pencil, Loader2 } from "lucide-react"
 import { toPng } from "html-to-image"
-
-interface InvoiceItem {
-  id: string
-  description: string
-  amount: number
-}
-
-interface Invoice {
-  id: string
-  invoice_number: string
-  invoice_date: string
-  client_name: string
-  client_company: string
-  client_address: string
-  items: InvoiceItem[]
-  tax_percentage: number
-  total_amount: number
-  created_at: string
-}
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -39,7 +20,7 @@ function generateFileName(brand: string, date: string): string {
 
 export default function InvoicePreview({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [invoice, setInvoice] = useState<InvoiceDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const invoiceRef = useRef<HTMLDivElement>(null)
@@ -47,17 +28,13 @@ export default function InvoicePreview({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     async function fetchInvoice() {
       try {
-        const { data, error } = await supabase
-          .from("invoices")
-          .select("*")
-          .eq("id", id)
-          .single()
+        const { data, error } = await getInvoiceByIdAction(id)
 
-        if (error) {
+        if (error || !data) {
           console.error("Error fetching invoice:", error)
           return
         }
-        setInvoice(data as Invoice)
+        setInvoice(data)
       } catch (err) {
         console.error(err)
       } finally {

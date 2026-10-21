@@ -1,7 +1,6 @@
 "use client"
 
-import * as Sentry from "@sentry/nextjs"
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { buildWaypointSegments } from "@/lib/segment-analysis"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
@@ -208,16 +207,14 @@ export default function Home() {
   const [showSessionModal, setShowSessionModal] = useState(false)
 
   // Load session name on mount
-  useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = sessionStorage.getItem("runnerName")
-      if (saved) {
-        setSessionRunnerName(saved)
-      } else {
-        setShowSessionModal(true)
-      }
+  useEffect(() => {
+    const saved = sessionStorage.getItem("runnerName")
+    if (saved) {
+      setSessionRunnerName(saved)
+    } else {
+      setShowSessionModal(true)
     }
-  })
+  }, [])
 
   const handleSessionNameSubmit = (name: string) => {
     setSessionRunnerName(name)
@@ -240,10 +237,13 @@ export default function Home() {
   const [shareId, setShareId] = useState<string | null>(null)
   const [isGeneratingShare, setIsGeneratingShare] = useState(false)
 
-  const handleShare = async () => {
-    if (!gpxData) return
+  const handleShare = useCallback(() => {
     setShowShareModal(true)
-  }
+  }, [])
+
+  const handleSegmentTabChange = useCallback(() => {
+    setHighlightRange(null)
+  }, [])
 
   const finishUpload = useCallback(
     async (
@@ -271,11 +271,9 @@ export default function Home() {
 
         if (dbError) {
           console.error("Failed to save route telemetry:", dbError)
-          Sentry.captureException(dbError)
         }
       } catch (err) {
         console.error("Error saving to supabase:", err)
-        Sentry.captureException(err)
       } finally {
         setGpxData(parsed)
         setFileName(name)
@@ -327,7 +325,6 @@ export default function Home() {
         setError(
           err instanceof Error ? err.message : "Failed to parse GPX file"
         )
-        Sentry.captureException(err)
         setTempRoute(null)
         setTempFileName("")
       }
@@ -571,7 +568,7 @@ export default function Home() {
                     waypointSegments={mergedWaypointSegments}
                     onSegmentClick={handleSegmentClick}
                     onWaypointSegmentClick={handleWaypointSegmentClick}
-                    onTabChange={() => setHighlightRange(null)}
+                    onTabChange={handleSegmentTabChange}
                   />
                 </motion.div>
 
