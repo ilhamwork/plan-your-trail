@@ -1,6 +1,5 @@
 "use client"
 
-import * as Sentry from "@sentry/nextjs"
 import { useState, useCallback, useMemo } from "react"
 import { buildWaypointSegments } from "@/lib/segment-analysis"
 import dynamic from "next/dynamic"
@@ -271,11 +270,9 @@ export default function Home() {
 
         if (dbError) {
           console.error("Failed to save route telemetry:", dbError)
-          Sentry.captureException(dbError)
         }
       } catch (err) {
         console.error("Error saving to supabase:", err)
-        Sentry.captureException(err)
       } finally {
         setGpxData(parsed)
         setFileName(name)
@@ -327,7 +324,6 @@ export default function Home() {
         setError(
           err instanceof Error ? err.message : "Failed to parse GPX file"
         )
-        Sentry.captureException(err)
         setTempRoute(null)
         setTempFileName("")
       }
