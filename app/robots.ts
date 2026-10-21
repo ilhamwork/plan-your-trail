@@ -5,6 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: ["/invoice", "/invoice/"],
     },
     sitemap: "https://planyourtrail.run/sitemap.xml",
   }

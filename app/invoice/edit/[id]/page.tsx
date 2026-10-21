@@ -6,25 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Save, Plus, Trash2, Loader2 } from "lucide-react"
 import { Header } from "@/components/trail/Header"
-import { supabase } from "@/lib/supabase"
+import {
+  getInvoiceByIdAction,
+  updateInvoiceAction,
+  type InvoiceItem,
+} from "@/app/invoice/actions"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
-interface InvoiceItem {
-  id: string
-  description: string
-  amount: number
-}
-
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-
-function generateFileName(brand: string, date: string): string {
-  const d = date ? new Date(date) : new Date()
-  const month = MONTH_NAMES[d.getMonth()].toLowerCase()
-  const year = d.getFullYear()
-  const slug = (brand || 'client').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-  return `ilhamontrail-${slug}-${month}${year}`
-}
 
 export default function EditInvoice({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -50,11 +38,7 @@ export default function EditInvoice({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     async function fetchInvoice() {
       try {
-        const { data, error } = await supabase
-          .from("invoices")
-          .select("*")
-          .eq("id", id)
-          .single()
+        const { data, error } = await getInvoiceByIdAction(id)
 
         if (error) {
           console.error("Error fetching invoice:", error)
@@ -140,19 +124,16 @@ export default function EditInvoice({ params }: { params: Promise<{ id: string }
     if (!validate()) return
     setIsSaving(true)
     try {
-      const { error } = await supabase
-        .from('invoices')
-        .update({
-          invoice_number: invoiceNumber,
-          invoice_date: invoiceDate,
-          client_name: clientName,
-          client_company: clientCompany,
-          client_address: clientAddress,
-          items: items,
-          tax_percentage: taxPercentage,
-          total_amount: totalAmount
-        })
-        .eq('id', id)
+      const { error } = await updateInvoiceAction(id, {
+        invoice_number: invoiceNumber,
+        invoice_date: invoiceDate,
+        client_name: clientName,
+        client_company: clientCompany,
+        client_address: clientAddress,
+        items: items,
+        tax_percentage: taxPercentage,
+        total_amount: totalAmount,
+      })
 
       if (error) {
         console.error("Error updating invoice:", error)
@@ -286,7 +267,7 @@ export default function EditInvoice({ params }: { params: Promise<{ id: string }
                     {errors.items}
                   </div>
                 )}
-                {items.map((item, index) => (
+                {items.map((item) => (
                   <div key={item.id} className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50 relative">
                     {items.length > 1 && (
                       <button
@@ -356,8 +337,7 @@ export default function EditInvoice({ params }: { params: Promise<{ id: string }
               </div>
               <div className="text-right">
                 <h2 className="text-xl font-bold text-gray-800">@ilhamontrail</h2>
-                <p className="text-gray-500 text-sm">ilhamontrail@example.com</p>
-                {/* You can add real phone/address here */}
+                <p className="text-gray-500 text-sm">ilhamontrail@gmail.com</p>
               </div>
             </div>
 

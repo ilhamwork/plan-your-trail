@@ -2,21 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { Header } from "@/components/trail/Header"
-import { supabase } from "@/lib/supabase"
+import { getInvoicesAction, type InvoiceRecord } from "@/app/invoice/actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Loader2, FileText, Pencil, Eye } from "lucide-react"
-
-interface InvoiceRecord {
-  id: string
-  invoice_number: string
-  invoice_date: string
-  client_name: string
-  client_company: string
-  total_amount: number
-  created_at: string
-}
 
 export default function InvoiceList() {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([])
@@ -28,15 +18,12 @@ export default function InvoiceList() {
 
   const fetchInvoices = async () => {
     try {
-      const { data, error } = await supabase
-        .from("invoices")
-        .select("id, invoice_number, invoice_date, client_name, client_company, total_amount, created_at")
-        .order("created_at", { ascending: false })
+      const { data, error } = await getInvoicesAction()
 
       if (error) {
         console.error("Error fetching invoices:", error)
       } else if (data) {
-        setInvoices(data as InvoiceRecord[])
+        setInvoices(data)
       }
     } catch (err) {
       console.error(err)

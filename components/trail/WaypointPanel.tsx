@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { memo, useState } from "react"
 import {
   Plus,
   MapPin,
@@ -25,7 +25,7 @@ interface WaypointPanelProps {
   onRemove: (id: string) => void
 }
 
-export function WaypointPanel({
+export const WaypointPanel = memo(function WaypointPanel({
   totalDistanceKm,
   waypoints,
   trackPoints,
@@ -307,4 +307,4 @@ export function WaypointPanel({
       </div>
     </div>
   )
-}
+})

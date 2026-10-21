@@ -6,18 +6,15 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Plus, Trash2, Save } from "lucide-react"
 import { Header } from "@/components/trail/Header"
-import { supabase } from "@/lib/supabase"
+import {
+  createInvoiceAction,
+  getInvoiceCountAction,
+  type InvoiceItem,
+} from "@/app/invoice/actions"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-interface InvoiceItem {
-  id: string
-  description: string
-  amount: number
-}
-
 const ROMAN_MONTHS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 function generateInvoiceNumber(count: number): string {
   const now = new Date()
@@ -25,14 +22,6 @@ function generateInvoiceNumber(count: number): string {
   const year = now.getFullYear()
   const seq = String(count + 1).padStart(3, '0')
   return `INV/${month}/${year}/${seq}`
-}
-
-function generateFileName(brand: string, date: string): string {
-  const d = date ? new Date(date) : new Date()
-  const month = MONTH_NAMES[d.getMonth()].toLowerCase()
-  const year = d.getFullYear()
-  const slug = (brand || 'client').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-  return `ilhamontrail-${slug}-${month}${year}`
 }
 
 export default function InvoiceGenerator() {
@@ -57,10 +46,8 @@ export default function InvoiceGenerator() {
 
   useEffect(() => {
     async function fetchNextInvoiceNumber() {
-      const { count } = await supabase
-        .from('invoices')
-        .select('*', { count: 'exact', head: true })
-      setInvoiceNumber(generateInvoiceNumber(count ?? 0))
+      const { count } = await getInvoiceCountAction()
+      setInvoiceNumber(generateInvoiceNumber(count))
     }
     fetchNextInvoiceNumber()
   }, [])
@@ -123,18 +110,16 @@ export default function InvoiceGenerator() {
     if (!validate()) return
     setIsSaving(true)
     try {
-      const { data, error } = await supabase.from('invoices').insert([
-        {
-          invoice_number: invoiceNumber,
-          invoice_date: invoiceDate,
-          client_name: clientName,
-          client_company: clientCompany,
-          client_address: clientAddress,
-          items: items,
-          tax_percentage: taxPercentage,
-          total_amount: totalAmount
-        }
-      ]).select('id').single()
+      const { id, error } = await createInvoiceAction({
+        invoice_number: invoiceNumber,
+        invoice_date: invoiceDate,
+        client_name: clientName,
+        client_company: clientCompany,
+        client_address: clientAddress,
+        items: items,
+        tax_percentage: taxPercentage,
+        total_amount: totalAmount,
+      })
 
       if (error) {
         console.error("Error saving invoice:", error)
@@ -142,8 +127,8 @@ export default function InvoiceGenerator() {
         return
       }
       
-      if (data?.id) {
-        router.push(`/invoice/${data.id}`)
+      if (id) {
+        router.push(`/invoice/${id}`)
       }
     } catch (err) {
       console.error(err)
@@ -260,7 +245,7 @@ export default function InvoiceGenerator() {
                     {errors.items}
                   </div>
                 )}
-                {items.map((item, index) => (
+                {items.map((item) => (
                   <div key={item.id} className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50 relative">
                     {items.length > 1 && (
                       <button
@@ -331,7 +316,6 @@ export default function InvoiceGenerator() {
               <div className="text-right">
                 <h2 className="text-xl font-bold text-gray-800">@ilhamontrail</h2>
                 <p className="text-gray-500 text-sm">ilhamontrail@gmail.com</p>
-                {/* You can add real phone/address here */}
               </div>
             </div>
 
