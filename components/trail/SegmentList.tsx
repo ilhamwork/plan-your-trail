@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { memo, useState } from "react"
 import type { Segment, WaypointSegment } from "@/lib/types"
 import { Waypoints, ChevronRight, ChevronDown } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -15,7 +15,7 @@ interface SegmentListProps {
 
 type TabType = "waypoints" | "gradient"
 
-export function SegmentList({
+export const SegmentList = memo(function SegmentList({
   segments,
   waypointSegments,
   onSegmentClick,
@@ -111,7 +111,7 @@ export function SegmentList({
       </div>
     </div>
   )
-}
+})
 
 // ─── Waypoint segment row ──────────────────────────────────────────
 function WaypointSegmentRow({

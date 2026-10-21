@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { memo, useState, useCallback, useEffect, useRef } from "react"
 import { CloudSun, MapPin, Search, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -113,7 +113,7 @@ function shortName(display_name: string): string {
   return parts[0]
 }
 
-export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
+export const WeatherForecast = memo(function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
   const [date, setDate] = useState(initialDate || "")
 
   useEffect(() => {
@@ -566,4 +566,4 @@ export function WeatherForecast({ center, initialDate }: WeatherForecastProps) {
       </AnimatePresence>
     </div>
   )
-}
+})

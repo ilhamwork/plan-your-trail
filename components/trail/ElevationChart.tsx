@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo } from "react"
+import { memo, useCallback, useMemo, useRef } from "react"
 import {
   AreaChart,
   Area,
@@ -19,11 +19,13 @@ interface ElevationChartProps {
   onHover: (point: TrackPoint | null) => void
 }
 
-export function ElevationChart({
+export const ElevationChart = memo(function ElevationChart({
   trackPoints,
   waypoints = [],
   onHover,
 }: ElevationChartProps) {
+  const lastHoveredIdxRef = useRef<number | null>(null)
+
   // Downsample points for chart performance and stabilize reference
   const chartData = useMemo(() => {
     const sampleRate = Math.max(1, Math.floor(trackPoints.length / 500))
@@ -39,8 +41,10 @@ export function ElevationChart({
 
   const handleMouseMove = useCallback(
     (data: any) => {
-      if (data && data.activeTooltipIndex !== undefined) {
-        const point = chartData[data.activeTooltipIndex]?.original
+      const idx = data?.activeTooltipIndex
+      if (typeof idx === "number" && idx !== lastHoveredIdxRef.current) {
+        lastHoveredIdxRef.current = idx
+        const point = chartData[idx]?.original
         if (point) {
           onHover?.(point)
         }
@@ -50,7 +54,10 @@ export function ElevationChart({
   )
 
   const handleMouseLeave = useCallback(() => {
-    onHover?.(null)
+    if (lastHoveredIdxRef.current !== null) {
+      lastHoveredIdxRef.current = null
+      onHover?.(null)
+    }
   }, [onHover])
 
   const getElevationAtDistance = useCallback(
@@ -167,4 +174,4 @@ export function ElevationChart({
       </div>
     </div>
   )
-}
+})

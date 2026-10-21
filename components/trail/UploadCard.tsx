@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { memo, useCallback, useRef, useState } from "react"
 import { FileUp, FileCheck } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -14,7 +14,7 @@ interface UploadCardProps {
   isLoading?: boolean
 }
 
-export function UploadCard({
+export const UploadCard = memo(function UploadCard({
   onFileLoaded,
   onError,
   fileName,
@@ -209,4 +209,4 @@ export function UploadCard({
       </AnimatePresence>
     </motion.div>
   )
-}
+})

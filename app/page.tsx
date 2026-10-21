@@ -237,10 +237,13 @@ export default function Home() {
   const [shareId, setShareId] = useState<string | null>(null)
   const [isGeneratingShare, setIsGeneratingShare] = useState(false)
 
-  const handleShare = async () => {
-    if (!gpxData) return
+  const handleShare = useCallback(() => {
     setShowShareModal(true)
-  }
+  }, [])
+
+  const handleSegmentTabChange = useCallback(() => {
+    setHighlightRange(null)
+  }, [])
 
   const finishUpload = useCallback(
     async (
@@ -565,7 +568,7 @@ export default function Home() {
                     waypointSegments={mergedWaypointSegments}
                     onSegmentClick={handleSegmentClick}
                     onWaypointSegmentClick={handleWaypointSegmentClick}
-                    onTabChange={() => setHighlightRange(null)}
+                    onTabChange={handleSegmentTabChange}
                   />
                 </motion.div>
 
