@@ -24,7 +24,7 @@ export const ElevationChart = memo(function ElevationChart({
   waypoints = [],
   onHover,
 }: ElevationChartProps) {
-  const lastHoveredIdxRef = useRef<number | null>(null)
+  const lastHoveredIdxRef = useRef<number | string | null>(null)
 
   // Downsample points for chart performance and stabilize reference
   const chartData = useMemo(() => {
@@ -42,9 +42,9 @@ export const ElevationChart = memo(function ElevationChart({
   const handleMouseMove = useCallback(
     (data: any) => {
       const idx = data?.activeTooltipIndex
-      if (typeof idx === "number" && idx !== lastHoveredIdxRef.current) {
+      if (idx != null && idx !== lastHoveredIdxRef.current) {
         lastHoveredIdxRef.current = idx
-        const point = chartData[idx]?.original
+        const point = chartData[Number(idx)]?.original
         if (point) {
           onHover?.(point)
         }
