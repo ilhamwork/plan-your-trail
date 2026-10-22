@@ -7,6 +7,3 @@ export function parseGPXSync(gpxString: string): GPXData {
   const extracted = extractGPX(gpxString);
   return computeGPXData(extracted);
 }
-
-// Backward-compatible alias for existing sync call sites
-export const parseGPX = parseGPXSync;
