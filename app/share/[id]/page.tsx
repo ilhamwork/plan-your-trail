@@ -157,12 +157,85 @@ export default function SharedRoutePage({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid gap-6 lg:grid-cols-[1fr_420px]"
+          className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_420px] lg:items-start lg:gap-6"
         >
           {/* Left column (main content) */}
-          <div className="order-2 flex flex-col gap-5 lg:order-1">
-            {/* Route Header Info Mobile */}
-            <div className="block lg:hidden">
+          <div className="contents lg:flex lg:flex-col lg:gap-5">
+            {/* Map */}
+            {mapProps && (
+              <div className="order-4 lg:order-none">
+                <MapView
+                  {...mapProps}
+                  hoveredPoint={hoveredPoint}
+                  highlightRange={highlightRange}
+                />
+              </div>
+            )}
+
+            {/* Elevation chart */}
+            <div className="order-5 lg:order-none">
+              <ElevationChart
+                trackPoints={route.trackPoints}
+                waypoints={route.waypoints}
+                onHover={setHoveredPoint}
+              />
+            </div>
+
+            {/* Segments */}
+            <div className="order-6 lg:order-none">
+              <SegmentList
+                segments={route.segments}
+                waypointSegments={route.waypointSegments}
+                onSegmentClick={handleSegmentClick}
+                onWaypointSegmentClick={handleWaypointSegmentClick}
+                onTabChange={() => setHighlightRange(null)}
+              />
+            </div>
+
+            {/* Gradient Distribution */}
+            <div className="order-7 lg:order-none">
+              <GradientDistribution points={route.trackPoints} />
+            </div>
+
+            {/* Weather */}
+            <div className="order-8 lg:order-none">
+              <WeatherForecast
+                center={route.center}
+                initialDate={routeInfo.raceDate}
+              />
+            </div>
+
+            <div className="order-9 lg:order-none">
+              <DonationSection />
+            </div>
+
+            <div className="order-10 lg:order-none">
+              <Footer />
+            </div>
+          </div>
+
+          {/* Right column (sidebar — sticky on desktop) */}
+          <div className="contents lg:sticky lg:top-15 lg:flex lg:flex-col lg:gap-5">
+            {/* Promotion / Call to Action */}
+            <div className="order-1 rounded-2xl bg-linear-to-br from-[#1B4332] to-[#2D5A46] p-6 text-white shadow-xl lg:order-none">
+              <h3 className="mb-2 text-lg font-bold">
+                Shared Trail Analysis
+              </h3>
+              <p className="mb-4 text-xs leading-relaxed text-white/70">
+                This route was analyzed using <strong>Plan Your Trail</strong>
+                . Analyze your own GPX files and plan your next
+                adventure.
+              </p>
+              <a
+                href="/"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#FAF6F1]"
+              >
+                Plan Your Trail
+              </a>
+            </div>
+
+            {/* Route Header Info */}
+            <div className="order-2 lg:order-none">
               <HeaderInfo
                 raceName={routeInfo.raceName}
                 userName={routeInfo.userName}
@@ -170,84 +243,9 @@ export default function SharedRoutePage({
               />
             </div>
 
-            {/* Metrics Mobile */}
-            <div className="block lg:hidden">
+            {/* Metrics */}
+            <div className="order-3 lg:order-none">
               <MetricsPanel stats={route.stats} />
-            </div>
-
-            {/* Map */}
-            {mapProps && (
-              <MapView
-                {...mapProps}
-                hoveredPoint={hoveredPoint}
-                highlightRange={highlightRange}
-              />
-            )}
-
-            {/* Elevation chart */}
-            <ElevationChart
-              trackPoints={route.trackPoints}
-              waypoints={route.waypoints}
-              onHover={setHoveredPoint}
-            />
-
-            {/* Segments */}
-            <SegmentList
-              segments={route.segments}
-              waypointSegments={route.waypointSegments}
-              onSegmentClick={handleSegmentClick}
-              onWaypointSegmentClick={handleWaypointSegmentClick}
-              onTabChange={() => setHighlightRange(null)}
-            />
-
-            {/* Gradient Distribution */}
-            <GradientDistribution points={route.trackPoints} />
-
-            {/* Weather */}
-            <WeatherForecast
-              center={route.center}
-              initialDate={routeInfo.raceDate}
-            />
-
-            <DonationSection />
-
-            <Footer />
-          </div>
-
-          {/* Right column (sidebar — sticky on desktop) */}
-          <div className="order-1 lg:order-2">
-            <div className="flex flex-col gap-5 lg:sticky lg:top-15">
-              {/* Promotion / Call to Action */}
-              <div className="rounded-2xl bg-linear-to-br from-[#1B4332] to-[#2D5A46] p-6 text-white shadow-xl">
-                <h3 className="mb-2 text-lg font-bold">
-                  Shared Trail Analysis
-                </h3>
-                <p className="mb-4 text-xs leading-relaxed text-white/70">
-                  This route was analyzed using <strong>Plan Your Trail</strong>
-                  . Analyze your own GPX files and plan your next
-                  adventure.
-                </p>
-                <a
-                  href="/"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#FAF6F1]"
-                >
-                  Plan Your Trail
-                </a>
-              </div>
-
-              {/* Route Header Info Desktop */}
-              <div className="hidden lg:block">
-                <HeaderInfo
-                  raceName={routeInfo.raceName}
-                  userName={routeInfo.userName}
-                  raceDate={routeInfo.raceDate}
-                />
-              </div>
-
-              {/* Metrics Desktop */}
-              <div className="hidden lg:block">
-                <MetricsPanel stats={route.stats} />
-              </div>
             </div>
           </div>
         </motion.div>
