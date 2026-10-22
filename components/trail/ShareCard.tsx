@@ -67,6 +67,7 @@ export function ShareCard({
     }
 
     const total = uphillDist + flatDist + downhillDist
+    if (total === 0) return { uphill: 0, flat: 0, downhill: 0 }
     return {
       uphill: Math.round((uphillDist / total) * 100),
       flat: Math.round((flatDist / total) * 100),
