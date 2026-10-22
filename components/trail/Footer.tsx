@@ -1,11 +1,13 @@
-import { useState } from "react"
+"use client"
+
+import { memo, useState } from "react"
 import { FeedbackModal } from "./FeedbackModal"
 
 interface FooterProps {
   runnerName?: string
 }
 
-export function Footer({ runnerName }: FooterProps) {
+export const Footer = memo(function Footer({ runnerName }: FooterProps) {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
 
   return (
@@ -41,4 +43,4 @@ export function Footer({ runnerName }: FooterProps) {
       />
     </footer>
   )
-}
+})
