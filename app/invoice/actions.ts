@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { headers } from "next/headers"
+import type { Database } from "@/lib/database.types"
 
 export interface InvoiceItem {
   id: string
@@ -79,7 +80,7 @@ function getServerSupabase() {
     )
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  return createClient<Database>(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -117,29 +118,51 @@ export async function getInvoicesAction(): Promise<{
   }
 }
 
-export async function getInvoiceCountAction(): Promise<{
-  count: number
+const ROMAN_MONTHS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+
+/**
+ * Suggest the next invoice number as INV/<month>/<year>/<seq>.
+ * The sequence is derived from the highest existing sequence instead of the
+ * row count, so deleting an invoice can never produce a duplicate number.
+ */
+export async function getNextInvoiceNumberAction(): Promise<{
+  invoiceNumber: string
   error: string | null
 }> {
+  const now = new Date()
+  const prefix = `INV/${ROMAN_MONTHS[now.getMonth()]}/${now.getFullYear()}/`
+  const format = (seq: number) => `${prefix}${String(seq).padStart(3, "0")}`
+
   try {
     await assertInvoiceAuth()
     const supabase = getServerSupabase()
 
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from("invoices")
-      .select("*", { count: "exact", head: true })
+      .select("invoice_number")
 
     if (error) {
-      console.error("Error counting invoices:", error)
-      return { count: 0, error: "Failed to count invoices" }
+      console.error("Error reading invoice numbers:", error)
+      return { invoiceNumber: format(1), error: "Failed to read invoice numbers" }
     }
 
-    return { count: count ?? 0, error: null }
+    const taken = new Set((data ?? []).map((row) => row.invoice_number))
+    let maxSeq = 0
+    for (const number of taken) {
+      const seq = parseInt(number.split("/").pop() ?? "", 10)
+      if (!isNaN(seq) && seq > maxSeq) maxSeq = seq
+    }
+
+    let next = maxSeq + 1
+    while (taken.has(format(next))) next++
+
+    return { invoiceNumber: format(next), error: null }
   } catch (err) {
-    console.error("getInvoiceCountAction error:", err)
+    console.error("getNextInvoiceNumberAction error:", err)
     return {
-      count: 0,
-      error: err instanceof Error ? err.message : "Failed to count invoices",
+      invoiceNumber: format(1),
+      error:
+        err instanceof Error ? err.message : "Failed to generate invoice number",
     }
   }
 }

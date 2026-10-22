@@ -15,7 +15,7 @@ import type {
   WaypointSegment,
   Waypoint,
 } from "@/lib/types"
-import { parseGPX } from "@/lib/gpx-parser"
+import { useGPXParser } from "@/lib/use-gpx-parser"
 import { supabase } from "@/lib/supabase"
 
 import { Header } from "@/components/trail/Header"
@@ -127,6 +127,7 @@ const FEATURES = [
 ]
 
 export default function Home() {
+  const { parse: parseGPX } = useGPXParser()
   const [gpxData, setGpxData] = useState<GPXData | null>(null)
   const [fileName, setFileName] = useState<string>("")
   const [error, setError] = useState<string>("")
@@ -293,10 +294,10 @@ export default function Home() {
   )
 
   const handleFileLoaded = useCallback(
-    (content: string, name: string) => {
+    async (content: string, name: string) => {
       try {
         setError("")
-        const parsed = parseGPX(content)
+        const parsed = await parseGPX(content)
         const today = new Date().toISOString().split("T")[0]
 
         // If example file, skip modal and auto-fill
@@ -329,7 +330,7 @@ export default function Home() {
         setTempFileName("")
       }
     },
-    [finishUpload, sessionRunnerName]
+    [parseGPX, finishUpload, sessionRunnerName]
   )
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
@@ -477,44 +478,17 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid gap-6 lg:grid-cols-[1fr_420px]"
+              className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_420px] lg:items-start lg:gap-6"
             >
-              {/* Left column (main content) */}
-
-              <div className="order-2 flex flex-col gap-5 lg:order-1">
-                {/* Route Header Info */}
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="block lg:hidden"
-                >
-                  <HeaderInfo
-                    raceName={routeDetails.raceName}
-                    userName={sessionRunnerName}
-                    raceDate={routeDetails.raceDate}
-                    onShare={handleShare}
-                    isSharing={isGeneratingShare}
-                  />
-                </motion.div>
-
-                {/* Metrics */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="block lg:hidden"
-                >
-                  <MetricsPanel stats={gpxData.stats} />
-                </motion.div>
-
+              {/* Left column (main content on desktop) */}
+              <div className="contents lg:flex lg:flex-col lg:gap-5">
                 {/* Map */}
                 {mapProps && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
+                    className="order-4 lg:order-0"
                   >
                     <MapView
                       {...mapProps}
@@ -530,6 +504,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
+                  className="order-5 lg:order-0"
                 >
                   <ElevationChart
                     trackPoints={gpxData.trackPoints}
@@ -538,32 +513,15 @@ export default function Home() {
                   />
                 </motion.div>
 
-                {/* Manual Waypoints — mobile */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.55 }}
-                  className="block lg:hidden"
-                >
-                  <WaypointPanel
-                    totalDistanceKm={gpxData.stats.totalDistance / 1000}
-                    waypoints={waypoints}
-                    trackPoints={gpxData.trackPoints}
-                    fileName={fileName}
-                    onAdd={handleAddWaypoint}
-                    onEdit={handleEditWaypoint}
-                    onRemove={handleRemoveWaypoint}
-                  />
-                </motion.div>
-
                 {/* Segments */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
+                  className="order-7 lg:order-0"
                 >
                   <SegmentList
-                    key={`${fileName}-${waypoints.length}-${waypoints.map((w) => w.name + w.distance).join("-")}`}
+                    key={fileName}
                     segments={gpxData.segments}
                     waypointSegments={mergedWaypointSegments}
                     onSegmentClick={handleSegmentClick}
@@ -577,6 +535,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
+                  className="order-8 lg:order-0"
                 >
                   <GradientDistribution points={gpxData.trackPoints} />
                 </motion.div>
@@ -586,10 +545,73 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.7 }}
+                  className="order-9 lg:order-0"
                 >
                   <WeatherForecast
                     center={gpxData.center}
                     initialDate={routeDetails.raceDate}
+                  />
+                </motion.div>
+              </div>
+
+              {/* Right column (sidebar — sticky on desktop) */}
+              <div className="contents lg:sticky lg:top-15 lg:flex lg:flex-col lg:gap-5">
+                {/* Upload card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="order-1 lg:order-0"
+                >
+                  <UploadCard
+                    onFileLoaded={handleFileLoaded}
+                    fileName={fileName}
+                    error={error}
+                    isLoading={isSubmittingDetails}
+                  />
+                </motion.div>
+
+                {/* Route Header Info */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="order-2 lg:order-0"
+                >
+                  <HeaderInfo
+                    raceName={routeDetails.raceName}
+                    userName={sessionRunnerName}
+                    raceDate={routeDetails.raceDate}
+                    onShare={handleShare}
+                    isSharing={isGeneratingShare}
+                  />
+                </motion.div>
+
+                {/* Metrics */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="order-3 lg:order-0"
+                >
+                  <MetricsPanel stats={gpxData.stats} />
+                </motion.div>
+
+                {/* Manual Waypoints */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="order-6 lg:order-0"
+                >
+                  <WaypointPanel
+                    totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                    waypoints={waypoints}
+                    trackPoints={gpxData.trackPoints}
+                    fileName={fileName}
+                    onAdd={handleAddWaypoint}
+                    onEdit={handleEditWaypoint}
+                    onRemove={handleRemoveWaypoint}
                   />
                 </motion.div>
 
@@ -597,112 +619,26 @@ export default function Home() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.9 }}
-                  className="block lg:hidden"
+                  transition={{ delay: 0.6 }}
+                  className="order-10 lg:order-0"
                 >
                   <DonationSection />
                 </motion.div>
-              </div>
 
-              {/* Right column (sidebar — sticky on desktop) */}
-
-              <div className="order-1 lg:order-2 lg:block">
-                <div className="flex flex-col gap-5 lg:sticky lg:top-15">
-                  {/* Upload card */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <UploadCard
-                      onFileLoaded={handleFileLoaded}
-                      fileName={fileName}
-                      error={error}
-                      isLoading={isSubmittingDetails}
-                    />
-                  </motion.div>
-
-                  {/* Route Header Info */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="hidden lg:block"
-                  >
-                    <HeaderInfo
-                      raceName={routeDetails.raceName}
-                      userName={sessionRunnerName}
-                      raceDate={routeDetails.raceDate}
-                      onShare={handleShare}
-                      isSharing={isGeneratingShare}
-                    />
-                  </motion.div>
-
-                  {/* Metrics */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="hidden lg:block"
-                  >
-                    <MetricsPanel stats={gpxData.stats} />
-                  </motion.div>
-
-                  {/* Manual Waypoints */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45 }}
-                    className="hidden lg:block"
-                  >
-                    <WaypointPanel
-                      totalDistanceKm={gpxData.stats.totalDistance / 1000}
-                      waypoints={waypoints}
-                      trackPoints={gpxData.trackPoints}
-                      fileName={fileName}
-                      onAdd={handleAddWaypoint}
-                      onEdit={handleEditWaypoint}
-                      onRemove={handleRemoveWaypoint}
-                    />
-                  </motion.div>
-
-                  {/* Donation Section */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="hidden lg:block"
-                  >
-                    <DonationSection />
-                  </motion.div>
-
-                  <motion.div
-                    key="footer"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="hidden lg:block"
-                  >
-                    <Footer runnerName={sessionRunnerName} />
-                  </motion.div>
-                </div>
+                <motion.div
+                  key="footer"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="order-11 lg:order-0"
+                >
+                  <Footer runnerName={sessionRunnerName} />
+                </motion.div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        {gpxData && (
-          <motion.div
-            key="footer"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="block lg:hidden"
-          >
-            <Footer runnerName={sessionRunnerName} />
-          </motion.div>
-        )}
 
         {/* ── Route Details Modal ────────────────────── */}
         <ModalFormInfo

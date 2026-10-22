@@ -23,9 +23,12 @@ export const SegmentList = memo(function SegmentList({
   onTabChange,
 }: SegmentListProps) {
   const hasWaypoints = waypointSegments.length > 0
-  const [tab, setTab] = useState<TabType>(
-    hasWaypoints ? "waypoints" : "gradient"
-  )
+  const [selectedTab, setTab] = useState<TabType | null>(null)
+  // Derive the effective tab so it stays valid when waypoints are added/removed
+  const tab: TabType =
+    selectedTab === "waypoints" && !hasWaypoints
+      ? "gradient"
+      : (selectedTab ?? (hasWaypoints ? "waypoints" : "gradient"))
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   return (
