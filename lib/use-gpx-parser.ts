@@ -53,12 +53,13 @@ export function useGPXParser() {
       }
     }
 
+    const requests = pendingRequests.current;
     return () => {
       if (workerRef.current) {
         workerRef.current.terminate();
         workerRef.current = null;
       }
-      pendingRequests.current.clear();
+      requests.clear();
     };
   }, []);
 

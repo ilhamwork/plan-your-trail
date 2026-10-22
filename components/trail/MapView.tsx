@@ -225,7 +225,6 @@ export function MapView({
       satLayerRef.current = null
       setMapReady(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [is3D, trackPoints, waypoints, bounds])
 
   // ── Toggle satellite layer (2D layer) ─────────────────────────────

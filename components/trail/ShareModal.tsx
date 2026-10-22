@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Share2, Image as ImageIcon, Download, Share } from "lucide-react"
+import { X, Share2, Download, Share } from "lucide-react"
 import { toPng } from "html-to-image"
 import { supabase } from "@/lib/supabase"
 import { ShareCard } from "./ShareCard"
@@ -173,7 +173,7 @@ export function ShareModal({
                     Your route stats are ready to share
                   </p>
                   <p className="text-sm leading-relaxed text-gray-400">
-                    Don't forget to tag{" "}
+                    Don&apos;t forget to tag{" "}
                     <span className="font-semibold text-[#1B4332]">
                       @ilhamontrail
                     </span>{" "}

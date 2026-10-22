@@ -19,7 +19,7 @@ const SEGMENT_LABELS: Record<SegmentType, string> = {
 };
 
 // ─── Minimum segment length based on total distance ────────────────
-function getMinSegmentLength(totalDistance: number): number {
+function getMinSegmentLength(_totalDistance: number): number {
   return 1000; // Strictly enforce 1km minimum
 }
 
