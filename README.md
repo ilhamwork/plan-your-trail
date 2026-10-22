@@ -27,7 +27,7 @@ Upload a GPX file and instantly get an interactive map, elevation profile, segme
 | 2D Map       | Leaflet + OpenStreetMap              |
 | 3D Map       | MapLibre GL JS + Terrarium DEM tiles |
 | Charts       | Recharts                             |
-| GPX Parsing  | @mapbox/togeojson                    |
+| GPX Parsing  | fast-xml-parser / Web Worker                    |
 | Image Export | html-to-image                        |
 | Animations   | Framer Motion                        |
 | Weather      | Open-Meteo (Historical + Forecast)   |

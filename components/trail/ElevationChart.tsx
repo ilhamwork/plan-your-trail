@@ -40,7 +40,7 @@ export const ElevationChart = memo(function ElevationChart({
   }, [trackPoints])
 
   const handleMouseMove = useCallback(
-    (data: any) => {
+    (data: { activeTooltipIndex?: number | string | null }) => {
       const idx = data?.activeTooltipIndex
       if (idx != null && idx !== lastHoveredIdxRef.current) {
         lastHoveredIdxRef.current = idx

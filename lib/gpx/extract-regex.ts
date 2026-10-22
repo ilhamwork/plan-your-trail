@@ -36,7 +36,6 @@ export function extractRegex(text: string): ExtractedGPX {
   const waypoints: RawWpt[] = [];
 
   let curLine: RawPt[] | null = null;
-  let inRte = false;
   let ptStart = -1;
   let ptAttrs = "";
   let inWpt = false;
@@ -59,12 +58,10 @@ export function extractRegex(text: string): ExtractedGPX {
         break;
       case "rte":
         if (!closing) {
-          inRte = !selfClosing;
           curLine = selfClosing ? null : [];
         } else {
           if (curLine && curLine.length >= 2) routeLines.push(curLine);
           curLine = null;
-          inRte = false;
         }
         break;
       case "trkpt":
@@ -121,7 +118,6 @@ export function extractRegex(text: string): ExtractedGPX {
         break;
     }
   }
-  void inRte;
 
   return { lines: trackLines.concat(routeLines), waypoints };
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { memo, useCallback, useRef, useState } from "react"
-import { FileUp, FileCheck } from "lucide-react"
+import { FileUp, FileCheck, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -47,7 +47,7 @@ export const UploadCard = memo(function UploadCard({
       }
       reader.readAsText(file)
     },
-    [onFileLoaded]
+    [onFileLoaded, onError]
   )
 
   const handleDrop = useCallback(
@@ -86,6 +86,7 @@ export const UploadCard = memo(function UploadCard({
   )
 
   const hasFile = !!fileName
+  const isBusy = isLoading || isLoadingExample
 
   return (
     <motion.div
@@ -97,14 +98,16 @@ export const UploadCard = memo(function UploadCard({
         <div
           className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
             hasFile ? "p-3" : "p-10 text-center"
-          } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""}`}
+          } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""} ${
+            isBusy ? "pointer-events-none opacity-90" : ""
+          }`}
           onDragOver={(e) => {
             e.preventDefault()
             setIsDragging(true)
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
+          onClick={() => !isBusy && inputRef.current?.click()}
         >
           <input
             ref={inputRef}
@@ -112,10 +115,29 @@ export const UploadCard = memo(function UploadCard({
             accept=".gpx"
             onChange={handleChange}
             className="hidden"
+            disabled={isBusy}
           />
 
           <AnimatePresence mode="wait">
-            {hasFile ? (
+            {isLoading ? (
+              <motion.div
+                key="parsing"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex items-center justify-center gap-3 py-2"
+              >
+                <Loader2 className="h-6 w-6 animate-spin text-[#2A9D8F]" />
+                <div className="text-left">
+                  <p className="text-sm font-bold text-white">
+                    Processing GPX data...
+                  </p>
+                  <p className="text-[11px] font-medium text-white/60">
+                    Running elevation smoothing & route analysis
+                  </p>
+                </div>
+              </motion.div>
+            ) : hasFile ? (
               <motion.div
                 key="loaded"
                 initial={{ opacity: 0, x: -10 }}
@@ -179,10 +201,10 @@ export const UploadCard = memo(function UploadCard({
 
             <button
               onClick={handleLoadExample}
-              disabled={isLoadingExample || isLoading}
+              disabled={isBusy}
               className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#E76F51] bg-white px-4 py-2 text-sm font-black text-[#E76F51] shadow-sm transition-all hover:bg-[#E76F51] hover:text-white active:scale-[0.98] disabled:opacity-50"
             >
-              {isLoadingExample || isLoading ? (
+              {isLoadingExample ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#E76F51]/20 border-t-[#E76F51]" />
               ) : (
                 "Try GPX Example"

@@ -232,11 +232,10 @@ export default function Home() {
   const [tempRoute, setTempRoute] = useState<GPXData | null>(null)
   const [tempFileName, setTempFileName] = useState<string>("")
   const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
+  const [isParsingGPX, setIsParsingGPX] = useState(false)
 
   // Share Modal State
   const [showShareModal, setShowShareModal] = useState(false)
-  const [shareId, setShareId] = useState<string | null>(null)
-  const [isGeneratingShare, setIsGeneratingShare] = useState(false)
 
   const handleShare = useCallback(() => {
     setShowShareModal(true)
@@ -297,6 +296,7 @@ export default function Home() {
     async (content: string, name: string) => {
       try {
         setError("")
+        setIsParsingGPX(true)
         const parsed = await parseGPX(content)
         const today = new Date().toISOString().split("T")[0]
 
@@ -328,6 +328,8 @@ export default function Home() {
         )
         setTempRoute(null)
         setTempFileName("")
+      } finally {
+        setIsParsingGPX(false)
       }
     },
     [parseGPX, finishUpload, sessionRunnerName]
@@ -421,7 +423,7 @@ export default function Home() {
                   onError={setError}
                   fileName={fileName}
                   error={error}
-                  isLoading={isSubmittingDetails}
+                  isLoading={isParsingGPX || isSubmittingDetails}
                 />
               </motion.div>
 
@@ -567,7 +569,7 @@ export default function Home() {
                     onFileLoaded={handleFileLoaded}
                     fileName={fileName}
                     error={error}
-                    isLoading={isSubmittingDetails}
+                    isLoading={isParsingGPX || isSubmittingDetails}
                   />
                 </motion.div>
 
@@ -583,7 +585,6 @@ export default function Home() {
                     userName={sessionRunnerName}
                     raceDate={routeDetails.raceDate}
                     onShare={handleShare}
-                    isSharing={isGeneratingShare}
                   />
                 </motion.div>
 
