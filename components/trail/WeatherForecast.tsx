@@ -17,20 +17,6 @@ interface WeatherPeriod {
 
 interface WeatherData {
   date: string
-  temperatureMax: number
-  temperatureMin: number
-  weatherCode: number
-  weatherDescription: string
-  rainProbability: number
-  precipitation: number
-  windSpeed: number
-  windDirection: string
-  humidity: number
-  uvIndex: number
-  feelsLikeMax: number
-  feelsLikeMin: number
-  sunrise: string
-  sunset: string
   periods?: WeatherPeriod[]
 }
 
@@ -79,12 +65,6 @@ function getWeatherEmoji(code: number): string {
   if (code <= 82) return "🌦️"
   if (code <= 86) return "🌨️"
   return "⛈️"
-}
-
-// Wind degree → direction
-function degToDirection(deg: number): string {
-  const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
-  return dirs[Math.round(deg / 45) % 8]
 }
 
 // Format YYYY-MM-DD to "14 April 2026"
@@ -253,7 +233,7 @@ export const WeatherForecast = memo(function WeatherForecast({ center, initialDa
         historyUrl.searchParams.set("longitude", activeLon.toFixed(4))
         historyUrl.searchParams.set(
           "daily",
-          "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,apparent_temperature_max,apparent_temperature_min"
+          "weather_code"
         )
         historyUrl.searchParams.set("hourly", "temperature_2m,weather_code")
         historyUrl.searchParams.set("start_date", date)
@@ -294,20 +274,6 @@ export const WeatherForecast = memo(function WeatherForecast({ center, initialDa
 
             forecastData = {
               date: d.time[0],
-              temperatureMax: d.temperature_2m_max[0],
-              temperatureMin: d.temperature_2m_min[0],
-              weatherCode: d.weather_code[0],
-              weatherDescription: WMO_CODES[d.weather_code[0]] || "Unknown",
-              rainProbability: 0,
-              precipitation: d.precipitation_sum[0],
-              windSpeed: d.wind_speed_10m_max[0],
-              windDirection: degToDirection(d.wind_direction_10m_dominant[0]),
-              humidity: 0,
-              uvIndex: 0,
-              feelsLikeMax: d.apparent_temperature_max[0],
-              feelsLikeMin: d.apparent_temperature_min[0],
-              sunrise: d.sunrise[0]?.split("T")[1] || "",
-              sunset: d.sunset[0]?.split("T")[1] || "",
               periods,
             }
           }
@@ -318,11 +284,11 @@ export const WeatherForecast = memo(function WeatherForecast({ center, initialDa
         forecastUrl.searchParams.set("longitude", activeLon.toFixed(4))
         forecastUrl.searchParams.set(
           "daily",
-          "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,uv_index_max,apparent_temperature_max,apparent_temperature_min"
+          "weather_code"
         )
         forecastUrl.searchParams.set(
           "hourly",
-          "relative_humidity_2m,temperature_2m,weather_code"
+          "temperature_2m,weather_code"
         )
         forecastUrl.searchParams.set("start_date", date)
         forecastUrl.searchParams.set("end_date", date)
@@ -334,14 +300,6 @@ export const WeatherForecast = memo(function WeatherForecast({ center, initialDa
           if (rawForecast.daily && rawForecast.daily.time.length > 0) {
             const d = rawForecast.daily
             const h = rawForecast.hourly
-            const avgHumidity = h?.relative_humidity_2m
-              ? Math.round(
-                  h.relative_humidity_2m.reduce(
-                    (a: number, b: number) => a + b,
-                    0
-                  ) / h.relative_humidity_2m.length
-                )
-              : 0
 
             let periods: WeatherPeriod[] | undefined
             if (h && h.temperature_2m && h.temperature_2m.length >= 24) {
@@ -371,20 +329,6 @@ export const WeatherForecast = memo(function WeatherForecast({ center, initialDa
 
             forecastData = {
               date: d.time[0],
-              temperatureMax: d.temperature_2m_max[0],
-              temperatureMin: d.temperature_2m_min[0],
-              weatherCode: d.weather_code[0],
-              weatherDescription: WMO_CODES[d.weather_code[0]] || "Unknown",
-              rainProbability: d.precipitation_probability_max?.[0] ?? 0,
-              precipitation: d.precipitation_sum[0],
-              windSpeed: d.wind_speed_10m_max[0],
-              windDirection: degToDirection(d.wind_direction_10m_dominant[0]),
-              humidity: avgHumidity,
-              uvIndex: d.uv_index_max?.[0] ?? 0,
-              feelsLikeMax: d.apparent_temperature_max[0],
-              feelsLikeMin: d.apparent_temperature_min[0],
-              sunrise: d.sunrise[0]?.split("T")[1] || "",
-              sunset: d.sunset[0]?.split("T")[1] || "",
               periods,
             }
           }
