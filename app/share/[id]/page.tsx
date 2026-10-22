@@ -68,11 +68,11 @@ export default function SharedRoutePage({
         if (dbError) throw dbError
         if (!data) throw new Error("Route not found")
 
-        setRoute(data.route_data as GPXData)
+        setRoute(data.route_data)
         setRouteInfo({
-          raceName: data.race_name,
-          userName: data.user_name,
-          raceDate: data.race_date,
+          raceName: data.race_name ?? "",
+          userName: data.user_name ?? "",
+          raceDate: data.race_date ?? "",
         })
       } catch (err) {
         console.error("Error fetching shared route:", err)

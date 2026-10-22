@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { headers } from "next/headers"
+import type { Database } from "@/lib/database.types"
 
 export interface InvoiceItem {
   id: string
@@ -79,7 +80,7 @@ function getServerSupabase() {
     )
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  return createClient<Database>(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
