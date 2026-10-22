@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { User, Flag, Calendar, Check } from "lucide-react"
+import { Flag, Calendar } from "lucide-react"
 
 export interface RouteDetailsData {
   raceName: string

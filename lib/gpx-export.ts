@@ -4,7 +4,7 @@ import type { TrackPoint, Waypoint } from "./types"
  * Generates a GPX XML string from track points and waypoints.
  * Includes all <trkpt> entries with elevation, plus <wpt> entries for each waypoint.
  */
-export function generateGPX(
+function generateGPX(
   trackPoints: TrackPoint[],
   waypoints: Waypoint[],
   routeName: string = "Route"

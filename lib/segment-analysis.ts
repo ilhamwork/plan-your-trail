@@ -18,19 +18,16 @@ const SEGMENT_LABELS: Record<SegmentType, string> = {
   descent: "Descent",
 };
 
-// ─── Minimum segment length based on total distance ────────────────
-function getMinSegmentLength(totalDistance: number): number {
-  return 1000; // Strictly enforce 1km minimum
-}
+// ─── Minimum segment length (1km strictly enforced) ────────────────
+const MIN_SEGMENT_LENGTH = 1000;
 
 // ─── Analyze segments ──────────────────────────────────────────────
 export function analyzeSegments(
-  points: TrackPoint[],
-  totalDistance: number
+  points: TrackPoint[]
 ): Segment[] {
   if (points.length < 2) return [];
 
-  const minLength = getMinSegmentLength(totalDistance);
+  const minLength = MIN_SEGMENT_LENGTH;
 
   // Step 1: Calculate rolling average gradient over a window
   const windowSize = Math.max(5, Math.floor(points.length / 200));

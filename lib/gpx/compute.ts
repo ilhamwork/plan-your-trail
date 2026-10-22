@@ -226,7 +226,7 @@ export function computeGPXData(extracted: ExtractedGPX): GPXData {
     waypointCount: waypoints.length,
   };
 
-  const segments = analyzeSegments(trackPoints, cumulativeDistance);
+  const segments = analyzeSegments(trackPoints);
   const waypointSegments = buildWaypointSegments(trackPoints, waypoints);
 
   return {

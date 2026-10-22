@@ -12,28 +12,48 @@ const parser = new XMLParser({
   isArray: (name) => ARR.has(name),
 });
 
-function txt(v: any): string {
+function txt(v: unknown): string {
   if (v == null) return "";
   if (typeof v === "string") return v;
-  if (typeof v === "object") return typeof v["#text"] === "string" ? v["#text"] : "";
+  if (typeof v === "object" && "#text" in (v as Record<string, unknown>)) {
+    const textVal = (v as Record<string, unknown>)["#text"];
+    return typeof textVal === "string" ? textVal : "";
+  }
   return String(v);
 }
 
-function pt(n: any): RawPt {
+interface FxpNode {
+  ele?: unknown;
+  "@_lat"?: string;
+  "@_lon"?: string;
+  name?: unknown;
+}
+
+function pt(n: FxpNode): RawPt {
   let ele = parseFloat(txt(Array.isArray(n.ele) ? n.ele[0] : n.ele));
   if (isNaN(ele)) ele = 0;
-  return { lat: parseFloat(n["@_lat"]), lon: parseFloat(n["@_lon"]), ele };
+  return {
+    lat: parseFloat(n["@_lat"] || "0"),
+    lon: parseFloat(n["@_lon"] || "0"),
+    ele,
+  };
+}
+
+interface FxpGpx {
+  trk?: Array<{ trkseg?: Array<{ trkpt?: FxpNode[] }> }>;
+  rte?: Array<{ rtept?: FxpNode[] }>;
+  wpt?: FxpNode[];
 }
 
 export function extractFxp(text: string, validate = true): ExtractedGPX {
   if (validate && XMLValidator.validate(text) !== true) throw new Error(ERR_XML);
-  let root: any;
+  let root: unknown;
   try {
     root = parser.parse(text);
   } catch {
     throw new Error(ERR_XML);
   }
-  const gpx = root && root.gpx;
+  const gpx = (root as Record<string, unknown>)?.gpx as FxpGpx | undefined;
   if (!gpx || typeof gpx !== "object") throw new Error(ERR_XML);
 
   const lines: RawPt[][] = [];
