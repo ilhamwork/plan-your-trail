@@ -520,7 +520,7 @@ export default function Home() {
                   className="order-7 lg:order-none"
                 >
                   <SegmentList
-                    key={`${fileName}-${waypoints.length}-${waypoints.map((w) => w.name + w.distance).join("-")}`}
+                    key={fileName}
                     segments={gpxData.segments}
                     waypointSegments={mergedWaypointSegments}
                     onSegmentClick={handleSegmentClick}

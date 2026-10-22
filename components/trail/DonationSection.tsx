@@ -13,10 +13,13 @@ export function DonationSection() {
         Planning your next adventure trail with this tool? Help support its growth
         for the trail community.
       </p>
-      <a target="_blank" href="https://trakteer.id/ilhamontrail">
-        <button className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-[#1B4332] px-8 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-[#2D5A46] active:scale-95">
-          Fuel This Tool
-        </button>
+      <a
+        href="https://trakteer.id/ilhamontrail"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-[#1B4332] px-8 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-[#2D5A46] active:scale-95"
+      >
+        Fuel This Tool
       </a>
     </div>
   )
