@@ -1,31 +1,24 @@
 "use client"
 
-import { useState, useCallback, useMemo, useEffect } from "react"
-import { buildWaypointSegments } from "@/lib/segment-analysis"
+import { useState, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
-import { Map, BarChart3, Waypoints, CloudSun } from "lucide-react"
 
 import { WaypointPanel } from "@/components/trail/WaypointPanel"
-
-import type {
-  GPXData,
-  TrackPoint,
-  Segment,
-  WaypointSegment,
-  Waypoint,
-} from "@/lib/types"
+import type { TrackPoint, Segment, WaypointSegment } from "@/lib/types"
 import { useGPXParser } from "@/lib/use-gpx-parser"
 import { useHighlightRange } from "@/lib/use-highlight-range"
-import { formatKm } from "@/lib/format"
-import { supabase } from "@/lib/supabase"
 
 import { Header } from "@/components/trail/Header"
 import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
 import { SegmentList } from "@/components/trail/SegmentList"
-import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
+import { EmptyState } from "@/components/trail/EmptyState"
+
+import { useWaypoints } from "@/components/trail/hooks/useWaypoints"
+import { useRunnerSession } from "@/components/trail/hooks/useRunnerSession"
+import { useRouteUpload } from "@/components/trail/hooks/useRouteUpload"
 
 // ─── Dynamic Component Imports ─────────────────────────────────────
 const MapView = dynamic(
@@ -96,149 +89,68 @@ const Footer = dynamic(
   { ssr: false }
 )
 
-// ─── Feature cards for empty state ─────────────────────────────────
-const FEATURES = [
-  {
-    icon: Map,
-    title: "Route Map",
-    desc: "Interactive 3D map",
-    color: "text-[#2A9D8F]",
-    bg: "bg-[#2A9D8F]/5",
-  },
-  {
-    icon: BarChart3,
-    title: "Elevation Profile",
-    desc: "Detailed elevation chart",
-    color: "text-[#F4A261]",
-    bg: "bg-[#F4A261]/5",
-  },
-  {
-    icon: Waypoints,
-    title: "Segment Breakdown",
-    desc: "Auto-detected segments",
-    color: "text-[#E9C46A]",
-    bg: "bg-[#E9C46A]/5",
-  },
-  {
-    icon: CloudSun,
-    title: "Weather Forecast",
-    desc: "Forecast along the route",
-    color: "text-[#457B9D]",
-    bg: "bg-[#457B9D]/5",
-  },
-]
-
 export default function Home() {
   const { parse: parseGPX } = useGPXParser()
-  const [gpxData, setGpxData] = useState<GPXData | null>(null)
-  const [fileName, setFileName] = useState<string>("")
-  const [error, setError] = useState<string>("")
-  const [waypoints, setWaypoints] = useState<Waypoint[]>([])
-
-  const interpolateCoordinatesForDistance = useCallback(
-    (targetDistMeters: number) => {
-      if (!gpxData) return { lat: 0, lon: 0, ele: 0 }
-      const pts = gpxData.trackPoints
-      let idx = pts.findIndex((p) => p.distance >= targetDistMeters)
-      if (idx < 0) idx = pts.length - 1
-      if (idx === 0) idx = 1
-      const p0 = pts[idx - 1]
-      const p1 = pts[idx]
-      const span = p1.distance - p0.distance
-      const t = span > 0 ? (targetDistMeters - p0.distance) / span : 0
-      return {
-        lat: p0.lat + t * (p1.lat - p0.lat),
-        lon: p0.lon + t * (p1.lon - p0.lon),
-        ele: p0.ele + t * (p1.ele - p0.ele),
-      }
-    },
-    [gpxData]
-  )
-
-  const handleAddWaypoint = useCallback(
-    (name: string, distanceKm: number) => {
-      const distMeters = distanceKm * 1000
-      const coords = interpolateCoordinatesForDistance(distMeters)
-      const newWp: Waypoint = {
-        id: crypto.randomUUID(),
-        name,
-        distance: distMeters,
-        isFromGpx: false,
-        ...coords,
-      }
-      setWaypoints((prev) => [...prev, newWp])
-    },
-    [interpolateCoordinatesForDistance]
-  )
-
-  const handleEditWaypoint = useCallback(
-    (id: string, name: string, distanceKm: number) => {
-      const distMeters = distanceKm * 1000
-      setWaypoints((prev) =>
-        prev.map((wp) => {
-          if (wp.id === id) {
-            const distChanged = Math.abs(wp.distance - distMeters) > 1
-            const coords = distChanged
-              ? interpolateCoordinatesForDistance(distMeters)
-              : { lat: wp.lat, lon: wp.lon, ele: wp.ele }
-            return {
-              ...wp,
-              name,
-              distance: distMeters,
-              ...coords,
-            }
-          }
-          return wp
-        })
-      )
-    },
-    [interpolateCoordinatesForDistance]
-  )
-
-  const handleRemoveWaypoint = useCallback((id: string) => {
-    setWaypoints((prev) => prev.filter((wp) => wp.id !== id))
-  }, [])
-
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
+  const [showShareModal, setShowShareModal] = useState(false)
+
+  // Subsystem hooks
+  const {
+    sessionRunnerName,
+    showSessionModal,
+    handleSessionNameSubmit,
+  } = useRunnerSession()
+
   const {
     highlightRange,
     clearHighlight,
     toggleHighlight,
   } = useHighlightRange()
 
-  // Session Runner Name
-  const [sessionRunnerName, setSessionRunnerName] = useState<string>("")
-  const [showSessionModal, setShowSessionModal] = useState(false)
+  // Forward ref dummy for route upload state; linked with useWaypoints
+  const [tempGpxForWaypoints, setTempGpxForWaypoints] = useState<
+    Parameters<typeof useWaypoints>[0]
+  >(null)
 
-  // Load session name on mount
-  useEffect(() => {
-    const saved = sessionStorage.getItem("runnerName")
-    if (saved) {
-      setSessionRunnerName(saved)
-    } else {
-      setShowSessionModal(true)
-    }
-  }, [])
+  const {
+    waypoints,
+    setWaypoints,
+    handleAddWaypoint,
+    handleEditWaypoint,
+    handleRemoveWaypoint,
+    sortedWaypoints,
+    mergedWaypointSegments,
+  } = useWaypoints(tempGpxForWaypoints)
 
-  const handleSessionNameSubmit = (name: string) => {
-    setSessionRunnerName(name)
-    sessionStorage.setItem("runnerName", name)
-    setShowSessionModal(false)
-  }
+  const handleResetInteractions = useCallback(() => {
+    clearHighlight()
+    setHoveredPoint(null)
+  }, [clearHighlight])
 
-  // Route Details Form State
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [routeDetails, setRouteDetails] = useState<RouteDetailsData>({
-    raceName: "",
-    raceDate: new Date().toISOString().split("T")[0],
+  const {
+    gpxData,
+    fileName,
+    error,
+    setError,
+    routeDetails,
+    setRouteDetails,
+    showDetailsModal,
+    isSubmittingDetails,
+    isParsingGPX,
+    handleFileLoaded,
+    handleDetailsSubmit,
+    handleDetailsCancel,
+  } = useRouteUpload({
+    parseGPX,
+    sessionRunnerName,
+    onWaypointsLoaded: (wps) => setWaypoints(wps),
+    onResetInteractions: handleResetInteractions,
   })
-  const [tempRoute, setTempRoute] = useState<GPXData | null>(null)
-  const [tempFileName, setTempFileName] = useState<string>("")
-  const [isSubmittingDetails, setIsSubmittingDetails] = useState(false)
-  const [isParsingGPX, setIsParsingGPX] = useState(false)
 
-  // Share Modal State
-  const [showShareModal, setShowShareModal] = useState(false)
+  // Synchronize gpxData with waypoint hook
+  if (tempGpxForWaypoints !== gpxData) {
+    setTempGpxForWaypoints(gpxData)
+  }
 
   const handleShare = useCallback(() => {
     setShowShareModal(true)
@@ -247,108 +159,6 @@ export default function Home() {
   const handleSegmentTabChange = useCallback(() => {
     clearHighlight()
   }, [clearHighlight])
-
-  const finishUpload = useCallback(
-    async (
-      parsed: GPXData,
-      name: string,
-      details: RouteDetailsData,
-      runnerName: string
-    ) => {
-      setIsSubmittingDetails(true)
-
-      try {
-        // Save to Supabase telemetry table
-        const { error: dbError } = await supabase.from("user_routes").insert([
-          {
-            user_name: runnerName,
-            race_name: details.raceName,
-            race_date: details.raceDate,
-            file_name: name,
-            distance: parseFloat(
-              formatKm(parsed.stats.totalDistance, 2)
-            ),
-            elevation_gain: parsed.stats.elevationGain,
-          },
-        ])
-
-        if (dbError) {
-          console.error("Failed to save route telemetry:", dbError)
-        }
-      } catch (err) {
-        console.error("Error saving to supabase:", err)
-      } finally {
-        setGpxData(parsed)
-        setFileName(name)
-        const initialWps = parsed.waypoints.map((wp) => ({
-          ...wp,
-          id: wp.id || crypto.randomUUID(),
-          isFromGpx: true,
-        }))
-        setWaypoints(initialWps)
-        setShowDetailsModal(false)
-        setTempRoute(null)
-        setTempFileName("")
-        setIsSubmittingDetails(false)
-      }
-    },
-    []
-  )
-
-  const handleFileLoaded = useCallback(
-    async (content: string, name: string) => {
-      try {
-        setError("")
-        setIsParsingGPX(true)
-        const parsed = await parseGPX(content)
-        const today = new Date().toISOString().split("T")[0]
-
-        // If example file, skip modal and auto-fill
-        if (name === "Rinjani-162K-2025.gpx") {
-          const exampleDetails = {
-            raceName: "Rinjani 162K",
-            raceDate: today,
-          }
-          setRouteDetails(exampleDetails)
-          finishUpload(parsed, name, exampleDetails, sessionRunnerName)
-          return
-        }
-
-        // For manual upload, reset fields (except date) and show modal
-        setTempRoute(parsed)
-        setTempFileName(name)
-        setRouteDetails({
-          raceName: "",
-          raceDate: today,
-        })
-
-        setShowDetailsModal(true)
-        clearHighlight()
-        setHoveredPoint(null)
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to parse GPX file"
-        )
-        setTempRoute(null)
-        setTempFileName("")
-      } finally {
-        setIsParsingGPX(false)
-      }
-    },
-    [parseGPX, finishUpload, sessionRunnerName, clearHighlight]
-  )
-
-  const handleDetailsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (tempRoute && tempFileName) {
-      await finishUpload(
-        tempRoute,
-        tempFileName,
-        routeDetails,
-        sessionRunnerName
-      )
-    }
-  }
 
   const handleSegmentClick = useCallback(
     (segment: Segment) => {
@@ -364,18 +174,6 @@ export default function Home() {
     [toggleHighlight]
   )
 
-  // Sort waypoints by distance
-  const sortedWaypoints = useMemo(() => {
-    return [...waypoints].sort((a, b) => a.distance - b.distance)
-  }, [waypoints])
-
-  // Rebuild waypoint segments from merged waypoints
-  const mergedWaypointSegments = useMemo(() => {
-    if (!gpxData) return []
-    return buildWaypointSegments(gpxData.trackPoints, sortedWaypoints)
-  }, [gpxData, sortedWaypoints])
-
-  // Memoize to avoid unnecessary re-renders
   const mapProps = useMemo(() => {
     if (!gpxData) return null
     return {
@@ -390,88 +188,16 @@ export default function Home() {
       <Header />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
-        {/* ── Empty state ───────────────────────── */}
         <AnimatePresence mode="wait">
           {!gpxData ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mx-auto max-w-lg"
-            >
-              {sessionRunnerName && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 text-center"
-                >
-                  <h2 className="text-2xl font-bold text-[#1B4332]">
-                    Hello, {sessionRunnerName}!
-                  </h2>
-                </motion.div>
-              )}
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <UploadCard
-                  onFileLoaded={handleFileLoaded}
-                  onError={setError}
-                  fileName={fileName}
-                  error={error}
-                  isLoading={isParsingGPX || isSubmittingDetails}
-                />
-              </motion.div>
-
-              {/* Tagline */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-6 text-center"
-              >
-                <p className="text-lg font-semibold text-gray-500">
-                  Analyze your trail route.
-                </p>
-                <p className="text-lg font-semibold text-gray-500">
-                  Plan your strategy.
-                </p>
-              </motion.div>
-
-              {/* Feature cards */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="my-6 grid grid-cols-2 gap-3"
-              >
-                {FEATURES.map((f) => (
-                  <div
-                    key={f.title}
-                    className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
-                  >
-                    <div className={`mb-2 inline-flex rounded-lg p-2 ${f.bg}`}>
-                      <f.icon className={`h-5 w-5 ${f.color}`} />
-                    </div>
-                    <p className="text-sm font-semibold text-[#2D3436]">
-                      {f.title}
-                    </p>
-                    <p className="text-xs text-gray-400">{f.desc}</p>
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <Footer runnerName={sessionRunnerName} />
-              </motion.div>
-            </motion.div>
+            <EmptyState
+              sessionRunnerName={sessionRunnerName}
+              onFileLoaded={handleFileLoaded}
+              onError={setError}
+              fileName={fileName}
+              error={error}
+              isLoading={isParsingGPX || isSubmittingDetails}
+            />
           ) : (
             /* ── Loaded state ──────────────────────── */
             <motion.div
@@ -647,11 +373,7 @@ export default function Home() {
           onChange={setRouteDetails}
           onSubmit={handleDetailsSubmit}
           isSubmitting={isSubmittingDetails}
-          onCancel={() => {
-            setShowDetailsModal(false)
-            setTempRoute(null)
-            setTempFileName("")
-          }}
+          onCancel={handleDetailsCancel}
         />
 
         <SessionNameModal
