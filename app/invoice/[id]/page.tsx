@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft, Download, Pencil, Loader2 } from "lucide-react"
 import { toPng } from "html-to-image"
+import { computeInvoiceTotals, formatRupiah } from "@/lib/invoice/totals"
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -81,10 +82,12 @@ export default function InvoicePreview({ params }: { params: Promise<{ id: strin
     )
   }
 
-  const subtotal = invoice.items?.reduce((s, i) => s + (i.amount || 0), 0) ?? 0
-  const tax = invoice.tax_percentage ?? 0
-  const taxAmount = (subtotal * tax) / 100
-  const total = subtotal + taxAmount
+  const {
+    subtotal,
+    taxPercentage: tax,
+    taxAmount,
+    total,
+  } = computeInvoiceTotals(invoice.items, invoice.tax_percentage)
 
   return (
     <div className="min-h-screen bg-[#FAF6F1] print:bg-white">
@@ -156,7 +159,7 @@ export default function InvoicePreview({ params }: { params: Promise<{ id: strin
                 <div key={item.id} className="grid grid-cols-[1fr_180px] gap-4 p-4 bg-gray-50 rounded-xl">
                   <p className="font-medium text-gray-800">{item.description || "—"}</p>
                   <p className="font-medium text-gray-800 text-right">
-                    Rp {item.amount?.toLocaleString('id-ID') ?? 0}
+                    {formatRupiah(item.amount)}
                   </p>
                 </div>
               ))}
@@ -168,17 +171,17 @@ export default function InvoicePreview({ params }: { params: Promise<{ id: strin
             <div className="w-72 space-y-3 p-6 bg-[#1B4332] text-white rounded-2xl">
               <div className="flex justify-between text-sm">
                 <p className="text-white/70">Subtotal</p>
-                <p>Rp {subtotal.toLocaleString('id-ID')}</p>
+                <p>{formatRupiah(subtotal)}</p>
               </div>
               {tax > 0 && (
                 <div className="flex justify-between text-sm">
                   <p className="text-white/70">Tax ({tax}%)</p>
-                  <p>Rp {taxAmount.toLocaleString('id-ID')}</p>
+                  <p>{formatRupiah(taxAmount)}</p>
                 </div>
               )}
               <div className="flex justify-between items-center text-lg font-bold pt-3 border-t border-white/20">
                 <p>Total</p>
-                <p>Rp {total.toLocaleString('id-ID')}</p>
+                <p>{formatRupiah(total)}</p>
               </div>
             </div>
           </div>

@@ -70,3 +70,7 @@ export interface GPXData {
   bounds: [[number, number], [number, number]]; // [[south, west], [north, east]]
   center: [number, number]; // [lat, lon]
 }
+export interface HighlightRange {
+  startIndex: number;
+  endIndex: number;
+}

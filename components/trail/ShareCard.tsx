@@ -10,6 +10,7 @@ import {
   ReferenceDot,
 } from "recharts"
 import type { RouteStats, TrackPoint } from "@/lib/types"
+import { formatKm, formatNumber } from "@/lib/format"
 
 interface ShareCardProps {
   stats: RouteStats
@@ -107,7 +108,7 @@ export function ShareCard({
             <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-bold tracking-tighter">
-                  {(stats.totalDistance / 1000).toFixed(0)}
+                  {formatKm(stats.totalDistance, 0)}
                 </span>
                 <span className="text-2xl font-bold">km</span>
               </div>
@@ -117,7 +118,7 @@ export function ShareCard({
             <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-bold tracking-tighter">
-                  {Math.round(stats.elevationGain).toLocaleString("id-ID")}
+                  {formatNumber(stats.elevationGain)}
                 </span>
                 <span className="text-2xl font-bold">m+</span>
               </div>

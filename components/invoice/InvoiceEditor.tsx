@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Header } from "@/components/trail/Header"
 import type { InvoiceItem, SaveInvoiceInput } from "@/app/invoice/actions"
+import { computeInvoiceTotals, formatRupiah } from "@/lib/invoice/totals"
 
 export interface InvoiceEditorInitialValues {
   invoiceNumber: string
@@ -107,9 +108,12 @@ export function InvoiceEditor({
     clearItemsError()
   }
 
-  const subtotal = items.reduce((sum, item) => sum + (item.amount || 0), 0)
-  const taxAmount = (subtotal * (taxPercentage || 0)) / 100
-  const totalAmount = subtotal + taxAmount
+  const {
+    subtotal,
+    taxPercentage: effectiveTax,
+    taxAmount,
+    total: totalAmount,
+  } = computeInvoiceTotals(items, taxPercentage)
 
   const validate = () => {
     const newErrors: FormErrors = {}
@@ -471,7 +475,7 @@ export function InvoiceEditor({
                       {item.description || "—"}
                     </p>
                     <p className="text-right font-medium text-gray-800">
-                      Rp {item.amount.toLocaleString("id-ID")}
+                      {formatRupiah(item.amount)}
                     </p>
                   </div>
                 ))}
@@ -483,17 +487,17 @@ export function InvoiceEditor({
               <div className="w-[300px] rounded-xl bg-[#1B4332] p-6 text-white">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-white/80">Subtotal</p>
-                  <p>Rp {subtotal.toLocaleString("id-ID")}</p>
+                  <p>{formatRupiah(subtotal)}</p>
                 </div>
-                {taxPercentage > 0 && (
+                {effectiveTax > 0 && (
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-white/80">Tax ({taxPercentage}%)</p>
-                    <p>Rp {taxAmount.toLocaleString("id-ID")}</p>
+                    <p className="text-white/80">Tax ({effectiveTax}%)</p>
+                    <p>{formatRupiah(taxAmount)}</p>
                   </div>
                 )}
                 <div className="flex items-center justify-between border-t border-white/20 pt-4 text-xl font-bold">
                   <p>Total</p>
-                  <p>Rp {totalAmount.toLocaleString("id-ID")}</p>
+                  <p>{formatRupiah(totalAmount)}</p>
                 </div>
               </div>
             </div>

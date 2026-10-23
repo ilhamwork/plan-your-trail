@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion"
 import type { Waypoint, TrackPoint } from "@/lib/types"
 import { downloadGPX } from "@/lib/gpx-export"
+import { formatKm, formatKmLabel } from "@/lib/format"
 
 interface WaypointPanelProps {
   totalDistanceKm: number
@@ -59,7 +60,7 @@ export const WaypointPanel = memo(function WaypointPanel({
     setError("")
     setEditingId(wp.id)
     setName(wp.name)
-    setDistanceStr((wp.distance / 1000).toFixed(2))
+    setDistanceStr(formatKm(wp.distance, 2))
   }
 
   const handleCancelEdit = () => {
@@ -259,7 +260,7 @@ export const WaypointPanel = memo(function WaypointPanel({
                       </p>
                       <div className="mt-0.5 flex items-center gap-1.5">
                         <span className="text-[10px] font-medium text-gray-400">
-                          {(wp.distance / 1000).toFixed(2)} km
+                          {formatKmLabel(wp.distance, 2)}
                         </span>
                         <span
                           className={`py-0.2 rounded px-1 text-[8px] font-bold ${
