@@ -6,6 +6,7 @@ import { Map, Globe, Maximize2, Minimize2, BarChart3 } from "lucide-react"
 import type L from "leaflet"
 import "maplibre-gl/dist/maplibre-gl.css"
 import { ElevationChart } from "./ElevationChart"
+import { escapeHtml } from "@/lib/html"
 
 interface HighlightRange {
   startIndex: number
@@ -190,7 +191,7 @@ export function MapView({
           }),
         }).addTo(map)
         marker.bindTooltip(
-          `<strong>${wp.name}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`,
+          `<strong>${escapeHtml(wp.name)}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`,
           {
             permanent: false,
             direction: "top",
@@ -422,7 +423,7 @@ export function MapView({
             .setLngLat([wp.lon, wp.lat])
             .setPopup(
               new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>${wp.name}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`
+                `<strong>${escapeHtml(wp.name)}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`
               )
             )
             .addTo(map)
