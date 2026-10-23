@@ -7,6 +7,7 @@ import { toPng } from "html-to-image"
 import { supabase } from "@/lib/supabase"
 import { ShareCard } from "./ShareCard"
 import type { GPXData } from "@/lib/types"
+import { formatKm } from "@/lib/format"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -50,7 +51,7 @@ export function ShareModal({
           race_name: raceName,
           race_date: raceDate,
           share_type: type,
-          distance: parseFloat((route.stats.totalDistance / 1000).toFixed(2)),
+          distance: parseFloat(formatKm(route.stats.totalDistance, 2)),
           elevation_gain: route.stats.elevationGain,
         },
       ])

@@ -13,6 +13,7 @@ import type {
   WaypointSegment,
 } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
+import { useHighlightRange } from "@/lib/use-highlight-range"
 
 import { Header } from "@/components/trail/Header"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
@@ -52,10 +53,11 @@ export default function SharedRoutePage({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
-  const [highlightRange, setHighlightRange] = useState<{
-    startIndex: number
-    endIndex: number
-  } | null>(null)
+  const {
+    highlightRange,
+    clearHighlight,
+    toggleHighlight,
+  } = useHighlightRange()
 
   useEffect(() => {
     async function fetchRoute() {
@@ -89,21 +91,11 @@ export default function SharedRoutePage({
   }, [id])
 
   const handleSegmentClick = (segment: Segment) => {
-    setHighlightRange((prev) =>
-      prev?.startIndex === segment.startIndex &&
-      prev?.endIndex === segment.endIndex
-        ? null
-        : { startIndex: segment.startIndex, endIndex: segment.endIndex }
-    )
+    toggleHighlight(segment)
   }
 
   const handleWaypointSegmentClick = (segment: WaypointSegment) => {
-    setHighlightRange((prev) =>
-      prev?.startIndex === segment.startIndex &&
-      prev?.endIndex === segment.endIndex
-        ? null
-        : { startIndex: segment.startIndex, endIndex: segment.endIndex }
-    )
+    toggleHighlight(segment)
   }
 
   const mapProps = useMemo(() => {
@@ -189,7 +181,7 @@ export default function SharedRoutePage({
                 waypointSegments={route.waypointSegments}
                 onSegmentClick={handleSegmentClick}
                 onWaypointSegmentClick={handleWaypointSegmentClick}
-                onTabChange={() => setHighlightRange(null)}
+                onTabChange={clearHighlight}
               />
             </div>
 

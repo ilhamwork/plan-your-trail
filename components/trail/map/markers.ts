@@ -1,0 +1,17 @@
+export function createMarkerSvg(color: string, size = 32): string {
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin">
+      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 15.014 4 10a8 8 0 0 1 16 0"/>
+      <circle cx="12" cy="10" r="3" fill="white"/>
+    </svg>
+  `
+}
+
+export function createMarkerSvg3D(color: string, size: number): string {
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">
+      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 15.014 4 10a8 8 0 0 1 16 0"/>
+      <circle cx="12" cy="10" r="3" fill="white"/>
+    </svg>
+  `
+}

@@ -12,6 +12,7 @@ import {
   HelpCircle,
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { formatKm } from "@/lib/format"
 
 interface MetricsPanelProps {
   stats: RouteStats
@@ -30,9 +31,7 @@ const item = {
   show: { opacity: 1, y: 0 },
 }
 
-function formatDistance(meters: number): string {
-  return (meters / 1000).toFixed(1)
-}
+
 
 export const MetricsPanel = memo(function MetricsPanel({ stats }: MetricsPanelProps) {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
@@ -52,7 +51,7 @@ export const MetricsPanel = memo(function MetricsPanel({ stats }: MetricsPanelPr
     {
       icon: Mountain,
       label: "Total Distance",
-      value: `${formatDistance(stats.totalDistance)} km`,
+      value: `${formatKm(stats.totalDistance)} km`,
       color: "text-[#2A9D8F]",
       bg: "bg-[#2A9D8F]/5",
     },
