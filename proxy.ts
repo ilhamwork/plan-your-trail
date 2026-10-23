@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { isInvoiceAuthBypassed, verifyInvoiceBasicAuth } from "@/lib/auth/basic"
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (isInvoiceAuthBypassed()) {
     return NextResponse.next()
   }

@@ -1,5 +1,5 @@
 /**
- * HTTP Basic auth for the invoice area. Shared by `middleware.ts` (Edge
+ * HTTP Basic auth for the invoice area. Shared by `proxy.ts` (Edge
  * runtime) and the invoice server actions (Node runtime), so it only uses
  * APIs available in both: `atob` and `TextDecoder`, no `Buffer`.
  */
