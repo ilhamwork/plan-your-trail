@@ -9,7 +9,8 @@ import { TILE_URLS, ATTRIBUTIONS } from "./map-constants"
 
 interface UseMaplibreMapOptions {
   containerRef: RefObject<HTMLDivElement | null>
-  active: boolean
+  is3D?: boolean
+  active?: boolean
   trackPoints: TrackPoint[]
   waypoints: Waypoint[]
   bounds: [[number, number], [number, number]]
@@ -20,7 +21,8 @@ interface UseMaplibreMapOptions {
 
 export function useMaplibreMap({
   containerRef,
-  active,
+  is3D = false,
+  active = true,
   trackPoints,
   waypoints,
   bounds,
@@ -39,7 +41,11 @@ export function useMaplibreMap({
   const pointsRef = useRef(trackPoints)
   pointsRef.current = trackPoints
 
-  // Initialize 3D MapLibre map
+  const initialIs3DRef = useRef(is3D)
+  const prevIs3DRef = useRef(is3D)
+  const initialSatelliteRef = useRef(isSatellite)
+
+  // Initialize MapLibre map (supports both 2D and 3D with 360° rotation)
   useEffect(() => {
     if (!active || !containerRef.current) return
 
@@ -47,6 +53,9 @@ export function useMaplibreMap({
 
     import("maplibre-gl").then((maplibregl) => {
       if (cancelled || !containerRef.current) return
+
+      const startIn3D = initialIs3DRef.current
+      const startInSatellite = initialSatelliteRef.current
 
       const map = new maplibregl.Map({
         container: containerRef.current!,
@@ -77,56 +86,117 @@ export function useMaplibreMap({
               id: "osm",
               type: "raster" as const,
               source: "osm",
-              layout: { visibility: isSatellite ? "none" : "visible" },
+              layout: { visibility: startInSatellite ? "none" : "visible" },
             },
             {
               id: "satellite",
               type: "raster" as const,
               source: "satellite",
-              layout: { visibility: isSatellite ? "visible" : "none" },
+              layout: { visibility: startInSatellite ? "visible" : "none" },
             },
           ],
-          terrain: { source: "terrain", exaggeration: 1.5 },
+          terrain: startIn3D
+            ? { source: "terrain", exaggeration: 1.5 }
+            : undefined,
         },
         center: [
           (bounds[0][1] + bounds[1][1]) / 2,
           (bounds[0][0] + bounds[1][0]) / 2,
         ],
         zoom: 11,
-        pitch: 60,
-        bearing: -20,
-        maxPitch: 85,
+        pitch: startIn3D ? 60 : 0,
+        bearing: startIn3D ? -20 : 0,
+        maxPitch: startIn3D ? 85 : 0,
+        dragRotate: true,
       })
 
-      map.addControl(new maplibregl.NavigationControl(), "top-left")
+      map.addControl(
+        new maplibregl.NavigationControl({ visualizePitch: true }),
+        "top-left"
+      )
       map.addControl(new maplibregl.ScaleControl(), "bottom-left")
 
       map.on("load", () => {
         if (cancelled) return
 
-        map.addSource("route", {
-          type: "geojson",
-          data: {
-            type: "Feature" as const,
-            properties: {},
-            geometry: {
-              type: "LineString" as const,
-              coordinates: trackPoints.map((p) => [p.lon, p.lat, p.ele]),
+        if (trackPoints.length > 0) {
+          map.addSource("route", {
+            type: "geojson",
+            data: {
+              type: "Feature" as const,
+              properties: {},
+              geometry: {
+                type: "LineString" as const,
+                coordinates: trackPoints.map((p) => [p.lon, p.lat, p.ele]),
+              },
             },
-          },
-        })
+          })
 
-        map.addLayer({
-          id: "route-line",
-          type: "line",
-          source: "route",
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: {
-            "line-color": "#E76F51",
-            "line-width": 4,
-            "line-opacity": 0.85,
-          },
-        })
+          map.addLayer({
+            id: "route-line",
+            type: "line",
+            source: "route",
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: {
+              "line-color": "#E76F51",
+              "line-width": 4,
+              "line-opacity": 0.85,
+            },
+          })
+
+          // Start marker
+          const startEl = document.createElement("div")
+          startEl.style.cursor = "pointer"
+          startEl.innerHTML = createMarkerSvg3D("#d82020ff", 40)
+
+          const startPopup = new maplibregl.Popup({
+            offset: [0, -20],
+            closeButton: false,
+          })
+            .setLngLat([trackPoints[0].lon, trackPoints[0].lat])
+            .setHTML(
+              `<strong>Start</strong><br/>${formatKmLabel(trackPoints[0].distance)} · ${formatElevation(trackPoints[0].ele)}`
+            )
+
+          new maplibregl.Marker({ element: startEl, anchor: "bottom" })
+            .setLngLat([trackPoints[0].lon, trackPoints[0].lat])
+            .setPopup(startPopup)
+            .addTo(map)
+
+          startEl.addEventListener("mouseenter", () => {
+            if (!startPopup.isOpen()) startPopup.addTo(map)
+          })
+          startEl.addEventListener("mouseleave", () => {
+            if (startPopup.isOpen()) startPopup.remove()
+          })
+
+          // Finish marker
+          const last = trackPoints[trackPoints.length - 1]
+          const endEl = document.createElement("div")
+          endEl.style.cursor = "pointer"
+          endEl.innerHTML = createMarkerSvg3D("#34e02eff", 32)
+
+          const endPopup = new maplibregl.Popup({
+            offset: [0, -20],
+            closeButton: false,
+          })
+            .setLngLat([last.lon, last.lat])
+            .setHTML(
+              `<strong>Finish</strong><br/>${formatKmLabel(last.distance)} · ${formatElevation(last.ele)}`
+            )
+
+          new maplibregl.Marker({ element: endEl, anchor: "bottom" })
+            .setLngLat([last.lon, last.lat])
+            .setPopup(endPopup)
+            .addTo(map)
+
+          endEl.addEventListener("mouseenter", () => {
+            if (!endPopup.isOpen()) endPopup.addTo(map)
+          })
+          endEl.addEventListener("mouseleave", () => {
+            if (endPopup.isOpen()) endPopup.remove()
+          })
+        }
 
         // Waypoint markers
         for (const wp of waypoints) {
@@ -134,42 +204,26 @@ export function useMaplibreMap({
           el.style.cursor = "pointer"
           el.innerHTML = createMarkerSvg3D("#3B82F6", 32)
 
+          const popup = new maplibregl.Popup({
+            offset: [0, -20],
+            closeButton: false,
+          })
+            .setLngLat([wp.lon, wp.lat])
+            .setHTML(
+              `<strong>${escapeHtml(wp.name)}</strong><br/>${formatKmLabel(wp.distance)} · ${formatElevation(wp.ele)}`
+            )
+
           new maplibregl.Marker({ element: el, anchor: "bottom" })
             .setLngLat([wp.lon, wp.lat])
-            .setPopup(
-              new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>${escapeHtml(wp.name)}</strong><br/>${formatKmLabel(wp.distance)} · ${formatElevation(wp.ele)}`
-              )
-            )
-            .addTo(map)
-        }
-
-        // Start marker
-        if (trackPoints.length > 0) {
-          const startEl = document.createElement("div")
-          startEl.innerHTML = createMarkerSvg3D("#d82020ff", 40)
-
-          new maplibregl.Marker({ element: startEl, anchor: "bottom" })
-            .setLngLat([trackPoints[0].lon, trackPoints[0].lat])
-            .setPopup(
-              new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>Start</strong><br/>${formatKmLabel(trackPoints[0].distance)} · ${formatElevation(trackPoints[0].ele)}`
-              )
-            )
+            .setPopup(popup)
             .addTo(map)
 
-          const last = trackPoints[trackPoints.length - 1]
-          const endEl = document.createElement("div")
-          endEl.innerHTML = createMarkerSvg3D("#34e02eff", 32)
-
-          new maplibregl.Marker({ element: endEl, anchor: "bottom" })
-            .setLngLat([last.lon, last.lat])
-            .setPopup(
-              new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>Finish</strong><br/>${formatKmLabel(last.distance)} · ${formatElevation(last.ele)}`
-              )
-            )
-            .addTo(map)
+          el.addEventListener("mouseenter", () => {
+            if (!popup.isOpen()) popup.addTo(map)
+          })
+          el.addEventListener("mouseleave", () => {
+            if (popup.isOpen()) popup.remove()
+          })
         }
 
         map.fitBounds(
@@ -177,7 +231,11 @@ export function useMaplibreMap({
             [bounds[0][1], bounds[0][0]],
             [bounds[1][1], bounds[1][0]],
           ],
-          { padding: 50, pitch: 60, bearing: -20 }
+          {
+            padding: 50,
+            pitch: startIn3D ? 60 : 0,
+            bearing: startIn3D ? -20 : 0,
+          }
         )
 
         setMaplibreReady(true)
@@ -197,12 +255,44 @@ export function useMaplibreMap({
       maplibreHoverMarkerRef.current = null
       setMaplibreReady(false)
     }
-  }, [active, trackPoints, waypoints, bounds, containerRef, isSatellite])
+  }, [active, trackPoints, waypoints, bounds, containerRef])
+
+  // Handle 2D <-> 3D transition smoothly without destroying map
+  useEffect(() => {
+    const map = maplibreMapRef.current
+    if (!map || !maplibreReady) return
+    if (prevIs3DRef.current === is3D) return
+    prevIs3DRef.current = is3D
+
+    if (is3D) {
+      map.setMaxPitch(85)
+      if (map.touchPitch) map.touchPitch.enable()
+      map.setTerrain({ source: "terrain", exaggeration: 1.5 })
+      map.easeTo({
+        pitch: 60,
+        bearing: map.getBearing() === 0 ? -20 : map.getBearing(),
+        duration: 800,
+      })
+    } else {
+      if (map.touchPitch) map.touchPitch.disable()
+      map.setTerrain(null)
+      map.easeTo({
+        pitch: 0,
+        duration: 800,
+      })
+      const timer = setTimeout(() => {
+        if (!prevIs3DRef.current && maplibreMapRef.current) {
+          maplibreMapRef.current.setMaxPitch(0)
+        }
+      }, 850)
+      return () => clearTimeout(timer)
+    }
+  }, [is3D, maplibreReady])
 
   // Toggle satellite layer
   useEffect(() => {
     const map = maplibreMapRef.current
-    if (!map || !maplibreReady || !active) return
+    if (!map || !maplibreReady) return
 
     if (map.getLayer("osm")) {
       map.setLayoutProperty(
@@ -218,13 +308,13 @@ export function useMaplibreMap({
         isSatellite ? "visible" : "none"
       )
     }
-  }, [isSatellite, maplibreReady, active])
+  }, [isSatellite, maplibreReady])
 
   // Hover marker
   useEffect(() => {
     const map = maplibreMapRef.current
     const ml = maplibreModuleRef.current
-    if (!map || !maplibreReady || !active || !ml) return
+    if (!map || !maplibreReady || !ml) return
 
     if (maplibreHoverMarkerRef.current) {
       maplibreHoverMarkerRef.current.remove()
@@ -233,7 +323,7 @@ export function useMaplibreMap({
 
     if (hoveredPoint) {
       const el = document.createElement("div")
-      el.className = "hover-marker-3d"
+      el.className = "hover-marker"
       el.style.width = "16px"
       el.style.height = "16px"
       el.style.backgroundColor = "#d82020ff"
@@ -247,7 +337,7 @@ export function useMaplibreMap({
           new ml.Popup({
             offset: [0, -10],
             closeButton: false,
-            className: "hover-tooltip-3d",
+            className: "hover-tooltip",
           }).setHTML(
             `<div>
               ${formatKmLabel(hoveredPoint.distance)} · ${formatElevation(hoveredPoint.ele)} · ${hoveredPoint.gradient.toFixed(0)}%
@@ -259,12 +349,12 @@ export function useMaplibreMap({
       marker.togglePopup()
       maplibreHoverMarkerRef.current = marker
     }
-  }, [hoveredPoint, maplibreReady, active])
+  }, [hoveredPoint, maplibreReady])
 
   // Segment highlight
   useEffect(() => {
     const map = maplibreMapRef.current
-    if (!map || !active || !maplibreReady) return
+    if (!map || !maplibreReady) return
 
     if (map.getLayer("segment-highlight")) {
       map.removeLayer("segment-highlight")
@@ -309,10 +399,15 @@ export function useMaplibreMap({
           [Math.min(...lons), Math.min(...lats)],
           [Math.max(...lons), Math.max(...lats)],
         ],
-        { padding: 50, pitch: 60, bearing: -20, duration: 1000 }
+        {
+          padding: 50,
+          pitch: is3D ? 60 : 0,
+          bearing: map.getBearing(),
+          duration: 1000,
+        }
       )
     }
-  }, [highlightRange, maplibreReady, active])
+  }, [highlightRange, maplibreReady, is3D])
 
   const resize = useCallback(() => {
     if (maplibreMapRef.current) {
@@ -321,6 +416,7 @@ export function useMaplibreMap({
   }, [])
 
   return {
+    mapReady: maplibreReady,
     maplibreReady,
     resize,
   }

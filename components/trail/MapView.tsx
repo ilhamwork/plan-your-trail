@@ -5,7 +5,6 @@ import type { TrackPoint, Waypoint, HighlightRange } from "@/lib/types"
 import { Map, Globe, Maximize2, Minimize2, BarChart3 } from "lucide-react"
 import "maplibre-gl/dist/maplibre-gl.css"
 import { ElevationChart } from "./ElevationChart"
-import { useLeafletMap } from "./map/useLeafletMap"
 import { useMaplibreMap } from "./map/useMaplibreMap"
 
 interface MapViewProps {
@@ -32,22 +31,10 @@ export function MapView({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showChart, setShowChart] = useState(true)
 
-  // 2D Leaflet map subsystem
-  const { mapReady, invalidateSize } = useLeafletMap({
+  // MapLibre map subsystem (supports both 2D and 3D with 360° rotation)
+  const { mapReady, resize } = useMaplibreMap({
     containerRef: mapContainerRef,
-    active: !is3D,
-    trackPoints,
-    waypoints,
-    bounds,
-    isSatellite,
-    hoveredPoint,
-    highlightRange,
-  })
-
-  // 3D MapLibre map subsystem
-  const { maplibreReady, resize } = useMaplibreMap({
-    containerRef: mapContainerRef,
-    active: is3D,
+    is3D,
     trackPoints,
     waypoints,
     bounds,
@@ -82,15 +69,11 @@ export function MapView({
   // Handle map resize on fullscreen transition & chart toggle
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (is3D) {
-        resize()
-      } else {
-        invalidateSize()
-      }
+      resize()
     }, 400)
 
     return () => clearTimeout(timer)
-  }, [isFullscreen, is3D, maplibreReady, mapReady, showChart, resize, invalidateSize])
+  }, [isFullscreen, is3D, mapReady, showChart, resize])
 
   return (
     <div

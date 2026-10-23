@@ -7,7 +7,7 @@ Upload a GPX file and instantly get an interactive map, elevation profile, segme
 ## ✨ Features
 
 - **GPX Upload** — Drag & drop `.gpx` files, parsed entirely client-side
-- **Route Map** — Interactive 2D (Leaflet) and 3D terrain (MapLibre GL) with satellite toggle
+- **Route Map** — Interactive 2D/3D map (MapLibre GL) with 360° rotation and satellite toggle
 - **Elevation Profile** — Recharts area chart with hover-to-map sync and waypoint markers
 - **Segment Breakdown** — Auto-detected gradient segments with distance-adaptive merging
 - **Gradient Distribution** — Bar chart visualization of terrain effort (Climb, Uphill, Flat, etc.)
@@ -24,8 +24,7 @@ Upload a GPX file and instantly get an interactive map, elevation profile, segme
 | Framework    | Next.js 16 (App Router, Turbopack)   |
 | Language     | TypeScript                           |
 | Styling      | Tailwind CSS v4 + shadcn/ui          |
-| 2D Map       | Leaflet + OpenStreetMap              |
-| 3D Map       | MapLibre GL JS + Terrarium DEM tiles |
+| Map          | MapLibre GL JS + Terrarium DEM tiles |
 | Charts       | Recharts                             |
 | GPX Parsing  | fast-xml-parser / Web Worker                    |
 | Image Export | html-to-image                        |
@@ -69,7 +68,7 @@ npm start
 ```
 plan-your-trail/
 ├── app/
-│   ├── globals.css          # Trail-running theme & Leaflet styles
+│   ├── globals.css          # Trail-running theme & MapLibre styles
 │   ├── layout.tsx           # Root layout with SEO & Analytics
 │   └── page.tsx             # Main page with empty/loaded states
 ├── components/
