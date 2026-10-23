@@ -16,6 +16,8 @@ import type {
   Waypoint,
 } from "@/lib/types"
 import { useGPXParser } from "@/lib/use-gpx-parser"
+import { useHighlightRange } from "@/lib/use-highlight-range"
+import { formatKm } from "@/lib/format"
 import { supabase } from "@/lib/supabase"
 
 import { Header } from "@/components/trail/Header"
@@ -198,10 +200,11 @@ export default function Home() {
   }, [])
 
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
-  const [highlightRange, setHighlightRange] = useState<{
-    startIndex: number
-    endIndex: number
-  } | null>(null)
+  const {
+    highlightRange,
+    clearHighlight,
+    toggleHighlight,
+  } = useHighlightRange()
 
   // Session Runner Name
   const [sessionRunnerName, setSessionRunnerName] = useState<string>("")
@@ -242,8 +245,8 @@ export default function Home() {
   }, [])
 
   const handleSegmentTabChange = useCallback(() => {
-    setHighlightRange(null)
-  }, [])
+    clearHighlight()
+  }, [clearHighlight])
 
   const finishUpload = useCallback(
     async (
@@ -263,7 +266,7 @@ export default function Home() {
             race_date: details.raceDate,
             file_name: name,
             distance: parseFloat(
-              (parsed.stats.totalDistance / 1000).toFixed(2)
+              formatKm(parsed.stats.totalDistance, 2)
             ),
             elevation_gain: parsed.stats.elevationGain,
           },
@@ -320,7 +323,7 @@ export default function Home() {
         })
 
         setShowDetailsModal(true)
-        setHighlightRange(null)
+        clearHighlight()
         setHoveredPoint(null)
       } catch (err) {
         setError(
@@ -332,7 +335,7 @@ export default function Home() {
         setIsParsingGPX(false)
       }
     },
-    [parseGPX, finishUpload, sessionRunnerName]
+    [parseGPX, finishUpload, sessionRunnerName, clearHighlight]
   )
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
@@ -347,23 +350,19 @@ export default function Home() {
     }
   }
 
-  const handleSegmentClick = useCallback((segment: Segment) => {
-    setHighlightRange((prev) =>
-      prev?.startIndex === segment.startIndex &&
-      prev?.endIndex === segment.endIndex
-        ? null
-        : { startIndex: segment.startIndex, endIndex: segment.endIndex }
-    )
-  }, [])
+  const handleSegmentClick = useCallback(
+    (segment: Segment) => {
+      toggleHighlight(segment)
+    },
+    [toggleHighlight]
+  )
 
-  const handleWaypointSegmentClick = useCallback((segment: WaypointSegment) => {
-    setHighlightRange((prev) =>
-      prev?.startIndex === segment.startIndex &&
-      prev?.endIndex === segment.endIndex
-        ? null
-        : { startIndex: segment.startIndex, endIndex: segment.endIndex }
-    )
-  }, [])
+  const handleWaypointSegmentClick = useCallback(
+    (segment: WaypointSegment) => {
+      toggleHighlight(segment)
+    },
+    [toggleHighlight]
+  )
 
   // Sort waypoints by distance
   const sortedWaypoints = useMemo(() => {
