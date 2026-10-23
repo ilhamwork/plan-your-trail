@@ -4,6 +4,7 @@ import { memo, useState } from "react"
 import type { Segment, WaypointSegment } from "@/lib/types"
 import { Waypoints, ChevronRight, ChevronDown } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { formatKmLabel } from "@/lib/format"
 
 interface SegmentListProps {
   segments: Segment[]
@@ -148,7 +149,7 @@ function WaypointSegmentRow({
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${expanded ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"}`}
           >
-            {(segment.distance / 1000).toFixed(2)} km
+            {formatKmLabel(segment.distance, 2)}
           </span>
         </div>
         {expanded ? (
@@ -240,7 +241,7 @@ function GradientSegmentRow({
           <span
             className={`text-xs font-medium ${expanded ? "text-white" : "text-[#2D3436]"}`}
           >
-            {(segment.distance / 1000).toFixed(2)} km
+            {formatKmLabel(segment.distance, 2)}
           </span>
           {expanded ? (
             <ChevronDown className="h-4 w-4" />

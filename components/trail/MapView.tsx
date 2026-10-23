@@ -1,17 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import type { TrackPoint, Waypoint } from "@/lib/types"
+import type { TrackPoint, Waypoint, HighlightRange } from "@/lib/types"
 import { Map, Globe, Maximize2, Minimize2, BarChart3 } from "lucide-react"
 import type L from "leaflet"
 import "maplibre-gl/dist/maplibre-gl.css"
 import { ElevationChart } from "./ElevationChart"
 import { escapeHtml } from "@/lib/html"
-
-interface HighlightRange {
-  startIndex: number
-  endIndex: number
-}
+import { formatKmLabel, formatElevation } from "@/lib/format"
 
 interface MapViewProps {
   trackPoints: TrackPoint[]
@@ -149,7 +145,7 @@ export function MapView({
         })
           .addTo(map)
           .bindTooltip(
-            `<strong>Start</strong><br/>${(trackPoints[0].distance / 1000).toFixed(1)} km · ${Math.round(trackPoints[0].ele)}m`,
+            `<strong>Start</strong><br/>${formatKmLabel(trackPoints[0].distance)} · ${formatElevation(trackPoints[0].ele)}`,
             {
               permanent: false,
               direction: "top",
@@ -170,7 +166,7 @@ export function MapView({
         })
           .addTo(map)
           .bindTooltip(
-            `<strong>Finish</strong><br/>${(last.distance / 1000).toFixed(1)} km · ${Math.round(last.ele)}m`,
+            `<strong>Finish</strong><br/>${formatKmLabel(last.distance)} · ${formatElevation(last.ele)}`,
             {
               permanent: false,
               direction: "top",
@@ -191,7 +187,7 @@ export function MapView({
           }),
         }).addTo(map)
         marker.bindTooltip(
-          `<strong>${escapeHtml(wp.name)}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`,
+          `<strong>${escapeHtml(wp.name)}</strong><br/>${formatKmLabel(wp.distance)} · ${formatElevation(wp.ele)}`,
           {
             permanent: false,
             direction: "top",
@@ -266,7 +262,7 @@ export function MapView({
 
       marker
         .bindTooltip(
-          `${(hoveredPoint.distance / 1000).toFixed(1)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%`,
+          `${formatKmLabel(hoveredPoint.distance)} · ${formatElevation(hoveredPoint.ele)} · ${hoveredPoint.gradient.toFixed(0)}%`,
           {
             permanent: true,
             direction: "top",
@@ -423,7 +419,7 @@ export function MapView({
             .setLngLat([wp.lon, wp.lat])
             .setPopup(
               new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>${escapeHtml(wp.name)}</strong><br/>${(wp.distance / 1000).toFixed(1)} km · ${Math.round(wp.ele)}m`
+                `<strong>${escapeHtml(wp.name)}</strong><br/>${formatKmLabel(wp.distance)} · ${formatElevation(wp.ele)}`
               )
             )
             .addTo(map)
@@ -438,7 +434,7 @@ export function MapView({
             .setLngLat([trackPoints[0].lon, trackPoints[0].lat])
             .setPopup(
               new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>Start</strong><br/>${(trackPoints[0].distance / 1000).toFixed(1)} km · ${Math.round(trackPoints[0].ele)}m`
+                `<strong>Start</strong><br/>${formatKmLabel(trackPoints[0].distance)} · ${formatElevation(trackPoints[0].ele)}`
               )
             )
             .addTo(map)
@@ -451,7 +447,7 @@ export function MapView({
             .setLngLat([last.lon, last.lat])
             .setPopup(
               new maplibregl.Popup({ offset: [0, -20] }).setHTML(
-                `<strong>Finish</strong><br/>${(last.distance / 1000).toFixed(1)} km · ${Math.round(last.ele)}m`
+                `<strong>Finish</strong><br/>${formatKmLabel(last.distance)} · ${formatElevation(last.ele)}`
               )
             )
             .addTo(map)
@@ -536,7 +532,7 @@ export function MapView({
             className: "hover-tooltip-3d",
           }).setHTML(
             `<div>
-              ${(hoveredPoint.distance / 1000).toFixed(1)} km · ${Math.round(hoveredPoint.ele)}m · ${hoveredPoint.gradient.toFixed(0)}%
+              ${formatKmLabel(hoveredPoint.distance)} · ${formatElevation(hoveredPoint.ele)} · ${hoveredPoint.gradient.toFixed(0)}%
             </div>`
           )
         )

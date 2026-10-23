@@ -3,6 +3,7 @@
 import { memo, useMemo } from "react"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
 import type { TrackPoint } from "@/lib/types"
+import { formatKmLabel, formatElevationLabel } from "@/lib/format"
 
 interface GradientDistributionProps {
   points: TrackPoint[]
@@ -46,7 +47,7 @@ export const GradientDistribution = memo(function GradientDistribution({ points 
 
   const pct = (d: number) => (total > 0 ? Math.round((d / total) * 100) : 0)
   const fmtKm = (m: number) =>
-    m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`
+    m >= 1000 ? formatKmLabel(m, 1) : formatElevationLabel(m)
 
   const categories = [
     {
