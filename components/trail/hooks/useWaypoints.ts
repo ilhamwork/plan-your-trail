@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react"
 import type { GPXData, Waypoint } from "@/lib/types"
 import { interpolateCoordinatesForDistance } from "@/lib/gpx/interpolate"
 import { buildWaypointSegments } from "@/lib/segment-analysis"
+import { trackEvent } from "@/lib/analytics/events"
 
 export function useWaypoints(gpxData: GPXData | null) {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([])
@@ -24,6 +25,7 @@ export function useWaypoints(gpxData: GPXData | null) {
         ...coords,
       }
       setWaypoints((prev) => [...prev, newWp])
+      trackEvent("waypoint_added", { source: "manual" })
     },
     [gpxData]
   )
@@ -52,6 +54,7 @@ export function useWaypoints(gpxData: GPXData | null) {
           return wp
         })
       )
+      trackEvent("waypoint_edited", { source: "manual" })
     },
     [gpxData]
   )

@@ -5,6 +5,7 @@ import type { GPXData, Waypoint } from "@/lib/types"
 import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
 import { supabase } from "@/lib/supabase"
 import { formatKm } from "@/lib/format"
+import { trackEvent } from "@/lib/analytics/events"
 
 const EXAMPLE_FILE_NAME = "Rinjani-162K-2025.gpx"
 
@@ -81,10 +82,25 @@ export function useRouteUpload({
 
   const handleFileLoaded = useCallback(
     async (content: string, name: string) => {
+      const source = name === EXAMPLE_FILE_NAME ? "example" : "upload"
+      trackEvent("upload_started", {
+        fileName: name,
+        fileSizeBytes: content.length,
+        source,
+      })
+
       try {
         setError("")
         setIsParsingGPX(true)
         const parsed = await parseGPX(content)
+
+        trackEvent("analysis_completed", {
+          source,
+          distanceKm: Number((parsed.stats.totalDistance / 1000).toFixed(2)),
+          elevationGainM: Math.round(parsed.stats.elevationGain),
+          pointCount: parsed.trackPoints.length,
+        })
+
         const today = new Date().toISOString().split("T")[0]
 
         // If example file, skip modal and auto-fill
