@@ -18,7 +18,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "no-restricted-imports": [
-        "warn",
+        "error",
         {
           paths: [
             {
@@ -48,6 +48,14 @@ const eslintConfig = defineConfig([
           ],
         },
       ],
+    },
+  },
+  // Audited legacy files per PRD Section 9.7 & IMPLEMENTATION_PLAN.md line 87:
+  // Legacy files allowed with warning until migrated in their respective epics.
+  {
+    files: ["lib/supabase.ts", "app/invoice/**"],
+    rules: {
+      "no-restricted-imports": "warn",
     },
   },
 ]);
