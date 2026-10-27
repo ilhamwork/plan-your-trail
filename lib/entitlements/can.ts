@@ -55,11 +55,8 @@ export function can(user: SessionUser | null, feature: Feature): boolean {
     case "download_gpx":
       return true
 
-    // Free until Pro launch; moves to Pro-only after Pro launch
-    case "waypoint_management":
-      return !proLaunched || isPro
-
     // Pro-only features: locked until Pro launch, then requires pro plan
+    case "waypoint_management":
     case "waypoint_user_chart":
     case "nutrition_notes":
     case "weather_hourly":
@@ -73,6 +70,7 @@ export function can(user: SessionUser | null, feature: Feature): boolean {
       return false
   }
 }
+
 
 /**
  * Upload size limits and route count limits per tier.

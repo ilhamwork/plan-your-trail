@@ -57,6 +57,19 @@ const GradientDistribution = dynamic(
   { ssr: false }
 )
 
+const PaceEstimator = dynamic(
+  () =>
+    import("@/components/trail/PaceEstimator").then((mod) => mod.PaceEstimator),
+  { ssr: false }
+)
+
+const GatedPrompt = dynamic(
+  () =>
+    import("@/components/trail/GatedPrompt").then((mod) => mod.GatedPrompt),
+  { ssr: false }
+)
+
+
 const DonationSection = dynamic(
   () =>
     import("@/components/trail/DonationSection").then(
@@ -209,7 +222,17 @@ export default function Home() {
             >
               {/* Left column (main content on desktop) */}
               <div className="contents lg:flex lg:flex-col lg:gap-5">
+                <GatedPrompt
+                  feature="weather_session"
+                  title="Dapatkan analisis lebih lengkap dengan akun"
+                  description="Daftar untuk melihat cuaca per sesi, waypoint di chart elevasi, dan estimasi waktu finish."
+                  source="analysis_complete"
+                  className="order-0"
+                />
+
+
                 {/* Map */}
+
                 {mapProps && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -322,6 +345,20 @@ export default function Home() {
                 >
                   <MetricsPanel stats={gpxData.stats} />
                 </motion.div>
+
+                {/* Pace Estimator */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.42 }}
+                  className="order-4 lg:order-0"
+                >
+                  <PaceEstimator
+                    stats={gpxData.stats}
+                    waypoints={sortedWaypoints}
+                  />
+                </motion.div>
+
 
                 {/* Manual Waypoints */}
                 <motion.div

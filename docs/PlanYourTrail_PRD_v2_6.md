@@ -1,13 +1,14 @@
 # PlanYourTrail.run
+
 ## Product Requirements Document — Free Registered Launch & Pro Monetization
 
-| | |
-|---|---|
-| **Versi** | 2.6 |
-| **Tanggal** | 26 Oktober 2026 |
-| **Status** | Draft — Internal |
-| **Author** | PlanYourTrail Team |
-| **Changelog** | Lihat Lampiran A |
+|               |                    |
+| ------------- | ------------------ |
+| **Versi**     | 2.6                |
+| **Tanggal**   | 26 Oktober 2026    |
+| **Status**    | Draft — Internal   |
+| **Author**    | PlanYourTrail Team |
+| **Changelog** | Lihat Lampiran A   |
 
 ---
 
@@ -44,12 +45,14 @@ Dokumen ini mendefinisikan rencana monetisasi dengan model **freemium permanen +
 ## 3. Target Pengguna
 
 ### Casual Trail Runner
+
 - Race 2–4x per tahun.
 - Butuh analisis rute mendalam menjelang race (1–2 minggu sebelum hari-H).
 - Tidak punya waypoint di file GPX, sehingga butuh tambah water/aid station sendiri.
   - → Merasakan batas Free saat ingin tambah waypoint, momen upgrade natural.
 
 ### Power User / Coach / Race Organizer
+
 - Menganalisis banyak rute secara rutin: latihan, scouting, perencanaan event.
 - Butuh fitur lanjutan: cutoff estimator, perbandingan rute, riwayat tanpa batas, export dan share.
   - → Target utama **Pro**.
@@ -64,32 +67,32 @@ Tiga level akses. **Free** dibuat cukup kuat agar registrasi terasa worth it. **
 
 ### 4.1 Tier Breakdown
 
-| Fitur | Anonymous | Free (registered) | Pro | Status Pro |
-|---|:---:|:---:|:---:|---|
-| **Harga** | Gratis | Gratis, selamanya | Lihat Section 8 | — |
-| **Batas ukuran upload GPX per file** | 5 MB | 10 MB | 20 MB | Coming soon (20 MB) |
-| Route map 2D interaktif (Leaflet) | ✓ | ✓ | ✓ | — |
-| Route map 3D interaktif (MapLibre GL) + satellite | ✓ | ✓ | ✓ | — |
-| Elevation profile chart | ✓ | ✓ | ✓ | — |
-| Basic metrics (distance, km effort, elevation gain/loss, highest/lowest point) | ✓ | ✓ | ✓ | — |
-| Segment breakdown (by waypoint atau gradient) | ✓ | ✓ | ✓ | — |
-| Gradient distribution (uphill, flat, downhill) | ✓ | ✓ | ✓ | — |
-| Waypoint dari GPX tampil di peta (read-only) | ✓ | ✓ | ✓ | — |
-| **Waypoint GPX tampil di elevation chart** (read-only) | — | ✓ | ✓ | — |
-| **Weather forecast per sesi** (morning/afternoon/evening/night), semua rute yang dianalisis | — | ✓ | ✓ | — |
-| **Estimasi pace dasar** (total waktu finish dari pace input) | — | ✓ | ✓ | — |
-| Simpan riwayat analisis | — (hilang saat tab ditutup) | ✓ maks 3 rute | ✓ unlimited* | Coming soon |
-| Akses hasil dari device lain | — | ✓ | ✓ | — |
-| **Download ulang GPX asli** (dari rute tersimpan) | — | ✓ | ✓ | — |
-| Waypoint management (add, edit, delete) | — | ✓\*\* | ✓ | Dikunci ke Pro saat Pro launch |
-| Waypoint ditambahkan user tampil di elevation chart | — | — | ✓ | Coming soon |
-| Nutrition & gear notes per waypoint | — | — | ✓ | Coming soon |
-| Hourly weather forecast | — | — | ✓ | Coming soon |
-| Pace & cutoff estimator (estimasi waktu per checkpoint + status cutoff) | — | — | ✓ | Coming soon |
-| Export PDF (race brief siap cetak) | — | — | ✓ | Coming soon |
-| Share link hasil analisis (view-only) | — | — | ✓ | Coming soon |
-| Perbandingan dua rute side-by-side | — | — | ✓ | Coming soon |
-| Priority support (email) | — | — | ✓ | Coming soon |
+| Fitur                                                                                       |          Anonymous          | Free (registered) |       Pro       | Status Pro                     |
+| ------------------------------------------------------------------------------------------- | :-------------------------: | :---------------: | :-------------: | ------------------------------ |
+| **Harga**                                                                                   |           Gratis            | Gratis, selamanya | Lihat Section 8 | —                              |
+| **Batas ukuran upload GPX per file**                                                        |            5 MB             |       10 MB       |      20 MB      | Coming soon (20 MB)            |
+| Route map 2D interaktif (Leaflet)                                                           |              ✓              |         ✓         |        ✓        | —                              |
+| Route map 3D interaktif (MapLibre GL) + satellite                                           |              ✓              |         ✓         |        ✓        | —                              |
+| Elevation profile chart                                                                     |              ✓              |         ✓         |        ✓        | —                              |
+| Basic metrics (distance, km effort, elevation gain/loss, highest/lowest point)              |              ✓              |         ✓         |        ✓        | —                              |
+| Segment breakdown (by waypoint atau gradient)                                               |              ✓              |         ✓         |        ✓        | —                              |
+| Gradient distribution (uphill, flat, downhill)                                              |              ✓              |         ✓         |        ✓        | —                              |
+| Waypoint dari GPX tampil di peta (read-only)                                                |              ✓              |         ✓         |        ✓        | —                              |
+| **Waypoint GPX tampil di elevation chart** (read-only)                                      |              —              |         ✓         |        ✓        | —                              |
+| **Weather forecast per sesi** (morning/afternoon/evening/night), semua rute yang dianalisis |              —              |         ✓         |        ✓        | —                              |
+| **Estimasi pace dasar** (total waktu finish dari pace input)                                |              —              |         ✓         |        ✓        | —                              |
+| Simpan riwayat analisis                                                                     | — (hilang saat tab ditutup) |   ✓ maks 3 rute   |  ✓ unlimited\*  | Coming soon                    |
+| Akses hasil dari device lain                                                                |              —              |         ✓         |        ✓        | —                              |
+| **Download ulang GPX asli** (dari rute tersimpan)                                           |              —              |         ✓         |        ✓        | —                              |
+| Waypoint management (add, edit, delete)                                                     |              —              |       ✓\*\*       |        ✓        | Dikunci ke Pro saat Pro launch |
+| Waypoint ditambahkan user tampil di elevation chart                                         |              —              |         —         |        ✓        | Coming soon                    |
+| Nutrition & gear notes per waypoint                                                         |              —              |         —         |        ✓        | Coming soon                    |
+| Hourly weather forecast                                                                     |              —              |         —         |        ✓        | Coming soon                    |
+| Pace & cutoff estimator (estimasi waktu per checkpoint + status cutoff)                     |              —              |         —         |        ✓        | Coming soon                    |
+| Export PDF (race brief siap cetak)                                                          |              —              |         —         |        ✓        | Coming soon                    |
+| Share link hasil analisis (view-only)                                                       |              —              |         —         |        ✓        | Coming soon                    |
+| Perbandingan dua rute side-by-side                                                          |              —              |         —         |        ✓        | Coming soon                    |
+| Priority support (email)                                                                    |              —              |         —         |        ✓        | Coming soon                    |
 
 \* "Unlimited" dikenai fair-use cap yang longgar (lihat Section 9.3).
 
@@ -125,39 +128,44 @@ Fitur yang terkunci untuk Anonymous (weather, waypoint di elevation chart, estim
 
 > **Mengapa segment breakdown gratis?** Ini fitur yang membuktikan kedalaman analisis. User yang merasakan value-nya lebih termotivasi untuk membuat akun dan, kemudian, upgrade.
 
-### 5.2 Fitur Free Registered (akun gratis)
+### 5.2 Fitur Free Registered (akun)
 
 Semua fitur Anonymous, ditambah:
 
 **Analisis lebih lengkap**
+
 - **Weather forecast per sesi** (morning, afternoon, evening, night) untuk **semua rute yang dianalisis** selama user login, tanpa perlu menyimpan rute
 - **Waypoint GPX di elevation profile chart** (read-only, dengan label)
 - **Estimasi pace dasar:** input pace, output total waktu finish. Per-checkpoint dan cutoff tetap Pro.
 
 **Penyimpanan & personalisasi**
+
 - Upload GPX **maks 10 MB per file** (naik dari 5 MB untuk Anonymous)
 - Simpan riwayat analisis, **maks 3 rute** permanen di akun
 - Akses hasil dari device manapun
 - Download ulang file GPX asli dari rute yang tersimpan
 - Rute ke-4 dan seterusnya memerlukan Pro (setelah launch) atau hapus rute lama
 
-> **Trigger upgrade saat Pro sudah launch:** saat user mau simpan rute ke-4, muncul prompt *"Kamu sudah menyimpan 3 rute. Upgrade ke Pro untuk menyimpan unlimited rute."* Sebelum Pro launch, prompt diganti: *"Hapus salah satu rute, atau daftar early access Pro."*
+> **Trigger upgrade saat Pro sudah launch:** saat user mau simpan rute ke-4, muncul prompt _"Kamu sudah menyimpan 3 rute. Upgrade ke Pro untuk menyimpan unlimited rute."_ Sebelum Pro launch, prompt diganti: _"Hapus salah satu rute, atau daftar early access Pro."_
 
 ### 5.3 Fitur Pro (subscription) — rilis 2027
 
 Semua fitur Free, ditambah:
 
 **Waypoint & Planning**
+
 - Waypoint management: add, edit, delete water/aid station langsung di peta
 - Waypoint buatan user tampil di elevation profile chart dengan label
 - Nutrition & gear notes per waypoint
 - Segment breakdown otomatis by waypoint yang ditambahkan user
 
 **Race Strategy**
+
 - Hourly weather forecast yang lebih detail
 - Pace & cutoff estimator: estimasi waktu per checkpoint dan status cutoff tiap aid station
 
 **Data & Sharing**
+
 - Upload GPX **maks 20 MB per file** (untuk rute ultra atau rekaman dengan sampling sangat rapat)
 - Export PDF (race brief siap cetak)
 - Share link hasil analisis (view-only untuk penerima)
@@ -165,6 +173,7 @@ Semua fitur Free, ditambah:
 - Perbandingan dua rute side-by-side
 
 **Support**
+
 - Priority support via email
 
 ---
@@ -175,14 +184,14 @@ Prinsip: **tease, don't hide**, disesuaikan untuk kondisi Pro belum tersedia. Fi
 
 ### 6.1 Perilaku selama Tahap 1 & 2 (Pro belum launch)
 
-| Fitur | Tampilan di Free | CTA |
-|---|---|---|
-| Waypoint management | **Akun registered:** tetap aktif, label "Gratis sampai Pro launch". **Anonymous:** tombol terkunci | Registered: tanpa CTA lock, pemakaian dicatat (`waypoint_added`). Anonymous: "Daftar gratis" |
-| Hourly weather | Section hourly tampil terkunci/blur di bawah weather per sesi | "Daftar early access" |
-| Cutoff estimator | Tabel checkpoint tampil dengan nilai "—" di bawah estimasi pace dasar | "Daftar early access" |
-| Export PDF & share link | Tombol disabled + tooltip "Segera hadir" | "Daftar early access" |
-| Simpan rute ke-4 | Prompt hapus rute lama | "Hapus rute" atau "Daftar early access" |
-| Compare route | Menu terkunci dengan label "Segera hadir" | "Daftar early access" |
+| Fitur                   | Tampilan di Free                                                                                   | CTA                                                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Waypoint management     | **Akun registered:** tetap aktif, label "Gratis sampai Pro launch". **Anonymous:** tombol terkunci | Registered: tanpa CTA lock, pemakaian dicatat (`waypoint_added`). Anonymous: "daftar" |
+| Hourly weather          | Section hourly tampil terkunci/blur di bawah weather per sesi                                      | "Daftar early access"                                                                 |
+| Cutoff estimator        | Tabel checkpoint tampil dengan nilai "—" di bawah estimasi pace dasar                              | "Daftar early access"                                                                 |
+| Export PDF & share link | Tombol disabled + tooltip "Segera hadir"                                                           | "Daftar early access"                                                                 |
+| Simpan rute ke-4        | Prompt hapus rute lama                                                                             | "Hapus rute" atau "Daftar early access"                                               |
+| Compare route           | Menu terkunci dengan label "Segera hadir"                                                          | "Daftar early access"                                                                 |
 
 Waypoint management **dikecualikan dari locked state Pro** untuk akun registered selama Tahap 1 dan 2. Label "Gratis sampai Pro launch" tampil sejak Free launch; tanggal sunset diumumkan begitu tanggal Pro launch ditetapkan. Anonymous tidak mendapat fitur ini dan melihat CTA registrasi. Pemakaian oleh akun registered (event `waypoint_added`, `waypoint_edited`) dipakai sebagai sinyal demand, melengkapi klik waitlist. Risiko: semakin lama gratis, semakin berat mencabutnya, sehingga komunikasinya tidak boleh ditunda.
 
@@ -202,7 +211,7 @@ Waypoint management **dikecualikan dari locked state Pro** untuk akun registered
 
 ### 6.4 Perilaku setelah Pro launch (Tahap 3)
 
-CTA berubah dari waitlist menjadi upgrade. Selama 30 hari pertama: *"Coba Pro, Rp 29.000 bulan pertama."* dengan harga normal Rp 49.000/bulan di bawahnya. Setelah jendela diskon: *"Upgrade ke Pro, Rp 49.000/bulan."* Opsi tahunan sebagai secondary di kedua kondisi. Urutan trigger dari yang terkuat:
+CTA berubah dari waitlist menjadi upgrade. Selama 30 hari pertama: _"Coba Pro, Rp 29.000 bulan pertama."_ dengan harga normal Rp 49.000/bulan di bawahnya. Setelah jendela diskon: _"Upgrade ke Pro, Rp 49.000/bulan."_ Opsi tahunan sebagai secondary di kedua kondisi. Urutan trigger dari yang terkuat:
 
 1. User upload GPX tanpa waypoint → tombol Add Waypoint terkunci
 2. User mencapai limit 3 rute → prompt upgrade saat simpan rute ke-4
@@ -218,13 +227,13 @@ Saat Pro launch, waypoint management berpindah dari "gratis sementara" menjadi t
 ### Anonymous → Free Registered
 
 1. User upload GPX → analisis selesai.
-2. User melihat weather atau elevation chart berlabel terkunci, atau ingin simpan hasil → prompt *"Daftar gratis dalam 30 detik untuk lihat cuaca, simpan rute, dan lainnya."*
+2. User melihat weather atau elevation chart berlabel terkunci, atau ingin simpan hasil → prompt _"daftar dalam 30 detik untuk lihat cuaca, simpan rute, dan lainnya."_
 3. Daftar (email atau Google) → verifikasi email jika memakai email → weather, waypoint GPX di elevation chart, estimasi pace, waypoint management (sementara), dan simpan rute aktif.
 
 ### Free Registered → Early Access (Tahap 1–2)
 
 1. User mengklik fitur Pro yang terkunci (misalnya hourly weather atau export PDF).
-2. Muncul tooltip/bottom sheet: *"Segera hadir di Pro."* + tombol "Daftar early access".
+2. Muncul tooltip/bottom sheet: _"Segera hadir di Pro."_ + tombol "Daftar early access".
 3. Klik → user masuk waitlist dengan fitur pemicu tercatat.
 
 ### Free Registered → Pro (via storage limit, setelah Pro launch)
@@ -232,8 +241,8 @@ Saat Pro launch, waypoint management berpindah dari "gratis sementara" menjadi t
 1. User sudah simpan 3 rute.
 2. Upload GPX baru, selesai analisis, klik "Simpan".
 3. Muncul prompt upgrade ke Pro.
-4. *Jika tidak upgrade:* hapus rute lama untuk ganti dengan yang baru.
-5. *Jika upgrade:* semua rute tersimpan, fitur Pro langsung aktif.
+4. _Jika tidak upgrade:_ hapus rute lama untuk ganti dengan yang baru.
+5. _Jika upgrade:_ semua rute tersimpan, fitur Pro langsung aktif.
 
 ### Free Registered → Pro (via waypoint / hourly weather / cutoff, setelah Pro launch)
 
@@ -251,19 +260,19 @@ Saat Pro launch, waypoint management berpindah dari "gratis sementara" menjadi t
 
 > Berlaku mulai Tahap 3. Tidak ada pembayaran pada Tahap 1 dan 2.
 
-| Plan | Harga | Catatan |
-|---|---|---|
-| Free | Rp 0 | Selamanya, tanpa batas waktu |
-| Pro — bulan pertama (**diskon launch**) | Rp 29.000 | Hanya untuk langganan yang dimulai dalam **30 hari sejak tanggal Pro launch**, sekali per akun |
-| Pro — bulanan (harga normal) | Rp 49.000/bulan | Berlaku untuk semua langganan baru setelah masa diskon, dan untuk bulan kedua dst. bagi pelanggan diskon. Auto-renew untuk kartu dan GoPay (lihat catatan) |
-| Pro Tahunan | Rp 399.000/tahun | ~Rp 33.000/bulan, hemat ~33% vs bulanan normal |
+| Plan                                    | Harga            | Catatan                                                                                                                                                    |
+| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Free                                    | Rp 0             | Selamanya, tanpa batas waktu                                                                                                                               |
+| Pro — bulan pertama (**diskon launch**) | Rp 29.000        | Hanya untuk langganan yang dimulai dalam **30 hari sejak tanggal Pro launch**, sekali per akun                                                             |
+| Pro — bulanan (harga normal)            | Rp 49.000/bulan  | Berlaku untuk semua langganan baru setelah masa diskon, dan untuk bulan kedua dst. bagi pelanggan diskon. Auto-renew untuk kartu dan GoPay (lihat catatan) |
+| Pro Tahunan                             | Rp 399.000/tahun | ~Rp 33.000/bulan, hemat ~33% vs bulanan normal                                                                                                             |
 
 ### Catatan implementasi pricing
 
 - **Diskon launch berperiode 30 hari**, dihitung dari tanggal Pro launch. Setelah jendela ini berakhir tidak ada harga intro sama sekali, sehingga tidak ada celah abuse lewat pembuatan akun baru. Penentuan berdasarkan tanggal mulai langganan, bukan tanggal registrasi akun.
 - Dalam jendela 30 hari, diskon tetap berlaku **sekali per akun**.
 - Tidak ada harga founder. Waitlist hanya mendapat pemberitahuan lebih dulu tentang tanggal Pro launch dan jendela diskon.
-- Harga bulan kedua **harus ditampilkan eksplisit** di halaman checkout, bukan di fine print. Contoh copy wajib selama jendela diskon: *"Bulan pertama Rp 29.000, selanjutnya Rp 49.000/bulan. Batalkan kapan saja."* Setelah jendela berakhir: *"Rp 49.000/bulan. Batalkan kapan saja."*
+- Harga bulan kedua **harus ditampilkan eksplisit** di halaman checkout, bukan di fine print. Contoh copy wajib selama jendela diskon: _"Bulan pertama Rp 29.000, selanjutnya Rp 49.000/bulan. Batalkan kapan saja."_ Setelah jendela berakhir: _"Rp 49.000/bulan. Batalkan kapan saja."_
 - Plan tahunan tidak mendapat diskon launch.
 - Harga final divalidasi dengan data survei waitlist sebelum Tahap 3.
 - **Perbaikan dari v1.3:** tabel tier lama menulis Rp 129.000/bulan dan Rp 990.000/tahun. Angka tersebut dianggap usang. Angka di tabel ini yang berlaku.
@@ -297,11 +306,11 @@ Saat Pro launch, waypoint management berpindah dari "gratis sementara" menjadi t
 - **GPX asli disimpan** supaya user bisa download ulang. Simpan versi ter-gzip di object storage (bukan kolom database) melalui lapisan abstraksi S3-compatible: **Cloudflare R2** (Standard, free tier) sejak Tahap 1, tetap dipakai setelah migrasi ke VPS. Tabel rute hanya menyimpan object key, bukan URL penuh. Track ter-simplify tetap di database untuk render cepat.
 - **Downgrade Pro → Free:** semua rute dan file tetap tersimpan, tetapi hanya **3 rute terakhir** (terbaru) yang ditampilkan dan bisa diakses. Rute lainnya berstatus tersembunyi (diarsipkan) dan **muncul kembali saat user upgrade lagi**. Share link **mengikuti** status tampil: link dari rute tersembunyi nonaktif dan aktif lagi saat rute kembali tampil.
 - Rute tersembunyi tidak dihitung terhadap limit 3 rute dan tidak bisa diedit selama tersembunyi. Karena data tersimpan tanpa batas, siapkan kebijakan retensi (misalnya pemberitahuan dan penghapusan setelah periode tidak aktif yang panjang) sebelum Tahap 3.
-- **Hapus rute = hapus permanen** (rute yang dihapus user sendiri; berbeda dengan rute tersembunyi akibat downgrade), baik baris database maupun file di Storage. Tampilkan konfirmasi *"Rute yang dihapus tidak bisa dikembalikan."*
+- **Hapus rute = hapus permanen** (rute yang dihapus user sendiri; berbeda dengan rute tersembunyi akibat downgrade), baik baris database maupun file di Storage. Tampilkan konfirmasi _"Rute yang dihapus tidak bisa dikembalikan."_
 - **Anonymous yang langsung upgrade ke Pro:** analisis sesi tersebut harus ikut tersimpan. Karena alur registrasi dan checkout memindahkan halaman, simpan hasil analisis dan file sementara (misalnya di browser storage atau area temporary dengan expiry singkat), lalu pindahkan ke akun setelah registrasi/pembayaran berhasil.
 - **Batas upload per tier:** Anonymous 5 MB, Free 10 MB, Pro 20 MB. Nilai dibaca dari konfigurasi per tier (bukan di-hardcode), melalui fungsi entitlement yang sama dengan fitur lain.
 - Validasi ukuran dilakukan di **client** (pesan error cepat) dan di **server** (jika file diproses di server), karena pengecekan client saja bisa dilewati.
-- Saat file melebihi batas tier, tampilkan pesan yang jelas dan CTA yang sesuai: Anonymous → *"File ini lebih dari 5 MB. Daftar gratis untuk upload sampai 10 MB."*; Free → *"File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB."* (berubah jadi CTA upgrade setelah Pro launch).
+- Saat file melebihi batas tier, tampilkan pesan yang jelas dan CTA yang sesuai: Anonymous → _"File ini lebih dari 5 MB. daftar untuk upload sampai 10 MB."_; Free → _"File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB."_ (berubah jadi CTA upgrade setelah Pro launch).
 - Karena GPX asli kini disimpan, kuota **file storage** ikut terpakai. Estimasi kasar: 1.000 user Free × 3 rute × 1–3 MB (sebelum gzip) ≈ 3–9 GB, jauh di bawah kapasitas disk VPS atau object storage yang umum dipakai. Dengan R2 free tier (10 GB-month), kuota storage cukup untuk estimasi ini. Pantau pemakaian dan pasang notifikasi (Section 9.6). Batas upload yang lebih besar menaikkan beban parsing/compute dan potensi storage per rute, jadi pantau pemakaian per user Pro.
 - Anonymous tidak menyimpan apa pun sehingga tidak menambah biaya storage.
 - Untuk Pro "unlimited", pasang fair-use cap yang longgar (usulan awal 200–500 rute, diputuskan sebelum Tahap 3).
@@ -329,24 +338,25 @@ Agar Pro tinggal "dinyalakan" pada Tahap 3 tanpa rewrite:
 
 Sebelum Pro launch, stack memakai plan gratis. Asumsi stack: Supabase (database, auth, storage), Resend (email), Vercel (hosting), dan API weather dengan free tier, dipakai sampai migrasi ke VPS saat Pro launch (Section 9.8). Dampaknya ke rencana:
 
-| Tool (plan gratis) | Batas yang relevan | Dampak | Mitigasi |
-|---|---|---|---|
-| **Supabase Free** | Auto-pause setelah 1 minggu tidak aktif; 500 MB database; **1 GB file storage**; 5 GB egress; tanpa daily backup (backup harian ada di Pro) | Login/simpan gagal saat project pause. GPX asli disimpan di R2, sehingga batas 1 GB file storage Supabase tidak menjadi bottleneck. | Keep-alive berkala (workaround, bukan solusi); backup `pg_dump` terjadwal ke penyimpanan sendiri; pantau kuota; jika ambang tercapai sebelum Pro launch, pilih antara upgrade sementara atau percepat migrasi |
-| **Resend Free** | 3.000 email/bulan, **100 email/hari**, 1 domain; kuota harian mencakup email terkirim dan diterima; bounce rate harus di bawah 4% | Lonjakan registrasi dalam sehari melewati 100 email (konfirmasi + reset password) membuat pengiriman berhenti. Email palsu menaikkan bounce rate. | Prioritaskan Google OAuth; verifikasi email aktif; hindari kampanye besar sebelum upgrade; upgrade Resend Pro (~$20/bulan) bila rata-rata harian mendekati batas |
-| **Vercel Hobby** | Hanya untuk penggunaan non-komersial pribadi; melewati batas pemakaian dapat memblokir fitur hingga 30 hari | Free launch masih area abu-abu karena produk dirancang untuk monetisasi. **Tidak boleh dipakai saat Pro menerima pembayaran.** | **Keputusan: tetap di Vercel Hobby sampai Pro launch, risiko diterima.** Image Docker dibangun di CI pada setiap PR sehingga pindah hosting bisa dilakukan kapan saja (±1 hari kerja) bila Vercel menegur. Pindah ke VPS saat Pro launch (fallback: Vercel Pro). Opsional: minta konfirmasi tertulis ke support Vercel |
-| **API weather (free tier)** | Kuota bergantung penyedia | Jika kuota global habis, weather mati untuk semua user | Cache agresif, rate limit per akun, batas global, dan pesan fallback yang jelas |
+| Tool (plan gratis)          | Batas yang relevan                                                                                                                          | Dampak                                                                                                                                            | Mitigasi                                                                                                                                                                                                                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Supabase Free**           | Auto-pause setelah 1 minggu tidak aktif; 500 MB database; **1 GB file storage**; 5 GB egress; tanpa daily backup (backup harian ada di Pro) | Login/simpan gagal saat project pause. GPX asli disimpan di R2, sehingga batas 1 GB file storage Supabase tidak menjadi bottleneck.               | Keep-alive berkala (workaround, bukan solusi); backup `pg_dump` terjadwal ke penyimpanan sendiri; pantau kuota; jika ambang tercapai sebelum Pro launch, pilih antara upgrade sementara atau percepat migrasi                                                                                                          |
+| **Resend Free**             | 3.000 email/bulan, **100 email/hari**, 1 domain; kuota harian mencakup email terkirim dan diterima; bounce rate harus di bawah 4%           | Lonjakan registrasi dalam sehari melewati 100 email (konfirmasi + reset password) membuat pengiriman berhenti. Email palsu menaikkan bounce rate. | Prioritaskan Google OAuth; verifikasi email aktif; hindari kampanye besar sebelum upgrade; upgrade Resend Pro (~$20/bulan) bila rata-rata harian mendekati batas                                                                                                                                                       |
+| **Vercel Hobby**            | Hanya untuk penggunaan non-komersial pribadi; melewati batas pemakaian dapat memblokir fitur hingga 30 hari                                 | Free launch masih area abu-abu karena produk dirancang untuk monetisasi. **Tidak boleh dipakai saat Pro menerima pembayaran.**                    | **Keputusan: tetap di Vercel Hobby sampai Pro launch, risiko diterima.** Image Docker dibangun di CI pada setiap PR sehingga pindah hosting bisa dilakukan kapan saja (±1 hari kerja) bila Vercel menegur. Pindah ke VPS saat Pro launch (fallback: Vercel Pro). Opsional: minta konfirmasi tertulis ke support Vercel |
+| **API weather (free tier)** | Kuota bergantung penyedia                                                                                                                   | Jika kuota global habis, weather mati untuk semua user                                                                                            | Cache agresif, rate limit per akun, batas global, dan pesan fallback yang jelas                                                                                                                                                                                                                                        |
 
 **Ambang untuk upgrade (usulan):**
+
 - Supabase: database atau file storage mencapai ~80% kuota, ada kampanye/peluncuran publik, atau project pernah pause saat dipakai user. Respons: upgrade sementara atau percepat migrasi ke VPS (Section 9.8).
 - Resend: rata-rata harian mendekati ~70 email, atau ada kampanye yang diperkirakan memicu lonjakan registrasi.
 - Vercel: saat ada peringatan batas pemakaian, atau sebelum Pro launch (diselesaikan lewat migrasi ke VPS, bukan Vercel Pro, kecuali fallback).
 
 **Perbandingan biaya saat Pro launch** (perkiraan kasar, cek harga terbaru; Resend Pro ~$20 bila diperlukan berlaku sama di kedua skenario):
 
-| Skenario | Komponen | Perkiraan/bulan | Setara pelanggan Pro (Rp 49.000) |
-|---|---|---|---|
-| Stack managed (tidak dipilih) | Supabase Pro ~$25 + Vercel Pro ~$20 | ≈ $45, sekitar Rp 700 ribu | ±14 |
-| **Self-host VPS (rencana)** | VPS ~4 vCPU / 8 GB ($15–25) + backup offsite ($1–5) | ≈ $15–30, sekitar Rp 250–500 ribu | ±5–10 |
+| Skenario                      | Komponen                                            | Perkiraan/bulan                   | Setara pelanggan Pro (Rp 49.000) |
+| ----------------------------- | --------------------------------------------------- | --------------------------------- | -------------------------------- |
+| Stack managed (tidak dipilih) | Supabase Pro ~$25 + Vercel Pro ~$20                 | ≈ $45, sekitar Rp 700 ribu        | ±14                              |
+| **Self-host VPS (rencana)**   | VPS ~4 vCPU / 8 GB ($15–25) + backup offsite ($1–5) | ≈ $15–30, sekitar Rp 250–500 ribu | ±5–10                            |
 
 Penghematan ≈ $15–30/bulan, belum menghitung jam kerja migrasi dan operasional, juga belum termasuk biaya payment gateway dan API weather. Karena itu migrasi dijadwalkan saat Pro launch, bukan sebelumnya.
 
@@ -355,6 +365,7 @@ Penghematan ≈ $15–30/bulan, belum menghitung jam kerja migrasi dan operasion
 Tujuan: migrasi ke VPS cukup mengganti implementasi di balik antarmuka, bukan menulis ulang aplikasi. Berlaku untuk semua kode baru sejak Tahap 1. Kode yang sudah ada (termasuk pipeline analytics harian dan skrip backfill) diaudit terhadap prinsip ini.
 
 **Data layer**
+
 - Semua query lewat satu modul (misalnya `lib/db`). Komponen dan route tidak mengimpor `supabase-js` langsung.
 - Akses database lewat koneksi Postgres biasa (`DATABASE_URL`) dengan ORM **Drizzle**. Hindari PostgREST, `.rpc()`, dan realtime.
 - Skema dan migrasi disimpan sebagai file di repo, bukan diubah lewat dashboard.
@@ -363,25 +374,30 @@ Tujuan: migrasi ke VPS cukup mengganti implementasi di balik antarmuka, bukan me
 - Di Vercel pakai connection string pooler. Pada mode transaction, driver Postgres umumnya perlu prepared statements dimatikan (cek dokumentasi driver).
 
 **Auth**
+
 - Bungkus di satu antarmuka (`getSession()`, `requireUser()`, `signOut()`). Tidak ada pemanggilan `supabase.auth.*` di luar modul itu.
 - Tabel user dikelola Better Auth di schema `public` (bukan `auth.users`). Identifier berupa UUID (cek opsi `generateId` di Better Auth).
 - Google OAuth memakai client ID milik sendiri agar redirect URI mudah dipindah.
 
 **Storage**
+
 - S3 SDK di balik antarmuka (`putObject`, `getObject`, `delete`, `signedUrl`). Diarahkan ke endpoint S3 Cloudflare R2.
 - Database hanya menyimpan object key, bukan URL penuh.
 
 **Vercel**
+
 - Job terjadwal berupa route biasa (`/api/cron/*`) yang dilindungi secret. Vercel cron hanya pemicu.
 - Gunakan Node runtime dan `output: 'standalone'`. Hindari edge runtime, edge middleware yang berat, `@vercel/*` (analytics, KV, Blob, Postgres), dan ISR yang bergantung pada cache Vercel.
 - Optimasi gambar pakai `sharp`. Konfigurasi lewat env var, tanpa logika di `vercel.json`.
 
 **Cache dan rate limit**
+
 - Weather cache dan rate limit memakai tabel Postgres dengan TTL (bukan Vercel KV), agar ikut pindah bersama database.
 
 ### 9.8 Rencana migrasi ke VPS saat Pro launch
 
 **Arsitektur target**
+
 - VPS (perkiraan 4 vCPU / 8 GB; provider dan lokasi diputuskan di Section 11.2) di belakang Cloudflare (DNS, proxy, WAF, cache static).
 - Deploy dengan Coolify atau Dokploy: git push deploy, SSL otomatis, scheduled task, backup DB ke S3. Next.js dalam Docker (`standalone`).
 - PostgreSQL dalam container dengan volume, tidak diekspos publik (internal network atau Tailscale).
@@ -391,6 +407,7 @@ Tujuan: migrasi ke VPS cukup mengganti implementasi di balik antarmuka, bukan me
 - Email tetap Resend.
 
 **Operasional**
+
 - Backup: `pg_dump` harian plus WAL archiving (pgBackRest/WAL-G) ke penyimpanan di provider berbeda dari VPS. Uji restore tiap bulan.
 - Monitoring: Uptime Kuma (termasuk endpoint webhook payment gateway, alert ke Telegram), Sentry, snapshot provider mingguan.
 - Hardening: SSH key only, firewall hanya 80/443 (via Cloudflare), fail2ban atau CrowdSec, unattended-upgrades.
@@ -398,6 +415,7 @@ Tujuan: migrasi ke VPS cukup mengganti implementasi di balik antarmuka, bukan me
 - Data pribadi user berada di server sendiri: terapkan pengamanan dan rencana respons insiden sesuai UU PDP (bagian dari workstream legal terpisah).
 
 **Urutan migrasi**
+
 1. **Tahap 1:** `Dockerfile` dan `docker compose` lokal (build Docker di CI pada setiap PR), skrip backup, audit kode terhadap Section 9.7.
 2. **Tahap 2:** runbook migrasi, keputusan teknis (Section 11.2), dry-run di VPS staging paralel dengan produksi.
 3. **Sebelum Pro launch** (target selesai 2–4 minggu sebelum pembayaran pertama): dump dan restore database, pindah cron, ganti hosting app, cutover DNS dengan TTL rendah. Karena Better Auth dan Drizzle sudah berjalan di atas Postgres sejak Tahap 1, tidak ada migrasi akun, hash password, atau OAuth.
@@ -410,24 +428,28 @@ Perkiraan effort implementasi: ~1–2 minggu kerja solo (hosting app, Postgres, 
 ## 10. Success Metrics
 
 ### Primary (Tahap 1–2)
+
 - Anonymous → Free registered conversion rate: target ≥ 30% (**hipotesis**; ukur baseline 2–4 minggu sebelum gating menyala, lalu tetapkan target)
 - Jumlah akun terdaftar dan retensi 30 hari
 - Pro waitlist sign-up rate (dari user Free aktif)
 - Proporsi user yang mencapai limit 3 rute
 
 ### Primary (Tahap 3, setelah Pro launch)
+
 - Free → Pro conversion rate: target awal 5%, **dikalibrasi ulang** dengan data waitlist. Dengan weather kini di Free, trigger upgrade bertumpu pada waypoint management, limit 3 rute, dan cutoff estimator, sehingga target perlu diuji.
 - Monthly Recurring Revenue (MRR)
 - Pro subscriber retention rate (target ≥ 90% per bulan)
 - Annual vs monthly plan ratio (target annual ≥ 40% dari paying users)
 
 ### Secondary
+
 - Waktu dari upload GPX pertama ke registrasi
 - Fitur Pro mana yang paling sering memicu klik early access
 - Waktu dari registrasi ke upgrade Pro
 - Biaya per user aktif (weather API, email, storage)
 
 ### Guardrail metrics (jangan sampai turun)
+
 - Bounce rate user Free/Anonymous: gating tidak boleh meningkatkan bounce
 - Time on page untuk analisis gratis
 - Upload GPX rate: jumlah user yang menyelesaikan analisis pertama
@@ -478,15 +500,16 @@ Perkiraan effort implementasi: ~1–2 minggu kerja solo (hosting app, Postgres, 
 Karena saat ini semua fitur terbuka tanpa akun, perubahan tier perlu dikomunikasikan:
 
 - Audit fitur yang saat ini live dan petakan ke tier baru (Anonymous / Free / Pro).
-- Fitur yang berpindah ke **Free registered** (weather, waypoint GPX di elevation chart, estimasi pace) diumumkan sebagai "sekarang butuh akun gratis".
+- Fitur yang berpindah ke **Free registered** (weather, waypoint GPX di elevation chart, estimasi pace) diumumkan sebagai "sekarang butuh akun".
 - Batas upload Anonymous turun dari 10 MB ke 5 MB. Umumkan bersama perubahan tier, dan pastikan pesan error mengarahkan ke registrasi.
-- **Waypoint management saat ini sudah live** untuk semua pengunjung. Mulai Free launch fitur ini **hanya untuk akun registered** (diumumkan sebagai "sekarang butuh akun gratis") dan tersedia sampai Pro launch dengan label "Gratis sampai Pro launch". Umumkan tanggal sunset sedini mungkin setelah tanggal Pro launch ditetapkan. Waypoint buatan user tetap tampil read-only setelah fitur dikunci.
-- Fitur yang berstatus **Pro** dinonaktifkan dan tampil "Segera hadir" dengan CTA early access (keputusan: opsi *sembunyikan/coming soon*), kecuali waypoint management yang tetap live untuk akun registered.
+- **Waypoint management saat ini sudah live** untuk semua pengunjung. Mulai Free launch fitur ini **hanya untuk akun registered** (diumumkan sebagai "sekarang butuh akun") dan tersedia sampai Pro launch dengan label "Gratis sampai Pro launch". Umumkan tanggal sunset sedini mungkin setelah tanggal Pro launch ditetapkan. Waypoint buatan user tetap tampil read-only setelah fitur dikunci.
+- Fitur yang berstatus **Pro** dinonaktifkan dan tampil "Segera hadir" dengan CTA early access (keputusan: opsi _sembunyikan/coming soon_), kecuali waypoint management yang tetap live untuk akun registered.
 - Umumkan perubahan lewat banner di app dan changelog sebelum diberlakukan, dengan tanggal efektif yang jelas.
 
 ### Tahap 1 — Launch Free Registered (dekat)
 
 **Foundation**
+
 - Rutinitas operasional tool gratis: keep-alive, backup berkala, dan monitoring kuota dengan ambang upgrade (Section 9.6)
 - Auth dengan Better Auth (email + Google OAuth), verifikasi email via Resend
 - Integrasi Resend langsung dari aplikasi, template email Bahasa Indonesia, verifikasi domain (SPF/DKIM/DMARC)
@@ -498,12 +521,14 @@ Karena saat ini semua fitur terbuka tanpa akun, perubahan tier perlu dikomunikas
 - Skrip backup `pg_dump` terjadwal ke penyimpanan sendiri (sekaligus latihan restore)
 
 **Fitur Free**
+
 - Simpan rute (maks 3), hapus rute, akses lintas device
 - Weather per sesi untuk user login (cache + rate limit)
 - Waypoint GPX di elevation chart
 - Estimasi pace dasar
 
 **Gating dan growth**
+
 - Batas ukuran upload per tier (client + server) dan pesan error dengan CTA
 - Locked state dan prompt registrasi untuk Anonymous
 - Locked state "Segera hadir" + early access waitlist untuk fitur Pro (kecuali waypoint management: live untuk akun registered dengan label "Gratis sampai Pro launch"; Anonymous mendapat CTA registrasi)
@@ -539,17 +564,17 @@ Karena saat ini semua fitur terbuka tanpa akun, perubahan tier perlu dikomunikas
 
 ## Lampiran A — Changelog
 
-| Versi | Tanggal | Perubahan |
-|---|---|---|
-| 1.3 | 8 Juli 2026 | Ditambahkan tier Anonymous vs Free vs Pro. Free registered maks 3 rute. Compare route dikonfirmasi sebagai fitur Pro. |
-| 2.0 | 23 Oktober 2026 | Weather per sesi, waypoint GPX di elevation chart, estimasi pace dasar, dan catatan rute dipindah ke Free registered. Hourly weather tetap Pro. Peluncuran bertahap: Free dulu, Pro 2027. Fitur Pro ditampilkan "Segera hadir" dengan early access waitlist. Ditambah Section 9 (pertimbangan teknis: Supabase, custom SMTP, desain penyimpanan, entitlement). Harga disatukan ke Rp 29.000 / Rp 49.000 / Rp 399.000. Section 6, 7, 10, 11, 12 disesuaikan. |
-| 2.1 | 23 Oktober 2026 | Batas ukuran upload GPX dibedakan per tier. Section 4.1, 5, 9.3, 11, dan 12 diperbarui. |
-| 2.2 | 23 Oktober 2026 | Batas upload final: Anonymous 5 MB, Free 10 MB, Pro 20 MB. Catatan/rename rute dan preferensi tersimpan dihapus dari Free. Ditambah download ulang GPX asli (Free & Pro). Open questions dijawab (Section 11): provider email Resend, GPX asli disimpan, rute dihapus tidak bisa dikembalikan, share link berlaku selamanya selama rute ada, downgrade menyisakan 3 rute, analisis Anonymous tersimpan saat langsung upgrade. Waypoint management dikonfirmasi sudah live dan akan dikunci "Segera hadir". |
-| 2.3 | 23 Oktober 2026 | Diskon launch berperiode 30 hari menggantikan introductory price permanen; tidak ada harga founder. Downgrade: semua rute tetap tersimpan, hanya 3 rute terakhir ditampilkan, share link mengikuti. Ditambah Section 9.6 (strategi tool gratis sampai Pro launch: Supabase Free, Resend Free, Vercel Hobby, API weather) beserta ambang upgrade. Section 9.1, 11, dan 12 disesuaikan. |
-| 2.4 | 23 Oktober 2026 | Strategi infrastruktur: tetap di tier gratis (Supabase Free, Vercel Hobby, Resend Free) sampai Pro launch, lalu migrasi penuh ke VPS sendiri (PostgreSQL, auth, storage) saat Pro launch, dengan motivasi utama biaya. Keputusan "self-hosted tidak dipertimbangkan" di Section 9.1 dibalik. Ditambah Section 9.7 (prinsip portabilitas: minim dependensi pada fungsi khusus Supabase/Vercel) dan 9.8 (rencana migrasi ke VPS). Section 9.1, 9.2, 9.3, 9.5, 9.6, 11, dan 12 disesuaikan. |
-| 2.5 | 26 Oktober 2026 | Waypoint management tetap live seperti sekarang sampai Pro launch (label "Gratis sampai Pro launch", tanggal sunset diumumkan sedini mungkin), lalu dikunci ke Pro; waypoint yang sudah dibuat tetap tampil read-only. Auth: Better Auth. ORM: Drizzle. Keduanya di atas Postgres Supabase sejak Tahap 1, tanpa Supabase Auth dan `supabase-js`; migrasi ke VPS tidak lagi memerlukan migrasi akun. Payment gateway: Midtrans, dengan usulan pembayaran dua jalur (auto-renew kartu/GoPay, prepaid per periode untuk metode lain). Hosting: tetap di Vercel Hobby sampai Pro launch (risiko diterima), pindah ke VPS saat Pro launch. Target konversi Anonymous → Free dijadikan hipotesis dengan baseline 2–4 minggu. Section 4.1, 6, 7, 8, 9.2, 9.6, 9.7, 9.8, 10, 11, dan 12 disesuaikan. |
-| 2.6 | 26 Oktober 2026 | Waypoint management **bukan untuk Anonymous**: hanya akun registered yang bisa memakainya, sampai Pro launch, lalu Pro-only (menggantikan keputusan v2.5 yang membiarkannya live untuk semua pengunjung). Anonymous mendapat CTA registrasi. Object storage diputuskan: **Cloudflare R2 (Standard, free tier)** sejak Tahap 1 dan tetap dipakai setelah migrasi VPS; batas 1 GB Supabase Storage tidak lagi relevan. Section 4.1, 5.1, 6.1, 7, 9.1, 9.3, 9.6, 9.7, 9.8, 11, dan 12 disesuaikan. |
+| Versi | Tanggal         | Perubahan                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.3   | 8 Juli 2026     | Ditambahkan tier Anonymous vs Free vs Pro. Free registered maks 3 rute. Compare route dikonfirmasi sebagai fitur Pro.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2.0   | 23 Oktober 2026 | Weather per sesi, waypoint GPX di elevation chart, estimasi pace dasar, dan catatan rute dipindah ke Free registered. Hourly weather tetap Pro. Peluncuran bertahap: Free dulu, Pro 2027. Fitur Pro ditampilkan "Segera hadir" dengan early access waitlist. Ditambah Section 9 (pertimbangan teknis: Supabase, custom SMTP, desain penyimpanan, entitlement). Harga disatukan ke Rp 29.000 / Rp 49.000 / Rp 399.000. Section 6, 7, 10, 11, 12 disesuaikan.                                                                                                                                                                                                                                                                                                                                  |
+| 2.1   | 23 Oktober 2026 | Batas ukuran upload GPX dibedakan per tier. Section 4.1, 5, 9.3, 11, dan 12 diperbarui.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 2.2   | 23 Oktober 2026 | Batas upload final: Anonymous 5 MB, Free 10 MB, Pro 20 MB. Catatan/rename rute dan preferensi tersimpan dihapus dari Free. Ditambah download ulang GPX asli (Free & Pro). Open questions dijawab (Section 11): provider email Resend, GPX asli disimpan, rute dihapus tidak bisa dikembalikan, share link berlaku selamanya selama rute ada, downgrade menyisakan 3 rute, analisis Anonymous tersimpan saat langsung upgrade. Waypoint management dikonfirmasi sudah live dan akan dikunci "Segera hadir".                                                                                                                                                                                                                                                                                   |
+| 2.3   | 23 Oktober 2026 | Diskon launch berperiode 30 hari menggantikan introductory price permanen; tidak ada harga founder. Downgrade: semua rute tetap tersimpan, hanya 3 rute terakhir ditampilkan, share link mengikuti. Ditambah Section 9.6 (strategi tool gratis sampai Pro launch: Supabase Free, Resend Free, Vercel Hobby, API weather) beserta ambang upgrade. Section 9.1, 11, dan 12 disesuaikan.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2.4   | 23 Oktober 2026 | Strategi infrastruktur: tetap di tier gratis (Supabase Free, Vercel Hobby, Resend Free) sampai Pro launch, lalu migrasi penuh ke VPS sendiri (PostgreSQL, auth, storage) saat Pro launch, dengan motivasi utama biaya. Keputusan "self-hosted tidak dipertimbangkan" di Section 9.1 dibalik. Ditambah Section 9.7 (prinsip portabilitas: minim dependensi pada fungsi khusus Supabase/Vercel) dan 9.8 (rencana migrasi ke VPS). Section 9.1, 9.2, 9.3, 9.5, 9.6, 11, dan 12 disesuaikan.                                                                                                                                                                                                                                                                                                     |
+| 2.5   | 26 Oktober 2026 | Waypoint management tetap live seperti sekarang sampai Pro launch (label "Gratis sampai Pro launch", tanggal sunset diumumkan sedini mungkin), lalu dikunci ke Pro; waypoint yang sudah dibuat tetap tampil read-only. Auth: Better Auth. ORM: Drizzle. Keduanya di atas Postgres Supabase sejak Tahap 1, tanpa Supabase Auth dan `supabase-js`; migrasi ke VPS tidak lagi memerlukan migrasi akun. Payment gateway: Midtrans, dengan usulan pembayaran dua jalur (auto-renew kartu/GoPay, prepaid per periode untuk metode lain). Hosting: tetap di Vercel Hobby sampai Pro launch (risiko diterima), pindah ke VPS saat Pro launch. Target konversi Anonymous → Free dijadikan hipotesis dengan baseline 2–4 minggu. Section 4.1, 6, 7, 8, 9.2, 9.6, 9.7, 9.8, 10, 11, dan 12 disesuaikan. |
+| 2.6   | 26 Oktober 2026 | Waypoint management **bukan untuk Anonymous**: hanya akun registered yang bisa memakainya, sampai Pro launch, lalu Pro-only (menggantikan keputusan v2.5 yang membiarkannya live untuk semua pengunjung). Anonymous mendapat CTA registrasi. Object storage diputuskan: **Cloudflare R2 (Standard, free tier)** sejak Tahap 1 dan tetap dipakai setelah migrasi VPS; batas 1 GB Supabase Storage tidak lagi relevan. Section 4.1, 5.1, 6.1, 7, 9.1, 9.3, 9.6, 9.7, 9.8, 11, dan 12 disesuaikan.                                                                                                                                                                                                                                                                                              |
 
 ---
 
-*PlanYourTrail.run — Dokumen internal. Versi 2.6*
+_PlanYourTrail.run — Dokumen internal. Versi 2.6_

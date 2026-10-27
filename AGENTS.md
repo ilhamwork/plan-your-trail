@@ -17,24 +17,25 @@ UI copy and emails: Bahasa Indonesia (match existing UI). Code, comments, commit
 
 ## 2. Locked stack (do not change without asking)
 
-| Area | Choice |
-|---|---|
-| Framework | Next.js App Router, TypeScript (strict), Node runtime |
-| Backend | Server Actions (mutations) + Route Handlers (auth, cron, downloads, health) |
-| UI | Tailwind CSS + shadcn/ui |
-| Validation | Zod at every boundary |
-| DB | Postgres via `DATABASE_URL` (Supabase Free now, own VPS at Pro launch) |
-| ORM | Drizzle, SQL migrations committed in `drizzle/` |
-| Auth | Better Auth on top of the same Postgres. **No Supabase Auth, no `supabase-js` in new code** |
-| Email | Resend, sent directly from the app |
-| Storage | Cloudflare R2 (Standard class, free tier) behind the S3-compatible interface (`lib/storage`) |
-| Tests | Vitest (unit/integration) + Playwright (e2e) |
-| Package manager | npm |
-| Hosting | Vercel Hobby until Pro launch, then Docker (`output: "standalone"`) on a VPS |
+| Area            | Choice                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| Framework       | Next.js App Router, TypeScript (strict), Node runtime                                        |
+| Backend         | Server Actions (mutations) + Route Handlers (auth, cron, downloads, health)                  |
+| UI              | Tailwind CSS + shadcn/ui                                                                     |
+| Validation      | Zod at every boundary                                                                        |
+| DB              | Postgres via `DATABASE_URL` (Supabase Free now, own VPS at Pro launch)                       |
+| ORM             | Drizzle, SQL migrations committed in `drizzle/`                                              |
+| Auth            | Better Auth on top of the same Postgres. **No Supabase Auth, no `supabase-js` in new code**  |
+| Email           | Resend, sent directly from the app                                                           |
+| Storage         | Cloudflare R2 (Standard class, free tier) behind the S3-compatible interface (`lib/storage`) |
+| Tests           | Vitest (unit/integration) + Playwright (e2e)                                                 |
+| Package manager | npm                                                                                          |
+| Hosting         | Vercel Hobby until Pro launch, then Docker (`output: "standalone"`) on a VPS                 |
 
 ## 3. Hard rules
 
 **Never**
+
 - Import `@supabase/supabase-js`, `@supabase/ssr`, `@vercel/kv`, `@vercel/postgres`, `@vercel/blob`, `@vercel/edge-config` in new code.
 - Use edge runtime, ISR that depends on Vercel cache, or logic in `vercel.json`.
 - Scatter `isPro` checks in components. All access decisions go through `can()` (section 5).
@@ -48,6 +49,7 @@ UI copy and emails: Bahasa Indonesia (match existing UI). Code, comments, commit
 - Guess library APIs. For Better Auth, Drizzle, Next.js, Resend, S3 SDK: read the installed version's docs/types first. If unsure, say so.
 
 **Always**
+
 - Validate input with Zod (Server Action args, Route Handler bodies/params, env).
 - Check authorization in the server function itself (`requireUser()` + `can()` + ownership).
 - Return typed results from Server Actions (section 5).
@@ -132,15 +134,14 @@ export const TIER_LIMITS = {
 
 Access matrix (`can()` must implement exactly this):
 
-| Feature | Anonymous | Free | Pro |
-|---|:---:|:---:|:---:|
-| weather_session, waypoint_gpx_chart, pace_basic, save_route, download_gpx | no | yes | yes |
-| waypoint_management | no (show register CTA) | **yes** (temporary, until Pro launch) | yes |
-| waypoint_user_chart, nutrition_notes, weather_hourly, cutoff_estimator, export_pdf, share_link, compare_routes | no | no | yes, only when `PRO_LAUNCHED` |
+| Feature                                                                                                                             | Anonymous | Free |              Pro              |
+| ----------------------------------------------------------------------------------------------------------------------------------- | :-------: | :--: | :---------------------------: |
+| weather_session, waypoint_gpx_chart, pace_basic, save_route, download_gpx                                                           |    no     | yes  |              yes              |
+| waypoint_management, waypoint_user_chart, nutrition_notes, weather_hourly, cutoff_estimator, export_pdf, share_link, compare_routes |    no     |  no  | yes, only when `PRO_LAUNCHED` |
 
-Before Pro launch `plan` is always `free`, so Pro-only features are locked ("Segera hadir" + early-access waitlist).
-`waypoint_management` is for **registered accounts only** (never Anonymous) until Pro launch, labeled "Gratis sampai Pro launch"; after launch it moves to Pro-only
-and user-created waypoints remain visible read-only. Rule: `user != null && (!PRO_LAUNCHED || user.plan === "pro")`. Anonymous GPX features (map, elevation, metrics, segments, GPX waypoints on the map) are always open.
+Before Pro launch `plan` is always `free`, so Pro-only features (including `waypoint_management`) are locked ("Segera hadir" + early-access waitlist).
+Rule: `user != null && proLaunched && user.plan === "pro"`. Anonymous GPX features (map, elevation, metrics, segments, GPX waypoints on the map) are always open.
+
 
 Owner-scoped queries: every query function for a user-owned table takes `userId` as its first, required parameter
 (e.g. `listRoutes(userId)`, `getRoute(userId, routeId)`). Do not export unscoped variants.
@@ -162,7 +163,7 @@ Owner-scoped queries: every query function for a user-owned table takes `userId`
 ## 7. Product rules to implement exactly
 
 - Upload size limits per tier (client check for fast feedback **and** server check). Messages:
-  - Anonymous: "File ini lebih dari 5 MB. Daftar gratis untuk upload sampai 10 MB."
+  - Anonymous: "File ini lebih dari 5 MB. Daftar untuk upload sampai 10 MB."
   - Free: "File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB."
 - Anonymous analysis must survive the register redirect (temporary browser storage or short-expiry temp area), then be saved to the new account.
 - Weather: login required, per-session forecast (morning/afternoon/evening/night). Cache by location/date with short TTL. Rate limit per account (proposal: 20 analyses/day, read from config) plus a global budget alert. Hourly forecast is Pro.
@@ -174,6 +175,7 @@ Owner-scoped queries: every query function for a user-owned table takes `userId`
 ## 8. Security and testing
 
 Security checklist for every PR touching data or auth:
+
 - [ ] Zod validation on inputs; reject unknown fields where it matters.
 - [ ] `requireUser()` + `can()` + ownership check in the server function.
 - [ ] Rate limit on auth, weather, upload/save, waitlist endpoints.
@@ -183,6 +185,7 @@ Security checklist for every PR touching data or auth:
 - [ ] No secrets in client bundles or logs.
 
 Testing:
+
 - Vitest for `lib/*` units; integration tests against real Postgres (`DATABASE_URL`, CI service container).
 - Required tests: `can()` matrix, owner scoping (user A cannot read/modify user B's route), upload limit enforcement server-side, RLS blocks anon access, env schema.
 - Playwright for critical flows: anonymous analyze, register/login, save route (limit 3), download GPX, waitlist, locked states.
@@ -212,32 +215,32 @@ DB commands (Drizzle Kit generate/migrate) are added in E1; use the scripts defi
 
 **Out of scope for Tahap 1:** payments/Midtrans, subscription backend, Pro features beyond locked UI, export PDF, share link, compare route, org/team, dashboards, edge runtime, VPS migration (Pro launch).
 
-| ID | Task | Acceptance criteria |
-|---|---|---|
-| E0 | Foundation | CI green (lint, typecheck, Vitest, Playwright, Docker build); `docker compose up` serves `/api/health`; `lib/env.ts` validated by Zod; restricted-imports lint rule on (warn); Vercel preview unaffected |
-| E1-T1 | Drizzle schema + migrations | Tables in section 6 exist via committed SQL migration; RLS enabled on all with no policies |
-| E1-T2 | `lib/db` + owner-scoped helpers | No unscoped query exported for user-owned tables; works with pooler connection string |
-| E1-T3 | DB integration tests in CI | Postgres service container; test proves anon role cannot read tables via Data API (or documented equivalent) |
-| E2-T1 | Better Auth + Drizzle adapter | Session works on Next.js App Router; tables migrated; `profile` row created on signup with `plan = free` |
-| E2-T2 | Google OAuth | Login/signup via Google; own client ID via env |
-| E2-T3 | Email verify + reset via Resend | Indonesian templates; verified domain; resend interval >= 60 s; auth endpoints rate-limited |
-| E2-T4 | `lib/auth` wrapper + UI | `getSession/requireUser/signOut` only entry points; sign in/up and account pages with all states |
-| E3 | Entitlements | `config.ts`, `can()`, `limits()` match section 5 matrix; unit tests cover every cell |
-| E4-T1 | `lib/storage` | S3 interface with put/get/delete/signedUrl; works against configured endpoint; unit tested with a fake |
-| E4-T2 | Save route | Parse + simplify track, gzip original to storage, store key; enforce limit 3 (non-hidden) and size limit server-side; typed `ActionResult` |
-| E4-T3 | List / detail / delete | Cross-device access; permanent delete (row + object) with confirmation; owner-only |
-| E4-T4 | Download original GPX | Owner-only signed URL redirect from `/api/routes/[id]/gpx` |
-| E4-T5 | Anonymous -> register -> save | Analysis survives the redirect and is saved to the new account |
-| E5-T1 | Weather for logged-in users | Per-session forecast, cache with TTL, per-account rate limit, graceful fallback when quota is exhausted |
-| E5-T2 | GPX waypoints on elevation chart (Free) | Read-only labels, login required |
-| E5-T3 | Basic pace estimate (Free) | Pace input -> total finish time |
-| E6-T1 | Upload limits per tier | Client + server; messages from section 7 |
-| E6-T2 | Locked states + register prompts | Follow prompt rules (PRD 6.3); `locked_feature_viewed` event |
-| E6-T3 | Waitlist | One-click for logged-in; stores trigger feature; `waitlist_joined` event |
-| E6-T4 | "Segera hadir" component | Generic locked UI for Pro-only features; waypoint_management NOT Pro-locked for registered users (label "Gratis sampai Pro launch"); Anonymous sees a register CTA |
-| E6-T5 | Analytics events | Event list in section 7 wired to funnel (start in Sprint 1 to collect a baseline early) |
-| E7 | Ops | Scheduled `pg_dump` to offsite + restore drill; keep-alive; quota monitor/alert; cron routes hardened; uptime check |
-| E8 | QA and launch | E2E critical flows; security checklist pass; beta; launch checklist + rollback |
+| ID    | Task                                    | Acceptance criteria                                                                                                                                                                                      |
+| ----- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E0    | Foundation                              | CI green (lint, typecheck, Vitest, Playwright, Docker build); `docker compose up` serves `/api/health`; `lib/env.ts` validated by Zod; restricted-imports lint rule on (warn); Vercel preview unaffected |
+| E1-T1 | Drizzle schema + migrations             | Tables in section 6 exist via committed SQL migration; RLS enabled on all with no policies                                                                                                               |
+| E1-T2 | `lib/db` + owner-scoped helpers         | No unscoped query exported for user-owned tables; works with pooler connection string                                                                                                                    |
+| E1-T3 | DB integration tests in CI              | Postgres service container; test proves anon role cannot read tables via Data API (or documented equivalent)                                                                                             |
+| E2-T1 | Better Auth + Drizzle adapter           | Session works on Next.js App Router; tables migrated; `profile` row created on signup with `plan = free`                                                                                                 |
+| E2-T2 | Google OAuth                            | Login/signup via Google; own client ID via env                                                                                                                                                           |
+| E2-T3 | Email verify + reset via Resend         | Indonesian templates; verified domain; resend interval >= 60 s; auth endpoints rate-limited                                                                                                              |
+| E2-T4 | `lib/auth` wrapper + UI                 | `getSession/requireUser/signOut` only entry points; sign in/up and account pages with all states                                                                                                         |
+| E3    | Entitlements                            | `config.ts`, `can()`, `limits()` match section 5 matrix; unit tests cover every cell                                                                                                                     |
+| E4-T1 | `lib/storage`                           | S3 interface with put/get/delete/signedUrl; works against configured endpoint; unit tested with a fake                                                                                                   |
+| E4-T2 | Save route                              | Parse + simplify track, gzip original to storage, store key; enforce limit 3 (non-hidden) and size limit server-side; typed `ActionResult`                                                               |
+| E4-T3 | List / detail / delete                  | Cross-device access; permanent delete (row + object) with confirmation; owner-only                                                                                                                       |
+| E4-T4 | Download original GPX                   | Owner-only signed URL redirect from `/api/routes/[id]/gpx`                                                                                                                                               |
+| E4-T5 | Anonymous -> register -> save           | Analysis survives the redirect and is saved to the new account                                                                                                                                           |
+| E5-T1 | Weather for logged-in users             | Per-session forecast, cache with TTL, per-account rate limit, graceful fallback when quota is exhausted                                                                                                  |
+| E5-T2 | GPX waypoints on elevation chart (Free) | Read-only labels, login required                                                                                                                                                                         |
+| E5-T3 | Basic pace estimate (Free)              | Pace input -> total finish time                                                                                                                                                                          |
+| E6-T1 | Upload limits per tier                  | Client + server; messages from section 7                                                                                                                                                                 |
+| E6-T2 | Locked states + register prompts        | Follow prompt rules (PRD 6.3); `locked_feature_viewed` event                                                                                                                                             |
+| E6-T3 | Waitlist                                | One-click for logged-in; stores trigger feature; `waitlist_joined` event                                                                                                                                 |
+| E6-T4 | "Segera hadir" component                | Generic locked UI for Pro-only features; waypoint_management is Pro-locked; Anonymous sees a register CTA                                                                   |
+| E6-T5 | Analytics events                        | Event list in section 7 wired to funnel (start in Sprint 1 to collect a baseline early)                                                                                                                  |
+| E7    | Ops                                     | Scheduled `pg_dump` to offsite + restore drill; keep-alive; quota monitor/alert; cron routes hardened; uptime check                                                                                      |
+| E8    | QA and launch                           | E2E critical flows; security checklist pass; beta; launch checklist + rollback                                                                                                                           |
 
 Current focus: Sprint 1 = E0 + E6-T5 (events) + E1-T1/T2.
 

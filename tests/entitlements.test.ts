@@ -63,12 +63,9 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       expect(can(freeUser, "download_gpx")).toBe(true)
     })
 
-    it("allows waypoint_management temporarily before Pro launch", () => {
-      expect(can(freeUser, "waypoint_management")).toBe(true)
-    })
-
-    it("denies Pro-only features", () => {
+    it("denies Pro-only features including waypoint_management", () => {
       const proOnlyFeatures: Feature[] = [
+        "waypoint_management",
         "waypoint_user_chart",
         "nutrition_notes",
         "weather_hourly",
@@ -103,7 +100,7 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       expect(can(freeUser, "download_gpx")).toBe(true)
     })
 
-    it("locks waypoint_management after Pro launch for Free users", () => {
+    it("locks waypoint_management for Free users", () => {
       expect(can(freeUser, "waypoint_management")).toBe(false)
     })
 
@@ -119,17 +116,18 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       _setProLaunchedForTesting(false)
     })
 
-    it("allows standard Free features and waypoint_management", () => {
+    it("allows standard Free features", () => {
       expect(can(proUser, "weather_session")).toBe(true)
       expect(can(proUser, "waypoint_gpx_chart")).toBe(true)
-      expect(can(proUser, "waypoint_management")).toBe(true)
     })
 
-    it("keeps Pro-only features locked before Pro launch", () => {
+    it("keeps Pro-only features locked before Pro launch (including waypoint_management)", () => {
+      expect(can(proUser, "waypoint_management")).toBe(false)
       expect(can(proUser, "weather_hourly")).toBe(false)
       expect(can(proUser, "export_pdf")).toBe(false)
       expect(can(proUser, "cutoff_estimator")).toBe(false)
     })
+
 
     it("returns pro limits (20MB, null maxSavedRoutes)", () => {
       const res = limits(proUser)
