@@ -126,6 +126,9 @@ export function trackEvent<E extends AnalyticsEventName>(
 
   try {
     if (typeof window !== "undefined") {
+      if (process.env.NODE_ENV === "development") {
+        console.log(`%c[Analytics Event] %c${event}`, "color: #3b82f6; font-weight: bold;", "color: inherit;", sanitized)
+      }
       track(event, sanitized)
     }
   } catch (error) {
