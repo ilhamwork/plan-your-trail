@@ -1,6 +1,7 @@
 "use client"
 
 import { memo, useState } from "react"
+import Link from "next/link"
 import {
   Plus,
   MapPin,
@@ -10,11 +11,14 @@ import {
   X,
   Check,
   Download,
+  Lock,
+  Sparkles,
 } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 import type { Waypoint, TrackPoint } from "@/lib/types"
 import { downloadGPX } from "@/lib/gpx-export"
 import { formatKm, formatKmLabel } from "@/lib/format"
+import { useEntitlements } from "@/lib/entitlements"
+import { trackEvent } from "@/lib/analytics/events"
 
 interface WaypointPanelProps {
   totalDistanceKm: number
@@ -35,17 +39,31 @@ export const WaypointPanel = memo(function WaypointPanel({
   onEdit,
   onRemove,
 }: WaypointPanelProps) {
+  const { can, user } = useEntitlements()
+  const canManageWaypoints = can("waypoint_management")
+  const canDownloadGpx = can("download_gpx")
+
   const [name, setName] = useState("")
   const [distanceStr, setDistanceStr] = useState("")
   const [error, setError] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [waitlistJoined, setWaitlistJoined] = useState(false)
 
   const routeName = fileName
     ? fileName.replace(/\.gpx$/i, "")
     : "route"
 
   const handleDownload = () => {
+    if (!canDownloadGpx) {
+      trackEvent("register_clicked", {
+        source: "waypoint_download",
+        feature: "download_gpx",
+      })
+      window.location.href = "/register"
+      return
+    }
+
     setIsDownloading(true)
     try {
       downloadGPX(trackPoints, waypoints, routeName)
@@ -56,7 +74,7 @@ export const WaypointPanel = memo(function WaypointPanel({
 
   // Populate inputs when entering edit mode
   const handleStartEdit = (wp: Waypoint) => {
-    if (!wp.id) return
+    if (!canManageWaypoints || !wp.id) return
     setError("")
     setEditingId(wp.id)
     setName(wp.name)
@@ -71,21 +89,23 @@ export const WaypointPanel = memo(function WaypointPanel({
   }
 
   const handleSubmit = () => {
+    if (!canManageWaypoints) return
+
     setError("")
     const trimmedName = name.trim()
     const km = parseFloat(distanceStr)
 
     if (!trimmedName) {
-      setError("Please enter a waypoint name.")
+      setError("Silakan masukkan nama waypoint.")
       return
     }
     if (isNaN(km) || km < 0) {
-      setError("Please enter a valid distance (≥ 0).")
+      setError("Silakan masukkan jarak yang valid (≥ 0).")
       return
     }
     if (km > totalDistanceKm) {
       setError(
-        `Distance exceeds route length (${totalDistanceKm.toFixed(1)} km).`
+        `Jarak melebihi panjang rute (${totalDistanceKm.toFixed(1)} km).`
       )
       return
     }
@@ -95,15 +115,17 @@ export const WaypointPanel = memo(function WaypointPanel({
       (wp) => wp.id !== editingId && Math.abs(wp.distance / 1000 - km) < 0.05
     )
     if (duplicate) {
-      setError(`A waypoint already exists near ${km.toFixed(2)} km.`)
+      setError(`Waypoint sudah ada di sekitar ${km.toFixed(2)} km.`)
       return
     }
 
     if (editingId) {
       onEdit(editingId, trimmedName, km)
+      trackEvent("waypoint_edited", { source: "waypoint_panel" })
       setEditingId(null)
     } else {
       onAdd(trimmedName, km)
+      trackEvent("waypoint_added", { source: "waypoint_panel" })
     }
 
     setName("")
@@ -113,6 +135,14 @@ export const WaypointPanel = memo(function WaypointPanel({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSubmit()
     if (e.key === "Escape" && editingId) handleCancelEdit()
+  }
+
+  const handleJoinWaitlist = () => {
+    trackEvent("waitlist_joined", {
+      feature: "waypoint_management",
+      source: "waypoint_panel",
+    })
+    setWaitlistJoined(true)
   }
 
   // Sort waypoints by distance
@@ -126,17 +156,33 @@ export const WaypointPanel = memo(function WaypointPanel({
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-[#E76F51]" />
             <h3 className="text-sm font-bold text-[#2D3436]">
-              {editingId ? "Edit Waypoint" : "Route Waypoints"}
+              {editingId ? "Edit Waypoint" : "Waypoint Rute"}
             </h3>
+            {canManageWaypoints ? (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                Pro
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                <Lock className="h-2.5 w-2.5" />
+                Khusus Pro
+              </span>
+            )}
           </div>
           <button
             onClick={handleDownload}
             disabled={isDownloading || trackPoints.length === 0}
-            title="Download GPX with waypoints"
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 shadow-sm transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            title={
+              canDownloadGpx
+                ? "Download GPX dengan waypoint"
+                : "Daftar akun untuk download GPX"
+            }
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 shadow-xs transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isDownloading ? (
               <div className="h-3 w-3 animate-spin rounded-full border-2 border-current/20 border-t-current" />
+            ) : !canDownloadGpx ? (
+              <Lock className="h-3 w-3 text-amber-600" />
             ) : (
               <Download className="h-3 w-3" />
             )}
@@ -145,166 +191,175 @@ export const WaypointPanel = memo(function WaypointPanel({
         </div>
         <p className="mt-0.5 text-xs text-gray-400">
           {editingId
-            ? "Modify the selected waypoint details"
-            : "Manage checkpoints, water, or aid stations"}
+            ? "Ubah rincian waypoint terpilih"
+            : "Kelola checkpoint, pos air, atau aid station"}
         </p>
       </div>
 
-      {/* Input row */}
-      <div className="border-b border-gray-50 bg-gray-50/50 px-4 pt-3 pb-2">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value)
-              setError("")
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Waypoint name"
-            className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
-          />
-          <div className="relative w-24 shrink-0">
+      {/* Input row or Pro Gated Prompt */}
+      {canManageWaypoints ? (
+        <div className="border-b border-gray-50 bg-gray-50/50 px-4 pt-3 pb-2">
+          <div className="flex gap-2">
             <input
-              type="number"
-              value={distanceStr}
+              type="text"
+              value={name}
               onChange={(e) => {
-                setDistanceStr(e.target.value)
+                setName(e.target.value)
                 setError("")
               }}
               onKeyDown={handleKeyDown}
-              placeholder="0.0"
-              min={0}
-              max={totalDistanceKm}
-              step={0.01}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-7 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
+              placeholder="Nama waypoint (cth: WS 1 Water)"
+              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
             />
-            <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] font-semibold text-gray-400">
-              km
-            </span>
-          </div>
+            <div className="relative w-24 shrink-0">
+              <input
+                type="number"
+                value={distanceStr}
+                onChange={(e) => {
+                  setDistanceStr(e.target.value)
+                  setError("")
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="0.0"
+                min={0}
+                max={totalDistanceKm}
+                step={0.01}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-7 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
+              />
+              <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] font-semibold text-gray-400">
+                km
+              </span>
+            </div>
 
-          <div className="flex gap-1">
-            {editingId ? (
-              <>
+            <div className="flex gap-1">
+              {editingId ? (
+                <>
+                  <button
+                    onClick={handleSubmit}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs transition hover:bg-emerald-700 active:scale-95"
+                    title="Simpan perubahan"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-200 text-gray-600 shadow-xs transition hover:bg-gray-300 active:scale-95"
+                    title="Batal edit"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
                 <button
                   onClick={handleSubmit}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
-                  title="Save changes"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1B4332] text-white shadow-xs transition hover:bg-[#143326] active:scale-95"
+                  title="Tambah waypoint"
                 >
-                  <Check className="h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                 </button>
+              )}
+            </div>
+          </div>
+
+          {error && (
+            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-red-500">
+              <AlertCircle className="h-3 w-3 shrink-0" />
+              {error}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="border-b border-amber-100 bg-amber-50/60 px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 shrink-0 text-amber-600" />
+              <div>
+                <p className="text-xs font-semibold text-amber-900">
+                  Manajemen Waypoint — Khusus Pro
+                </p>
+                <p className="text-[11px] text-amber-700">
+                  Tambah dan edit pos air atau checkpoint kustom di peta & chart rute.
+                </p>
+              </div>
+            </div>
+
+            {user ? (
+              waitlistJoined ? (
+                <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-700">
+                  <Check className="h-3 w-3" />
+                  Terdaftar Early Access
+                </span>
+              ) : (
                 <button
-                  onClick={handleCancelEdit}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-200 text-gray-600 shadow-sm transition hover:bg-gray-300 active:scale-95"
-                  title="Cancel edit"
+                  type="button"
+                  onClick={handleJoinWaitlist}
+                  className="shrink-0 rounded-lg bg-[#1B4332] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326]"
                 >
-                  <X className="h-4 w-4" />
+                  Daftar Early Access
                 </button>
-              </>
+              )
             ) : (
-              <button
-                onClick={handleSubmit}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1B4332] text-white shadow-sm transition hover:bg-[#1B4332]/80 active:scale-95"
-                title="Add waypoint"
+              <Link
+                href="/register"
+                onClick={() =>
+                  trackEvent("register_clicked", {
+                    source: "waypoint_panel_gated",
+                    feature: "waypoint_management",
+                  })
+                }
+                className="shrink-0 rounded-lg bg-[#1B4332] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326]"
               >
-                <Plus className="h-4 w-4" />
-              </button>
+                Daftar Akun
+              </Link>
             )}
           </div>
         </div>
+      )}
 
-        {/* Error */}
-        <AnimatePresence border-none>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-1.5 flex items-center gap-1 overflow-hidden"
+      {/* Waypoint List */}
+      <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
+        {sorted.length === 0 ? (
+          <div className="py-8 text-center text-xs text-gray-400">
+            {canManageWaypoints
+              ? "Belum ada waypoint. Tambahkan pos air atau aid station pertama kamu."
+              : "Tidak ada waypoint pada file GPX ini."}
+          </div>
+        ) : (
+          sorted.map((wp) => (
+            <div
+              key={wp.id}
+              className="flex items-center justify-between px-4 py-2.5 transition hover:bg-gray-50/80"
             >
-              <AlertCircle className="h-3 w-3 shrink-0 text-red-500" />
-              <p className="text-[11px] text-red-500">{error}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-800">
+                  {formatKmLabel(wp.distance)}
+                </span>
+                <span className="truncate text-xs font-medium text-[#2D3436]">
+                  {wp.name}
+                </span>
+              </div>
 
-      {/* Waypoint list */}
-      <div className="max-h-40 divide-y divide-gray-50 overflow-y-auto">
-        <AnimatePresence>
-          {sorted.length > 0 ? (
-            sorted.map((wp) => {
-              const isEditingThis = editingId === wp.id
-              return (
-                <motion.div
-                  key={wp.id || `${wp.name}-${wp.distance}`}
-                  layout
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className={`flex items-center justify-between px-4 py-2.5 transition-colors ${
-                    isEditingThis ? "bg-emerald-50/50" : "hover:bg-gray-50/40"
-                  }`}
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                        wp.isFromGpx ? "bg-[#2A9D8F]" : "bg-[#E76F51]"
-                      }`}
-                    />
-                    <div className="flex min-w-0 flex-col">
-                      <p className="truncate text-xs font-semibold text-[#2D3436]">
-                        {wp.name}
-                      </p>
-                      <div className="mt-0.5 flex items-center gap-1.5">
-                        <span className="text-[10px] font-medium text-gray-400">
-                          {formatKmLabel(wp.distance, 2)}
-                        </span>
-                        <span
-                          className={`py-0.2 rounded px-1 text-[8px] font-bold ${
-                            wp.isFromGpx
-                              ? "bg-[#2A9D8F]/10 text-[#2A9D8F]"
-                              : "bg-[#E76F51]/10 text-[#E76F51]"
-                          }`}
-                        >
-                          {wp.isFromGpx ? "GPX" : "Manual"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="ml-2 flex shrink-0 items-center gap-1">
-                    <button
-                      onClick={() => handleStartEdit(wp)}
-                      disabled={isEditingThis}
-                      className={`rounded p-1 transition ${
-                        isEditingThis
-                          ? "text-emerald-500"
-                          : "text-gray-300 hover:bg-gray-100 hover:text-gray-600"
-                      }`}
-                      title="Edit waypoint"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => wp.id && onRemove(wp.id)}
-                      className="rounded p-1 text-gray-300 transition hover:bg-red-50 hover:text-red-400"
-                      title="Remove waypoint"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </motion.div>
-              )
-            })
-          ) : (
-            <p className="px-4 py-4 text-center text-xs text-gray-400">
-              No waypoints on this route.
-            </p>
-          )}
-        </AnimatePresence>
+              {canManageWaypoints && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleStartEdit(wp)}
+                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    title="Edit waypoint"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => wp.id && onRemove(wp.id)}
+                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    title="Hapus waypoint"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   )
