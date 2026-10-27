@@ -30,8 +30,9 @@ export function getVerificationEmailTemplate(url: string, name?: string): EmailT
 
     <p style="font-size: 16px; line-height: 24px; color: #e2e8f0; margin-bottom: 16px;">${greeting}</p>
     <p style="font-size: 15px; line-height: 22px; color: #cbd5e1; margin-bottom: 24px;">
-      Terima kasih telah mendaftar di PlanYourTrail. Silakan klik tombol di bawah untuk memverifikasi alamat email Anda dan mengaktifkan akun gratis Anda.
+      Terima kasih telah mendaftar di PlanYourTrail. Silakan klik tombol di bawah untuk memverifikasi alamat email Anda dan mengaktifkan akun Anda.
     </p>
+
 
     <div style="text-align: center; margin: 32px 0;">
       <a href="${url}" style="background-color: #0284c7; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block;">
