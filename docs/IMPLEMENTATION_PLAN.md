@@ -18,7 +18,8 @@ Versi 1.1 · 26 Oktober 2026 · Mengacu ke PRD v2.6 dan docs/ARCHITECTURE.md
 | E3 Entitlements | `config.ts` limit per tier, `can()`, feature flag, test | 2 |
 | E4 Saved routes | `lib/storage` (Cloudflare R2), simpan rute (gzip, validasi, limit 3, simplify track), list/detail/hapus, download GPX via signed URL, analisis Anonymous bertahan lewat alur register, test | 9.5 |
 | E5 Fitur Free | Gating weather per sesi + cache + rate limit, label waypoint di elevation chart, estimasi pace dasar | 4.5 |
-| E6 Gating & growth | Limit upload per tier (client + server), locked state + prompt register, waitlist, komponen "Segera hadir", banner + label "Gratis sampai Pro launch" di waypoint management, event analytics funnel | 8.5 |
+| E6 Gating & growth | Limit upload per tier (client + server), locked state + prompt register, waitlist, komponen "Segera hadir", locked state waypoint management khusus Pro, event analytics funnel | 8.5 |
+
 | E7 Ops | `pg_dump` terjadwal ke offsite + restore drill, keep-alive, monitor kuota, hardening cron, uptime check | 3.5 |
 | E8 QA & launch | E2E alur kritis, security checklist (authz, rate limit, RLS), beta, launch checklist + rollback | 5.5 |
 | **Total** | | **50** |
