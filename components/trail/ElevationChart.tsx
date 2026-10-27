@@ -1,6 +1,7 @@
 "use client"
 
 import { memo, useCallback, useMemo, useRef } from "react"
+import Link from "next/link"
 import {
   AreaChart,
   Area,
@@ -11,7 +12,8 @@ import {
   ReferenceDot,
 } from "recharts"
 import type { TrackPoint, Waypoint } from "@/lib/types"
-import { BarChart3 } from "lucide-react"
+import { BarChart3, Lock } from "lucide-react"
+import { useEntitlements } from "@/lib/entitlements"
 
 interface ElevationChartProps {
   trackPoints: TrackPoint[]
@@ -25,6 +27,8 @@ export const ElevationChart = memo(function ElevationChart({
   onHover,
 }: ElevationChartProps) {
   const lastHoveredIdxRef = useRef<number | string | null>(null)
+  const { can } = useEntitlements()
+  const canShowGpxWaypoints = can("waypoint_gpx_chart")
 
   // Downsample points for chart performance and stabilize reference
   const chartData = useMemo(() => {
@@ -72,26 +76,38 @@ export const ElevationChart = memo(function ElevationChart({
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-      <div className="border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-[#F4A261]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">
-            Elevation Profile
-          </h3>
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-[#F4A261]" />
+            <h3 className="text-sm font-bold text-[#2D3436]">
+              Profil Elevasi
+            </h3>
+          </div>
+          <p className="mt-0.5 text-xs text-gray-400">
+            Geser kursor untuk melihat elevasi dan lokasi pada peta
+          </p>
         </div>
-        <p className="mt-0.5 text-xs text-gray-400">
-          Hover, tap, or slide to see details on the map
-        </p>
+
+        {waypoints.length > 0 && !canShowGpxWaypoints && (
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:bg-amber-100"
+          >
+            <Lock className="h-2.5 w-2.5" />
+            <span>Masuk untuk melihat {waypoints.length} waypoint di chart</span>
+          </Link>
+        )}
       </div>
 
       <div className="touch-none p-3">
-        <ResponsiveContainer width="100%" height={100}>
+        <ResponsiveContainer width="100%" height={120}>
           <AreaChart
             data={chartData}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             onTouchMove={handleMouseMove}
-            margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+            margin={{ top: 15, right: 10, left: -20, bottom: 0 }}
           >
             <defs>
               <linearGradient
@@ -130,9 +146,9 @@ export const ElevationChart = memo(function ElevationChart({
                 const data = payload[0].payload
                 return (
                   <div className="pointer-events-none rounded-lg bg-[#2D3436] px-3 py-2 text-xs text-white shadow-lg">
-                    <p>Distance: {data.distance.toFixed(1)} km</p>
-                    <p>Altitude: {data.elevation} m</p>
-                    <p>Gradient: {data.gradient.toFixed(0)}%</p>
+                    <p>Jarak: {data.distance.toFixed(1)} km</p>
+                    <p>Elevasi: {data.elevation} m</p>
+                    <p>Gradien: {data.gradient.toFixed(0)}%</p>
                   </div>
                 )
               }}
@@ -149,26 +165,30 @@ export const ElevationChart = memo(function ElevationChart({
               isAnimationActive={false}
             />
 
-            {waypoints.map((wp, i) => {
-              const x = wp.distance / 1000
-              const y = getElevationAtDistance(x)
+            {canShowGpxWaypoints &&
+              waypoints.map((wp, i) => {
+                const x = wp.distance / 1000
+                const y = getElevationAtDistance(x)
 
-              return (
-                <ReferenceDot
-                  key={i}
-                  x={x}
-                  y={y}
-                  r={5}
-                  fill="#E76F51"
-                  stroke="white"
-                  strokeWidth={2}
-                  label={{
-                    position: "top",
-                    fontSize: 10,
-                  }}
-                />
-              )
-            })}
+                return (
+                  <ReferenceDot
+                    key={wp.id || i}
+                    x={x}
+                    y={y}
+                    r={5}
+                    fill="#E76F51"
+                    stroke="white"
+                    strokeWidth={2}
+                    label={{
+                      // value: wp.name,
+                      position: "top",
+                      fontSize: 10,
+                      fill: "#E76F51",
+                      offset: 6,
+                    }}
+                  />
+                )
+              })}
           </AreaChart>
         </ResponsiveContainer>
       </div>
