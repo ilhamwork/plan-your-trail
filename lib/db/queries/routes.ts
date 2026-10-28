@@ -48,7 +48,7 @@ export async function countActiveRoutes(userId: string): Promise<number> {
  */
 export async function createRoute(
   userId: string,
-  data: Omit<NewRoute, "userId" | "id" | "createdAt">
+  data: Omit<NewRoute, "userId" | "createdAt">
 ): Promise<Route> {
   const [created] = await db
     .insert(route)
