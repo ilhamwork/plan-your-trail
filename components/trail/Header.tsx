@@ -40,7 +40,6 @@ export function Header() {
                 title="Rute Saya"
               >
                 <Map className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Rute Saya</span>
               </Link>
               <Link
                 href="/account"

@@ -6,12 +6,16 @@ interface ParseOptions {
   signal?: AbortSignal;
 }
 
+const WORKER_TIMEOUT_MS = 3000;
+
 export function useGPXParser() {
   const workerRef = useRef<Worker | null>(null);
   const pendingRequests = useRef<
     Map<
       number,
       {
+        text: string;
+        timer: ReturnType<typeof setTimeout>;
         resolve: (data: GPXData) => void;
         reject: (error: Error) => void;
       }
@@ -20,7 +24,6 @@ export function useGPXParser() {
   const reqIdCounter = useRef(0);
 
   useEffect(() => {
-    // Inisialisasi Web Worker jika didukung oleh browser
     if (typeof window !== "undefined" && typeof Worker !== "undefined") {
       try {
         const worker = new Worker(
@@ -35,6 +38,7 @@ export function useGPXParser() {
           const req = pendingRequests.current.get(id);
           if (!req) return;
 
+          clearTimeout(req.timer);
           pendingRequests.current.delete(id);
           if (error) {
             req.reject(new Error(error));
@@ -44,7 +48,18 @@ export function useGPXParser() {
         };
 
         worker.onerror = (e) => {
-          console.error("GPX Worker error, falling back to sync:", e);
+          console.warn("GPX Worker error, falling back to sync:", e);
+          workerRef.current = null;
+          // Resolve any pending requests synchronously so the UI never hangs
+          for (const [id, req] of pendingRequests.current.entries()) {
+            clearTimeout(req.timer);
+            pendingRequests.current.delete(id);
+            try {
+              req.resolve(parseGPXSync(req.text));
+            } catch (err) {
+              req.reject(err instanceof Error ? err : new Error(String(err)));
+            }
+          }
         };
 
         workerRef.current = worker;
@@ -59,6 +74,9 @@ export function useGPXParser() {
         workerRef.current.terminate();
         workerRef.current = null;
       }
+      for (const req of requests.values()) {
+        clearTimeout(req.timer);
+      }
       requests.clear();
     };
   }, []);
@@ -71,7 +89,6 @@ export function useGPXParser() {
 
       const worker = workerRef.current;
       if (!worker) {
-        // Fallback synchronous jika Worker tidak aktif / tidak tersedia
         return parseGPXSync(gpxString);
       }
 
@@ -79,6 +96,8 @@ export function useGPXParser() {
         const id = ++reqIdCounter.current;
 
         const onAbort = () => {
+          const req = pendingRequests.current.get(id);
+          if (req) clearTimeout(req.timer);
           pendingRequests.current.delete(id);
           reject(new DOMException("Aborted", "AbortError"));
         };
@@ -87,7 +106,24 @@ export function useGPXParser() {
           options.signal.addEventListener("abort", onAbort, { once: true });
         }
 
+        // Fallback to sync parsing if worker takes too long (e.g. cold compile in dev)
+        const timer = setTimeout(() => {
+          const req = pendingRequests.current.get(id);
+          if (!req) return;
+          pendingRequests.current.delete(id);
+          if (options?.signal) {
+            options.signal.removeEventListener("abort", onAbort);
+          }
+          try {
+            resolve(parseGPXSync(gpxString));
+          } catch (err) {
+            reject(err instanceof Error ? err : new Error(String(err)));
+          }
+        }, WORKER_TIMEOUT_MS);
+
         pendingRequests.current.set(id, {
+          text: gpxString,
+          timer,
           resolve: (data) => {
             if (options?.signal) {
               options.signal.removeEventListener("abort", onAbort);

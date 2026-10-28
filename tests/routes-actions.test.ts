@@ -209,4 +209,60 @@ describe("app/actions/routes", () => {
     expect(fakeStorage.files.has(storageKey)).toBe(false)
     expect(mockDelete).toHaveBeenCalled()
   })
+
+  it("deleteRouteAction fails with NOT_FOUND and leaves S3 object intact if route belongs to different user", async () => {
+    const userA = "user-A"
+    const userB = "user-B"
+    const routeIdB = "b0000000-0000-4000-8000-000000000002"
+    const storageKeyB = `gpx/${userB}/${routeIdB}.gpx.gz`
+
+    // Pre-populate S3 storage with user B's file
+    fakeStorage.files.set(storageKeyB, {
+      body: new Uint8Array([9, 9, 9]),
+      contentEncoding: "gzip",
+    })
+
+    // Logged in as User A
+    setSessionForTesting({
+      user: { id: userA, email: "userA@test.com", plan: "free" },
+    })
+
+    // Mock getRoute("user-A", routeIdB) returning empty (not found for user A)
+    const mockLimit = vi.fn().mockResolvedValue([])
+    const mockWhereGet = vi.fn().mockReturnValue({ limit: mockLimit })
+    const mockFromGet = vi.fn().mockReturnValue({ where: mockWhereGet })
+    const mockSelect = vi.fn().mockReturnValue({ from: mockFromGet })
+
+    const mockDelete = vi.fn()
+
+    setDbForTesting({
+      select: mockSelect,
+      delete: mockDelete,
+    } as unknown as Parameters<typeof setDbForTesting>[0])
+
+    const res = await deleteRouteAction({ routeId: routeIdB })
+
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.error.code).toBe("NOT_FOUND")
+      expect(res.error.message).toContain("Rute tidak ditemukan")
+    }
+
+    // Crucial: User B's S3 file must NOT be deleted
+    expect(fakeStorage.files.has(storageKeyB)).toBe(true)
+    expect(mockDelete).not.toHaveBeenCalled()
+  })
+
+  it("deleteRouteAction rejects invalid UUID with VALIDATION_ERROR", async () => {
+    setSessionForTesting({
+      user: { id: "user-123", email: "user@test.com", plan: "free" },
+    })
+
+    const res = await deleteRouteAction({ routeId: "not-a-uuid" })
+
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.error.code).toBe("VALIDATION_ERROR")
+    }
+  })
 })

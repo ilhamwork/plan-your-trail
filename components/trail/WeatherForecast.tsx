@@ -2,12 +2,13 @@
 
 import { memo, useState, useCallback, useEffect, useRef } from "react"
 import Link from "next/link"
-import { CloudSun, MapPin, Search, X, Lock, Sparkles, Check, ArrowRight } from "lucide-react"
+import { CloudSun, MapPin, Search, X, Lock, ArrowRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEntitlements } from "@/lib/entitlements"
 import { fetchWeatherAction } from "@/app/actions/weather"
 import type { WeatherData } from "@/lib/weather"
 import { trackEvent } from "@/lib/analytics/events"
+import { ComingSoonLock } from "./ComingSoonLock"
 
 
 interface WeatherForecastProps {
@@ -112,7 +113,6 @@ export const WeatherForecast = memo(function WeatherForecast({
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [waitlistJoined, setWaitlistJoined] = useState(false)
 
   // Location state
   const [locationQuery, setLocationQuery] = useState("")
@@ -237,14 +237,6 @@ export const WeatherForecast = memo(function WeatherForecast({
       fetchWeather()
     }
   }, [hasWeatherAccess, date, activeLat, activeLon, fetchWeather])
-
-  const handleJoinWaitlist = () => {
-    trackEvent("waitlist_joined", {
-      feature: "weather_hourly",
-      source: "weather_card",
-    })
-    setWaitlistJoined(true)
-  }
 
   // If user is Anonymous: show Gated State
   if (!authLoading && !hasWeatherAccess) {
@@ -466,32 +458,13 @@ export const WeatherForecast = memo(function WeatherForecast({
             )}
 
             {/* Pro Hourly Teaser (PRD 6.1) */}
-            <div className="mx-4 mb-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/70 p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  <span className="text-xs font-semibold text-gray-700">
-                    Prakiraan Cuaca Per Jam (Hourly)
-                  </span>
-                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
-                    Segera Hadir di Pro
-                  </span>
-                </div>
-                {waitlistJoined ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
-                    <Check className="h-3 w-3" />
-                    Terdaftar Early Access
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleJoinWaitlist}
-                    className="text-xs font-medium text-[#1B4332] underline hover:text-[#143326]"
-                  >
-                    Daftar Early Access
-                  </button>
-                )}
-              </div>
+            <div className="mx-4 mb-4">
+              <ComingSoonLock
+                feature="weather_hourly"
+                title="Prakiraan Cuaca Per Jam (Hourly)"
+                source="weather_card"
+                variant="inline"
+              />
             </div>
           </motion.div>
         )}
