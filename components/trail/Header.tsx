@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { User, LogIn, UserPlus } from "lucide-react"
+import { User, LogIn, UserPlus, Map } from "lucide-react"
 import { useSession } from "@/lib/auth/client"
 import { SignOutButton } from "@/components/auth/SignOutButton"
 
@@ -34,6 +34,14 @@ export function Header() {
             <div className="h-8 w-20 animate-pulse rounded-lg bg-white/10" />
           ) : user ? (
             <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                href="/routes"
+                className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
+                title="Rute Saya"
+              >
+                <Map className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Rute Saya</span>
+              </Link>
               <Link
                 href="/account"
                 className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"

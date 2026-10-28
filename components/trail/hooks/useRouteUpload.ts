@@ -24,6 +24,7 @@ export function useRouteUpload({
 }: UseRouteUploadOptions) {
   const [gpxData, setGpxData] = useState<GPXData | null>(null)
   const [fileName, setFileName] = useState<string>("")
+  const [rawGpxContent, setRawGpxContent] = useState<string>("")
   const [error, setError] = useState<string>("")
 
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -91,6 +92,7 @@ export function useRouteUpload({
 
       try {
         setError("")
+        setRawGpxContent(content)
         setIsParsingGPX(true)
         const parsed = await parseGPX(content)
 
@@ -161,6 +163,7 @@ export function useRouteUpload({
   return {
     gpxData,
     fileName,
+    rawGpxContent,
     error,
     setError,
     routeDetails,
