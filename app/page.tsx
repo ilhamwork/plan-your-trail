@@ -19,6 +19,8 @@ import { EmptyState } from "@/components/trail/EmptyState"
 import { useWaypoints } from "@/components/trail/hooks/useWaypoints"
 import { useRunnerSession } from "@/components/trail/hooks/useRunnerSession"
 import { useRouteUpload } from "@/components/trail/hooks/useRouteUpload"
+import { usePendingRouteSave } from "@/components/trail/hooks/usePendingRouteSave"
+import Link from "next/link"
 
 // ─── Dynamic Component Imports ─────────────────────────────────────
 const MapView = dynamic(
@@ -143,6 +145,7 @@ export default function Home() {
   const {
     gpxData,
     fileName,
+    rawGpxContent,
     error,
     setError,
     routeDetails,
@@ -159,6 +162,30 @@ export default function Home() {
     onWaypointsLoaded: (wps) => setWaypoints(wps),
     onResetInteractions: handleResetInteractions,
   })
+
+  const {
+    isSaving,
+    savedRouteId,
+    saveMessage,
+    saveError,
+    saveRoute,
+  } = usePendingRouteSave()
+
+  const handleSaveRoute = useCallback(async () => {
+    if (!rawGpxContent) return
+    const res = await saveRoute({
+      gpxContent: rawGpxContent,
+      fileName: fileName || "route.gpx",
+      raceName: routeDetails.raceName || fileName || "Rute Saya",
+      raceDate: routeDetails.raceDate,
+      runnerName: sessionRunnerName,
+      waypoints,
+    })
+
+    if (res?.needsAuth) {
+      window.location.href = "/register"
+    }
+  }, [rawGpxContent, fileName, routeDetails, sessionRunnerName, waypoints, saveRoute])
 
   // Synchronize gpxData with waypoint hook
   if (tempGpxForWaypoints !== gpxData) {
@@ -222,6 +249,32 @@ export default function Home() {
             >
               {/* Left column (main content on desktop) */}
               <div className="contents lg:flex lg:flex-col lg:gap-5">
+                {saveMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="order-0 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm font-medium text-emerald-900 shadow-xs"
+                  >
+                    <span>{saveMessage}</span>
+                    <Link
+                      href="/routes"
+                      className="rounded-xl bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46]"
+                    >
+                      Buka Rute Saya
+                    </Link>
+                  </motion.div>
+                )}
+
+                {saveError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="order-0 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-red-800 shadow-xs"
+                  >
+                    {saveError}
+                  </motion.div>
+                )}
+
                 <GatedPrompt
                   feature="weather_session"
                   title="Dapatkan analisis lebih lengkap dengan akun"
@@ -333,6 +386,9 @@ export default function Home() {
                     userName={sessionRunnerName}
                     raceDate={routeDetails.raceDate}
                     onShare={handleShare}
+                    onSave={handleSaveRoute}
+                    isSaving={isSaving}
+                    isSaved={!!savedRouteId}
                   />
                 </motion.div>
 

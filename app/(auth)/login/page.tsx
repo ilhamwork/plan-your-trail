@@ -1,11 +1,11 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
-import { Loader2, AlertCircle } from "lucide-react"
-import { signIn } from "@/lib/auth/client"
+import { Loader2, AlertCircle, WifiOff } from "lucide-react"
+import { signIn, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 
 function LoginForm() {
   const router = useRouter()
@@ -17,6 +17,22 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [isOffline, setIsOffline] = useState(false)
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      setIsOffline(!navigator.onLine)
+    }
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+
+    window.addEventListener("online", handleOnline)
+    window.addEventListener("offline", handleOffline)
+    return () => {
+      window.removeEventListener("online", handleOnline)
+      window.removeEventListener("offline", handleOffline)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,26 +45,24 @@ function LoginForm() {
 
     setLoading(true)
     try {
-      const res = await signIn.email({
-        email,
-        password,
-      })
+      const res = await withAuthTimeout(
+        signIn.email({
+          email,
+          password,
+        })
+      )
 
       if (res?.error) {
-        if (res.error.message?.includes("Email not verified")) {
-          setError(
-            "Email belum diverifikasi. Silakan periksa inbox kamu untuk tautan verifikasi."
-          )
-        } else {
-          setError("Email atau kata sandi tidak valid. Silakan coba lagi.")
-        }
+        setError(
+          parseAuthError(res.error, "Email atau kata sandi tidak valid. Silakan coba lagi.")
+        )
         return
       }
 
       router.push(returnTo)
       router.refresh()
-    } catch {
-      setError("Terjadi kesalahan saat masuk. Silakan coba lagi nanti.")
+    } catch (err) {
+      setError(parseAuthError(err, "Gagal masuk ke akun kamu. Silakan coba lagi nanti."))
     } finally {
       setLoading(false)
     }
@@ -58,12 +72,22 @@ function LoginForm() {
     setError(null)
     setGoogleLoading(true)
     try {
-      await signIn.social({
-        provider: "google",
-        callbackURL: returnTo,
-      })
-    } catch {
-      setError("Gagal masuk dengan Google. Silakan coba lagi.")
+      const res = await withAuthTimeout(
+        signIn.social({
+          provider: "google",
+          callbackURL: returnTo,
+        })
+      )
+
+      if (res?.error) {
+        setError(
+          parseAuthError(res.error, "Gagal masuk dengan Google. Silakan coba lagi.")
+        )
+        return
+      }
+    } catch (err) {
+      setError(parseAuthError(err, "Gagal masuk dengan Google. Silakan periksa koneksi Anda."))
+    } finally {
       setGoogleLoading(false)
     }
   }
@@ -100,6 +124,13 @@ function LoginForm() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="rounded-2xl border border-gray-100 bg-white px-6 py-8 shadow-sm sm:px-10">
+          {isOffline && (
+            <div className="mb-6 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-800">
+              <WifiOff className="h-4 w-4 shrink-0 text-amber-600" />
+              <span>Tidak ada koneksi internet. Silakan periksa jaringan Anda.</span>
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />

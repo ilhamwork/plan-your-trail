@@ -23,6 +23,7 @@ export function getDb(): PostgresJsDatabase<typeof schema> {
     // In transaction pooler mode (Supabase/PgBouncer), prepared statements must be disabled
     client = postgres(databaseUrl, {
       prepare: false,
+      connect_timeout: 10,
     })
 
     dbInstance = drizzle(client, { schema })

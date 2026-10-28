@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Loader2, AlertCircle, CheckCircle } from "lucide-react"
-import { signUp, signIn } from "@/lib/auth/client"
+import { Loader2, AlertCircle, CheckCircle, WifiOff } from "lucide-react"
+import { signUp, signIn, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 import { trackEvent } from "@/lib/analytics/events"
 
 export default function RegisterPage() {
@@ -15,6 +15,22 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [isOffline, setIsOffline] = useState(false)
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      setIsOffline(!navigator.onLine)
+    }
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+
+    window.addEventListener("online", handleOnline)
+    window.addEventListener("offline", handleOffline)
+    return () => {
+      window.removeEventListener("online", handleOnline)
+      window.removeEventListener("offline", handleOffline)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,21 +51,25 @@ export default function RegisterPage() {
 
     setLoading(true)
     try {
-      const res = await signUp.email({
-        name: name.trim(),
-        email,
-        password,
-      })
+      const res = await withAuthTimeout(
+        signUp.email({
+          name: name.trim(),
+          email,
+          password,
+        })
+      )
 
       if (res?.error) {
-        setError(res.error.message || "Gagal membuat akun. Silakan coba lagi.")
+        setError(
+          parseAuthError(res.error, "Gagal membuat akun. Silakan coba lagi.")
+        )
         return
       }
 
       trackEvent("register_completed", { method: "email" })
       setSuccess(true)
-    } catch {
-      setError("Terjadi kesalahan saat pendaftaran. Silakan coba lagi.")
+    } catch (err) {
+      setError(parseAuthError(err, "Gagal membuat akun. Silakan coba lagi nanti."))
     } finally {
       setLoading(false)
     }
@@ -60,12 +80,22 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     try {
       trackEvent("register_completed", { method: "google" })
-      await signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      })
-    } catch {
-      setError("Gagal mendaftar dengan Google. Silakan coba lagi.")
+      const res = await withAuthTimeout(
+        signIn.social({
+          provider: "google",
+          callbackURL: "/",
+        })
+      )
+
+      if (res?.error) {
+        setError(
+          parseAuthError(res.error, "Gagal mendaftar dengan Google. Silakan coba lagi.")
+        )
+        return
+      }
+    } catch (err) {
+      setError(parseAuthError(err, "Gagal mendaftar dengan Google. Silakan periksa koneksi Anda."))
+    } finally {
       setGoogleLoading(false)
     }
   }
@@ -126,6 +156,13 @@ export default function RegisterPage() {
             </div>
           ) : (
             <>
+              {isOffline && (
+                <div className="mb-6 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-800">
+                  <WifiOff className="h-4 w-4 shrink-0 text-amber-600" />
+                  <span>Tidak ada koneksi internet. Silakan periksa jaringan Anda.</span>
+                </div>
+              )}
+
               {error && (
                 <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />

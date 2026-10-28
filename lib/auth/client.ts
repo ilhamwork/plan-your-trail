@@ -2,6 +2,11 @@
 
 import { createAuthClient } from "better-auth/react"
 
-export const authClient = createAuthClient()
+export const authClient = createAuthClient({
+  fetchOptions: {
+    timeout: 15000,
+  },
+})
 
 export const { signIn, signUp, signOut, useSession } = authClient
+export { parseAuthError, withAuthTimeout } from "./errors"

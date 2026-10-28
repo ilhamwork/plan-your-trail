@@ -23,6 +23,40 @@ export const auth = betterAuth({
     env().BETTER_AUTH_URL ||
     env().NEXT_PUBLIC_APP_URL ||
     "http://localhost:3000",
+  trustedOrigins: async (request) => {
+    const trusted = [
+      env().BETTER_AUTH_URL,
+      env().NEXT_PUBLIC_APP_URL,
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:3001",
+      "http://127.0.0.1:3001",
+      "http://192.168.137.1:3000",
+      "http://192.168.137.1:3001",
+    ].filter(Boolean) as string[]
+
+    const origin = request?.headers?.get?.("origin")
+    if (process.env.NODE_ENV !== "production" && origin) {
+      try {
+        const url = new URL(origin)
+        const hostname = url.hostname
+        if (
+          hostname === "localhost" ||
+          hostname === "127.0.0.1" ||
+          hostname === "::1" ||
+          hostname.startsWith("192.168.") ||
+          hostname.startsWith("10.") ||
+          hostname.startsWith("172.")
+        ) {
+          trusted.push(origin)
+        }
+      } catch {
+        // ignore invalid URL
+      }
+    }
+
+    return trusted
+  },
   advanced: {
     database: {
       generateId: "uuid",
