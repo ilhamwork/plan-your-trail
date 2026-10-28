@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Loader2, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
-import { authClient } from "@/lib/auth/client"
+import { authClient, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -23,20 +23,26 @@ export default function ForgotPasswordPage() {
 
     setLoading(true)
     try {
-      const res = await authClient.requestPasswordReset({
-        email,
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-
+      const res = await withAuthTimeout(
+        authClient.requestPasswordReset({
+          email,
+          redirectTo: `${window.location.origin}/reset-password`,
+        })
+      )
 
       if (res?.error) {
-        setError(res.error.message || "Gagal mengirim tautan reset. Silakan coba lagi.")
+        setError(
+          parseAuthError(
+            res.error,
+            "Gagal mengirim tautan reset. Silakan coba lagi."
+          )
+        )
         return
       }
 
       setSuccess(true)
-    } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi nanti.")
+    } catch (err) {
+      setError(parseAuthError(err, "Terjadi gangguan koneksi atau server. Silakan coba lagi nanti."))
     } finally {
       setLoading(false)
     }

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { LogOut, Loader2 } from "lucide-react"
-import { signOut } from "@/lib/auth/client"
+import { signOut, withAuthTimeout } from "@/lib/auth/client"
 
 interface SignOutButtonProps {
   className?: string
@@ -17,11 +17,18 @@ export function SignOutButton({ className, children }: SignOutButtonProps) {
   const handleSignOut = async () => {
     setLoading(true)
     try {
-      await signOut()
+      const res = await withAuthTimeout(signOut(), 8000)
+      if (res?.error) {
+        console.error("Sign out error:", res.error)
+      }
       router.push("/login")
       router.refresh()
     } catch (e) {
       console.error("Sign out error:", e)
+      // Even if network fails, redirect to login page as client-side fallback
+      router.push("/login")
+      router.refresh()
+    } finally {
       setLoading(false)
     }
   }

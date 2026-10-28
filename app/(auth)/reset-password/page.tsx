@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react"
-import { authClient } from "@/lib/auth/client"
+import { authClient, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
@@ -38,19 +38,23 @@ function ResetPasswordForm() {
 
     setLoading(true)
     try {
-      const res = await authClient.resetPassword({
-        newPassword: password,
-        token,
-      })
+      const res = await withAuthTimeout(
+        authClient.resetPassword({
+          newPassword: password,
+          token,
+        })
+      )
 
       if (res?.error) {
-        setError(res.error.message || "Gagal mengatur ulang kata sandi.")
+        setError(
+          parseAuthError(res.error, "Gagal mengatur ulang kata sandi. Silakan coba lagi.")
+        )
         return
       }
 
       setSuccess(true)
-    } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi nanti.")
+    } catch (err) {
+      setError(parseAuthError(err, "Terjadi gangguan koneksi atau server. Silakan coba lagi nanti."))
     } finally {
       setLoading(false)
     }
