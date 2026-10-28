@@ -3,8 +3,7 @@
 import { memo, useCallback, useRef, useState } from "react"
 import { FileUp, FileCheck, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+import { useEntitlements } from "@/lib/entitlements"
 
 interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
@@ -21,6 +20,7 @@ export const UploadCard = memo(function UploadCard({
   error,
   isLoading,
 }: UploadCardProps) {
+  const { user, limits } = useEntitlements()
   const [isDragging, setIsDragging] = useState(false)
   const [isLoadingExample, setIsLoadingExample] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -31,12 +31,20 @@ export const UploadCard = memo(function UploadCard({
       if (onError) onError("")
 
       if (!file.name.toLowerCase().endsWith(".gpx")) {
-        if (onError) onError("Please upload a .gpx file")
+        if (onError) onError("Format file tidak valid. Silakan upload file berekstensi .gpx")
         return
       }
 
-      if (file.size > MAX_FILE_SIZE) {
-        if (onError) onError("File is too large (max 10MB)")
+      if (file.size > limits.maxUploadBytes) {
+        let msg: string
+        if (!user) {
+          msg = "File ini lebih dari 5 MB. Daftar untuk upload sampai 10 MB."
+        } else if (user.plan === "pro") {
+          msg = "File ini melebihi batas upload 20 MB."
+        } else {
+          msg = "File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB."
+        }
+        if (onError) onError(msg)
         return
       }
 
@@ -47,7 +55,7 @@ export const UploadCard = memo(function UploadCard({
       }
       reader.readAsText(file)
     },
-    [onFileLoaded, onError]
+    [onFileLoaded, onError, limits.maxUploadBytes, user]
   )
 
   const handleDrop = useCallback(
@@ -153,7 +161,7 @@ export const UploadCard = memo(function UploadCard({
                     {fileName}
                   </p>
                   <p className="text-[10px] font-medium text-white/50">
-                    GPX file loaded • Tap to change (Max 10MB)
+                    GPX loaded • Klik untuk ganti (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
                   </p>
                 </div>
               </motion.div>
@@ -172,10 +180,10 @@ export const UploadCard = memo(function UploadCard({
                   <div>
                     <p className="text-lg font-bold">Import GPX</p>
                     <p className="text-sm text-white/50">
-                      Drop file or tap to browse
+                      Tarik file ke sini atau klik untuk browse
                     </p>
                     <p className="mt-1 text-[10px] font-medium text-white/30">
-                      (Max 10MB)
+                      (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
                     </p>
                   </div>
                 </div>

@@ -6,6 +6,7 @@ import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
 import { supabase } from "@/lib/supabase"
 import { formatKm } from "@/lib/format"
 import { trackEvent } from "@/lib/analytics/events"
+import { useEntitlements } from "@/lib/entitlements"
 
 const EXAMPLE_FILE_NAME = "Rinjani-162K-2025.gpx"
 
@@ -22,6 +23,7 @@ export function useRouteUpload({
   onWaypointsLoaded,
   onResetInteractions,
 }: UseRouteUploadOptions) {
+  const { user, limits: tierLimits } = useEntitlements()
   const [gpxData, setGpxData] = useState<GPXData | null>(null)
   const [fileName, setFileName] = useState<string>("")
   const [rawGpxContent, setRawGpxContent] = useState<string>("")
@@ -44,10 +46,23 @@ export function useRouteUpload({
       details: RouteDetailsData,
       runnerName: string
     ) => {
-      setIsSubmittingDetails(true)
+      // Update UI state immediately so route rendering is never blocked by network/telemetry
+      setGpxData(parsed)
+      setFileName(name)
+      const initialWps = parsed.waypoints.map((wp) => ({
+        ...wp,
+        id: wp.id || crypto.randomUUID(),
+        isFromGpx: true,
+      }))
+      onWaypointsLoaded(initialWps)
+      setShowDetailsModal(false)
+      setTempRoute(null)
+      setTempFileName("")
+      setIsSubmittingDetails(false)
 
-      try {
-        const { error: dbError } = await supabase.from("user_routes").insert([
+      // Fire-and-forget telemetry with short timeout so unreachable/slow Supabase never hangs upload
+      void Promise.race([
+        supabase.from("user_routes").insert([
           {
             user_name: runnerName,
             race_name: details.raceName,
@@ -56,27 +71,13 @@ export function useRouteUpload({
             distance: parseFloat(formatKm(parsed.stats.totalDistance, 2)),
             elevation_gain: parsed.stats.elevationGain,
           },
-        ])
-
-        if (dbError) {
-          console.error("Failed to save route telemetry:", dbError)
-        }
-      } catch (err) {
-        console.error("Error saving to supabase:", err)
-      } finally {
-        setGpxData(parsed)
-        setFileName(name)
-        const initialWps = parsed.waypoints.map((wp) => ({
-          ...wp,
-          id: wp.id || crypto.randomUUID(),
-          isFromGpx: true,
-        }))
-        onWaypointsLoaded(initialWps)
-        setShowDetailsModal(false)
-        setTempRoute(null)
-        setTempFileName("")
-        setIsSubmittingDetails(false)
-      }
+        ]),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Telemetry timeout")), 3000)
+        ),
+      ]).catch(() => {
+        // Ignore telemetry errors silently
+      })
     },
     [onWaypointsLoaded]
   )
@@ -92,6 +93,20 @@ export function useRouteUpload({
 
       try {
         setError("")
+
+        if (source !== "example" && content.length > tierLimits.maxUploadBytes) {
+          let msg: string
+          if (!user) {
+            msg = "File ini lebih dari 5 MB. Daftar untuk upload sampai 10 MB."
+          } else if (user.plan === "pro") {
+            msg = "File ini melebihi batas upload 20 MB."
+          } else {
+            msg = "File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB."
+          }
+          setError(msg)
+          return
+        }
+
         setRawGpxContent(content)
         setIsParsingGPX(true)
         const parsed = await parseGPX(content)
@@ -112,7 +127,7 @@ export function useRouteUpload({
             raceDate: today,
           }
           setRouteDetails(exampleDetails)
-          finishUpload(parsed, name, exampleDetails, sessionRunnerName)
+          await finishUpload(parsed, name, exampleDetails, sessionRunnerName)
           return
         }
 
@@ -136,7 +151,14 @@ export function useRouteUpload({
         setIsParsingGPX(false)
       }
     },
-    [parseGPX, finishUpload, sessionRunnerName, onResetInteractions]
+    [
+      parseGPX,
+      finishUpload,
+      sessionRunnerName,
+      onResetInteractions,
+      tierLimits.maxUploadBytes,
+      user,
+    ]
   )
 
   const handleDetailsSubmit = useCallback(

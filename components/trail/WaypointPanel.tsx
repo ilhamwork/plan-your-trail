@@ -1,7 +1,6 @@
 "use client"
 
 import { memo, useState } from "react"
-import Link from "next/link"
 import {
   Plus,
   MapPin,
@@ -12,13 +11,13 @@ import {
   Check,
   Download,
   Lock,
-  Sparkles,
 } from "lucide-react"
 import type { Waypoint, TrackPoint } from "@/lib/types"
 import { downloadGPX } from "@/lib/gpx-export"
 import { formatKm, formatKmLabel } from "@/lib/format"
 import { useEntitlements } from "@/lib/entitlements"
 import { trackEvent } from "@/lib/analytics/events"
+import { ComingSoonLock } from "./ComingSoonLock"
 
 interface WaypointPanelProps {
   totalDistanceKm: number
@@ -39,7 +38,7 @@ export const WaypointPanel = memo(function WaypointPanel({
   onEdit,
   onRemove,
 }: WaypointPanelProps) {
-  const { can, user } = useEntitlements()
+  const { can } = useEntitlements()
   const canManageWaypoints = can("waypoint_management")
   const canDownloadGpx = can("download_gpx")
 
@@ -48,7 +47,6 @@ export const WaypointPanel = memo(function WaypointPanel({
   const [error, setError] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [waitlistJoined, setWaitlistJoined] = useState(false)
 
   const routeName = fileName
     ? fileName.replace(/\.gpx$/i, "")
@@ -135,14 +133,6 @@ export const WaypointPanel = memo(function WaypointPanel({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSubmit()
     if (e.key === "Escape" && editingId) handleCancelEdit()
-  }
-
-  const handleJoinWaitlist = () => {
-    trackEvent("waitlist_joined", {
-      feature: "waypoint_management",
-      source: "waypoint_panel",
-    })
-    setWaitlistJoined(true)
   }
 
   // Sort waypoints by distance
@@ -269,50 +259,14 @@ export const WaypointPanel = memo(function WaypointPanel({
           )}
         </div>
       ) : (
-        <div className="border-b border-amber-100 bg-amber-50/60 px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 shrink-0 text-amber-600" />
-              <div>
-                <p className="text-xs font-semibold text-amber-900">
-                  Manajemen Waypoint — Khusus Pro
-                </p>
-                <p className="text-[11px] text-amber-700">
-                  Tambah dan edit pos air atau checkpoint kustom di peta & chart rute.
-                </p>
-              </div>
-            </div>
-
-            {user ? (
-              waitlistJoined ? (
-                <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-700">
-                  <Check className="h-3 w-3" />
-                  Terdaftar Early Access
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleJoinWaitlist}
-                  className="shrink-0 rounded-lg bg-[#1B4332] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326]"
-                >
-                  Daftar Early Access
-                </button>
-              )
-            ) : (
-              <Link
-                href="/register"
-                onClick={() =>
-                  trackEvent("register_clicked", {
-                    source: "waypoint_panel_gated",
-                    feature: "waypoint_management",
-                  })
-                }
-                className="shrink-0 rounded-lg bg-[#1B4332] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326]"
-              >
-                Daftar Akun
-              </Link>
-            )}
-          </div>
+        <div className="border-b border-amber-100 bg-amber-50/60 p-3">
+          <ComingSoonLock
+            feature="waypoint_management"
+            title="Manajemen Waypoint"
+            description="Tambah dan edit pos air atau checkpoint kustom di peta & chart rute."
+            source="waypoint_panel_gated"
+            variant="card"
+          />
         </div>
       )}
 

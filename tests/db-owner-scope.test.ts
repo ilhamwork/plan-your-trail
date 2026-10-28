@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import * as routeQueries from "@/lib/db/queries/routes"
 import * as profileQueries from "@/lib/db/queries/profiles"
+import * as waitlistQueries from "@/lib/db/queries/waitlist"
 import { setDbForTesting } from "@/lib/db/client"
 
 describe("lib/db owner-scoped queries", () => {
@@ -21,6 +22,13 @@ describe("lib/db owner-scoped queries", () => {
   it("enforces userId on all profile queries", () => {
     expect(profileQueries.getProfile.length).toBe(1)
     expect(profileQueries.upsertProfile.length).toBe(1) // has default param for plan
+  })
+
+  it("enforces userId on all waitlist queries", () => {
+    expect(waitlistQueries.createWaitlistEntry.length).toBe(3)
+    expect(waitlistQueries.getWaitlistEntry.length).toBe(2)
+    expect(waitlistQueries.hasJoinedWaitlist.length).toBe(2)
+    expect(waitlistQueries.listWaitlistEntries.length).toBe(1)
   })
 
   it("listRoutes builds query filtering by userId and hidden=false", async () => {

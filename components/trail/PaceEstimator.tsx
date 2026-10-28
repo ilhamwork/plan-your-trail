@@ -2,11 +2,12 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
-import { Timer, Lock, Sparkles, Check, ArrowRight } from "lucide-react"
+import { Timer, Lock, ArrowRight } from "lucide-react"
 
 import { useEntitlements } from "@/lib/entitlements"
 import { trackEvent } from "@/lib/analytics/events"
 import type { RouteStats, Waypoint } from "@/lib/types"
+import { ComingSoonLock } from "./ComingSoonLock"
 
 interface PaceEstimatorProps {
   stats: RouteStats
@@ -39,7 +40,6 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
   const [paceMin, setPaceMin] = useState<number>(7)
   const [paceSec, setPaceSec] = useState<number>(30)
   const [useKmEffort, setUseKmEffort] = useState<boolean>(true)
-  const [waitlistJoined, setWaitlistJoined] = useState(false)
 
   const distanceKm = stats.totalDistance / 1000
   const elevationGainM = stats.elevationGain
@@ -53,14 +53,6 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
       useKmEffort
     )
   }, [distanceKm, elevationGainM, paceMin, paceSec, useKmEffort])
-
-  const handleJoinWaitlist = () => {
-    trackEvent("waitlist_joined", {
-      feature: "cutoff_estimator",
-      source: "pace_estimator",
-    })
-    setWaitlistJoined(true)
-  }
 
   // Gated State for Anonymous
   if (!authLoading && !hasPaceAccess) {
@@ -208,31 +200,13 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
 
         {/* Pro Checkpoint Cutoff Table Teaser (PRD 6.1) */}
         <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              <span className="text-xs font-semibold text-gray-800">
-                Cutoff Estimator per Checkpoint
-              </span>
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
-                Segera Hadir di Pro
-              </span>
-            </div>
-            {waitlistJoined ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
-                <Check className="h-3 w-3" />
-                Masuk Waitlist
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handleJoinWaitlist}
-                className="text-xs font-medium text-[#1B4332] underline hover:text-[#143326]"
-              >
-                Daftar Early Access
-              </button>
-            )}
-          </div>
+          <ComingSoonLock
+            feature="cutoff_estimator"
+            title="Cutoff Estimator per Checkpoint"
+            source="pace_estimator"
+            variant="inline"
+            className="border-0 bg-transparent p-0"
+          />
 
           <div className="mt-3 overflow-hidden rounded-lg border border-gray-200/60 bg-white">
             <table className="w-full text-left text-xs">
