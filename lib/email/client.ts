@@ -5,6 +5,7 @@ import {
   getPasswordResetEmailTemplate,
 } from "./templates/auth-emails"
 import { checkCooldown } from "../rate-limit"
+import { RATE_LIMITS } from "../entitlements/config"
 
 let resendClient: Resend | null = null
 
@@ -40,7 +41,10 @@ export async function sendVerificationEmail({
   name,
 }: SendAuthEmailOptions): Promise<SendEmailResult> {
   const cooldownKey = `email-resend:verify:${to.toLowerCase()}`
-  const cooldown = await checkCooldown(cooldownKey, 60)
+  const cooldown = await checkCooldown(
+    cooldownKey,
+    RATE_LIMITS.emailResendCooldownSeconds
+  )
 
   if (!cooldown.allowed) {
     return {
@@ -66,7 +70,10 @@ export async function sendPasswordResetEmail({
   name,
 }: SendAuthEmailOptions): Promise<SendEmailResult> {
   const cooldownKey = `email-resend:reset:${to.toLowerCase()}`
-  const cooldown = await checkCooldown(cooldownKey, 60)
+  const cooldown = await checkCooldown(
+    cooldownKey,
+    RATE_LIMITS.emailResendCooldownSeconds
+  )
 
   if (!cooldown.allowed) {
     return {
@@ -97,12 +104,15 @@ async function sendRawEmail({
 }): Promise<SendEmailResult> {
   const client = getResend()
   const from = env().EMAIL_FROM || "PlanYourTrail <noreply@planyourtrail.run>"
+  const isProd = env().NODE_ENV === "production"
 
   if (!client) {
-    // In dev / test or when RESEND_API_KEY is not configured
-    console.info(`[Email Mock] To: ${to} | Subject: ${subject}`)
-    if (url) {
-      console.info(`[Email Mock Link] 👉 ${url}`)
+    // In dev / test when RESEND_API_KEY is not configured; never log secret URLs in production
+    if (!isProd) {
+      console.info(`[Email Mock] To: ${to} | Subject: ${subject}`)
+      if (url) {
+        console.info(`[Email Mock Link] 👉 ${url}`)
+      }
     }
     return { ok: true, id: `mock-${Date.now()}` }
   }
@@ -117,10 +127,7 @@ async function sendRawEmail({
     })
 
     if (response.error) {
-      console.error("Resend API error:", response.error)
-      if (url) {
-        console.info(`[Email Link Fallback] 👉 ${url}`)
-      }
+      console.error("Resend API error:", response.error.message)
       return {
         ok: false,
         error: {
@@ -132,10 +139,10 @@ async function sendRawEmail({
 
     return { ok: true, id: response.data?.id }
   } catch (err) {
-    console.error("Error sending email via Resend:", err)
-    if (url) {
-      console.info(`[Email Link Fallback] 👉 ${url}`)
-    }
+    console.error(
+      "Error sending email via Resend:",
+      err instanceof Error ? err.message : "Unknown error"
+    )
     return {
       ok: false,
       error: {

@@ -10,6 +10,7 @@ import { useGPXParser } from "@/lib/use-gpx-parser"
 import { useHighlightRange } from "@/lib/use-highlight-range"
 
 import { Header } from "@/components/trail/Header"
+import { TierAnnouncementBanner } from "@/components/trail/TierAnnouncementBanner"
 import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
@@ -226,6 +227,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
       <Header />
+      <TierAnnouncementBanner />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <AnimatePresence mode="wait">

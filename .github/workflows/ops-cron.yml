@@ -1,0 +1,88 @@
+name: Ops — Keep-Alive, Quota Monitor & Backup Drill
+
+on:
+  schedule:
+    # Daily at 02:15 UTC (09:15 WIB)
+    - cron: "15 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  cron-triggers:
+    name: Trigger Keep-Alive & Quota Monitor
+    runs-on: ubuntu-latest
+    if: ${{ vars.APP_BASE_URL != '' }}
+    steps:
+      - name: Call /api/cron/keep-alive
+        env:
+          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_BASE_URL}/api/cron/keep-alive"
+
+      - name: Call /api/cron/quota-monitor
+        env:
+          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_BASE_URL}/api/cron/quota-monitor"
+
+  backup-and-restore-drill:
+    name: pg_dump Backup & Restore Drill
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: planyourtrail_drill
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install PostgreSQL client tools
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Seed source database with migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgres://postgres:password@localhost:5432/planyourtrail_drill' }}
+        run: npm run db:migrate
+
+      - name: Run pg_dump Backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgres://postgres:password@localhost:5432/planyourtrail_drill' }}
+          BACKUP_LOCAL_OUT: /tmp/pyt-backup.sql.gz
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: node scripts/backup-db.mjs
+
+      - name: Create fresh target database for Restore Drill
+        env:
+          PGPASSWORD: password
+        run: |
+          psql -h localhost -U postgres -c "DROP DATABASE IF EXISTS planyourtrail_restored;"
+          psql -h localhost -U postgres -c "CREATE DATABASE planyourtrail_restored;"
+
+      - name: Run Restore Drill & Verify RLS
+        env:
+          BACKUP_FILE_PATH: /tmp/pyt-backup.sql.gz
+          RESTORE_DATABASE_URL: postgres://postgres:password@localhost:5432/planyourtrail_restored
+        run: node scripts/restore-drill.mjs
+

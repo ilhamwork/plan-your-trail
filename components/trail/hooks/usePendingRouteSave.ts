@@ -17,15 +17,51 @@ export interface PendingRouteData {
   waypoints?: Waypoint[]
 }
 
+const SESSION_STORAGE_SAFE_CHARS = 2_000_000
+
+function compactGpxForSessionStorage(gpx: string): string {
+  if (gpx.length <= SESSION_STORAGE_SAFE_CHARS) {
+    return gpx
+  }
+
+  let compact = gpx
+    .replace(/<extensions>[\s\S]*?<\/extensions>/gi, "")
+    .replace(/<time>[^<]*<\/time>/gi, "")
+    .replace(/>\s+</g, "><")
+
+  if (compact.length <= SESSION_STORAGE_SAFE_CHARS) {
+    return compact
+  }
+
+  let idx = 0
+  compact = compact.replace(
+    /<trkpt\b[^>]*>[\s\S]*?<\/trkpt>|<trkpt\b[^>]*\/>/gi,
+    (match) => {
+      idx++
+      return idx % 5 === 1 ? match : ""
+    }
+  )
+  return compact
+}
+
 /**
  * Saves pending route data to sessionStorage so an anonymous user's analysis
- * survives the redirect through registration or login.
+ * survives the redirect through registration or login, compacting large GPX
+ * strings if needed to stay within browser 5 MB sessionStorage quota.
  */
 export function storePendingRoute(data: PendingRouteData): void {
   try {
     sessionStorage.setItem(PENDING_ROUTE_KEY, JSON.stringify(data))
-  } catch (err) {
-    console.warn("Could not save pending route to sessionStorage:", err)
+  } catch {
+    try {
+      const compacted: PendingRouteData = {
+        ...data,
+        gpxContent: compactGpxForSessionStorage(data.gpxContent),
+      }
+      sessionStorage.setItem(PENDING_ROUTE_KEY, JSON.stringify(compacted))
+    } catch (err) {
+      console.warn("Could not save pending route to sessionStorage:", err)
+    }
   }
 }
 

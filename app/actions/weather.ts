@@ -3,11 +3,13 @@
 import { z } from "zod"
 import { getWeatherForecast, type ActionResult, type WeatherData } from "@/lib/weather"
 
-const WeatherInputSchema = z.object({
-  lat: z.number().min(-90).max(90),
-  lon: z.number().min(-180).max(180),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD"),
-})
+const WeatherInputSchema = z
+  .object({
+    lat: z.number().min(-90).max(90),
+    lon: z.number().min(-180).max(180),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD"),
+  })
+  .strict()
 
 export async function fetchWeatherAction(
   rawInput: unknown

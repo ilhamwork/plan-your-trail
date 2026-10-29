@@ -1,5 +1,6 @@
 import { XMLParser, XMLValidator } from "fast-xml-parser";
-import { ExtractedGPX, RawPt, RawWpt, ERR_XML } from "./types";
+import { ExtractedGPX, RawPt, RawWpt, ERR_XML, ERR_MAX_POINTS } from "./types";
+import { GPX_BOUNDS } from "../entitlements/config";
 
 const ARR = new Set(["trk", "trkseg", "trkpt", "rte", "rtept", "wpt"]);
 
@@ -9,6 +10,7 @@ const parser = new XMLParser({
   parseAttributeValue: false,
   parseTagValue: false,
   trimValues: true,
+  processEntities: false,
   isArray: (name) => ARR.has(name),
 });
 
@@ -56,20 +58,36 @@ export function extractFxp(text: string, validate = true): ExtractedGPX {
   const gpx = (root as Record<string, unknown>)?.gpx as FxpGpx | undefined;
   if (!gpx || typeof gpx !== "object") throw new Error(ERR_XML);
 
+  let totalPts = 0;
   const lines: RawPt[][] = [];
   for (const trk of gpx.trk || []) {
     for (const seg of (trk && trk.trkseg) || []) {
-      const pts: RawPt[] = (seg && seg.trkpt ? seg.trkpt : []).map(pt);
+      const rawNodes = seg && seg.trkpt ? seg.trkpt : [];
+      totalPts += rawNodes.length;
+      if (totalPts > GPX_BOUNDS.maxPoints) {
+        throw new Error(ERR_MAX_POINTS);
+      }
+      const pts: RawPt[] = rawNodes.map(pt);
       if (pts.length >= 2) lines.push(pts);
     }
   }
   for (const rte of gpx.rte || []) {
-    const pts: RawPt[] = (rte && rte.rtept ? rte.rtept : []).map(pt);
+    const rawNodes = rte && rte.rtept ? rte.rtept : [];
+    totalPts += rawNodes.length;
+    if (totalPts > GPX_BOUNDS.maxPoints) {
+      throw new Error(ERR_MAX_POINTS);
+    }
+    const pts: RawPt[] = rawNodes.map(pt);
     if (pts.length >= 2) lines.push(pts);
   }
 
+  const rawWpts = gpx.wpt || [];
+  if (rawWpts.length > GPX_BOUNDS.maxWaypoints) {
+    throw new Error(ERR_MAX_POINTS);
+  }
+
   const waypoints: RawWpt[] = [];
-  for (const w of gpx.wpt || []) {
+  for (const w of rawWpts) {
     const node = typeof w === "object" && w ? w : {};
     waypoints.push({
       name: txt(Array.isArray(node.name) ? node.name[0] : node.name) || "Waypoint",

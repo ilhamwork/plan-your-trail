@@ -1,4 +1,5 @@
-import { ExtractedGPX, RawPt, RawWpt, ERR_XML } from "./types";
+import { ExtractedGPX, RawPt, RawWpt, ERR_XML, ERR_MAX_POINTS } from "./types";
+import { GPX_BOUNDS } from "../entitlements/config";
 
 const TAG_RE = /<(\/?)(trk|trkseg|trkpt|rte|rtept|wpt)(?=[\s>\/])([^>]*)>/g;
 const LAT_RE = /(?:^|\s)lat\s*=\s*(?:"([^"]*)"|'([^']*)')/;
@@ -39,6 +40,7 @@ export function extractRegex(text: string): ExtractedGPX {
   let ptStart = -1;
   let ptAttrs = "";
   let inWpt = false;
+  let totalPoints = 0;
 
   TAG_RE.lastIndex = 0;
   let m: RegExpExecArray | null;
@@ -71,6 +73,9 @@ export function extractRegex(text: string): ExtractedGPX {
         if (!closing) {
           if (selfClosing) {
             if (isWpt) {
+              if (waypoints.length + 1 > GPX_BOUNDS.maxWaypoints) {
+                throw new Error(ERR_MAX_POINTS);
+              }
               waypoints.push({
                 name: "Waypoint",
                 lat: parseFloat(attr(LAT_RE, attrs) || "0"),
@@ -78,6 +83,10 @@ export function extractRegex(text: string): ExtractedGPX {
                 ele: 0,
               });
             } else if (curLine) {
+              totalPoints++;
+              if (totalPoints > GPX_BOUNDS.maxPoints) {
+                throw new Error(ERR_MAX_POINTS);
+              }
               curLine.push({
                 lat: parseFloat(attr(LAT_RE, attrs) as string),
                 lon: parseFloat(attr(LON_RE, attrs) as string),
@@ -93,6 +102,9 @@ export function extractRegex(text: string): ExtractedGPX {
           const body = text.slice(ptStart, m.index);
           const eleM = ELE_RE.exec(body);
           if (inWpt && isWpt) {
+            if (waypoints.length + 1 > GPX_BOUNDS.maxWaypoints) {
+              throw new Error(ERR_MAX_POINTS);
+            }
             const nameM = NAME_RE.exec(body);
             const eleNum = parseFloat((eleM && eleM[1]) || "0");
             waypoints.push({
@@ -102,6 +114,10 @@ export function extractRegex(text: string): ExtractedGPX {
               ele: eleNum,
             });
           } else if (!inWpt && !isWpt && curLine) {
+            totalPoints++;
+            if (totalPoints > GPX_BOUNDS.maxPoints) {
+              throw new Error(ERR_MAX_POINTS);
+            }
             let ele = eleM ? parseFloat(eleM[1]) : NaN;
             if (isNaN(ele)) ele = 0;
             curLine.push({

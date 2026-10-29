@@ -85,7 +85,7 @@ test.describe("E2 Auth UI & Anonymous Navigation", () => {
       page.getByText("Dapatkan analisis lebih lengkap dengan akun")
     ).toBeVisible({ timeout: 15000 })
     await expect(
-      page.getByText("Manajemen Waypoint — Khusus Pro")
+      page.getByText("Manajemen Waypoint")
     ).toBeVisible({ timeout: 15000 })
   })
 })
