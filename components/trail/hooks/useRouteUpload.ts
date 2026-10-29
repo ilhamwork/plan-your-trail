@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase"
 import { formatKm } from "@/lib/format"
 import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 
 const EXAMPLE_FILE_NAME = "Rinjani-162K-2025.gpx"
 
@@ -24,6 +25,7 @@ export function useRouteUpload({
   onResetInteractions,
 }: UseRouteUploadOptions) {
   const { user, limits: tierLimits } = useEntitlements()
+  const { t } = useI18n()
   const [gpxData, setGpxData] = useState<GPXData | null>(null)
   const [fileName, setFileName] = useState<string>("")
   const [rawGpxContent, setRawGpxContent] = useState<string>("")
@@ -97,11 +99,11 @@ export function useRouteUpload({
         if (source !== "example" && content.length > tierLimits.maxUploadBytes) {
           let msg: string
           if (!user) {
-            msg = "File ini lebih dari 5 MB. Daftar untuk upload sampai 10 MB."
+            msg = t("home.upload.limitAnon")
           } else if (user.plan === "pro") {
-            msg = "File ini melebihi batas upload 20 MB."
+            msg = t("home.upload.limitPro")
           } else {
-            msg = "File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB."
+            msg = t("home.upload.limitFree")
           }
           setError(msg)
           return
@@ -143,7 +145,7 @@ export function useRouteUpload({
         onResetInteractions?.()
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to parse GPX file"
+          err instanceof Error ? err.message : t("home.upload.parseError")
         )
         setTempRoute(null)
         setTempFileName("")
@@ -158,6 +160,7 @@ export function useRouteUpload({
       onResetInteractions,
       tierLimits.maxUploadBytes,
       user,
+      t,
     ]
   )
 

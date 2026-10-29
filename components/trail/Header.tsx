@@ -6,9 +6,12 @@ import Link from "next/link"
 import { User, LogIn, UserPlus, Map } from "lucide-react"
 import { useSession } from "@/lib/auth/client"
 import { SignOutButton } from "@/components/auth/SignOutButton"
+import { LanguageSwitcher } from "@/components/trail/LanguageSwitcher"
+import { useI18n } from "@/lib/i18n/context"
 
 export function Header() {
   const { data: sessionData, isPending } = useSession()
+  const { t } = useI18n()
   const user = sessionData?.user
 
   return (
@@ -29,7 +32,9 @@ export function Header() {
           />
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <LanguageSwitcher />
+
           {isPending ? (
             <div className="h-8 w-20 animate-pulse rounded-lg bg-white/10" />
           ) : user ? (
@@ -37,14 +42,14 @@ export function Header() {
               <Link
                 href="/routes"
                 className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
-                title="Rute Saya"
+                title={t("nav.myRoutes")}
               >
                 <Map className="h-3.5 w-3.5" />
               </Link>
               <Link
                 href="/account"
                 className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
-                title="Kelola Akun"
+                title={t("nav.manageAccount")}
               >
                 <User className="h-3.5 w-3.5" />
               </Link>
@@ -58,14 +63,14 @@ export function Header() {
                 className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/90 transition hover:bg-white/10"
               >
                 <LogIn className="h-3.5 w-3.5" />
-                <span>Masuk</span>
+                <span>{t("nav.login")}</span>
               </Link>
               <Link
                 href="/register"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-xs transition hover:bg-emerald-500"
               >
                 <UserPlus className="h-3.5 w-3.5" />
-                <span>Daftar</span>
+                <span>{t("nav.register")}</span>
               </Link>
             </div>
           )}

@@ -8,6 +8,7 @@ import { RouteCard } from "./RouteCard"
 import { DeleteRouteModal } from "./DeleteRouteModal"
 import { deleteRouteAction } from "@/app/actions/routes"
 import type { Route } from "@/lib/db/schema"
+import { useI18n } from "@/lib/i18n/context"
 
 interface RoutesListClientProps {
   initialRoutes: Route[]
@@ -21,6 +22,7 @@ export function RoutesListClient({
   currentPlan,
 }: RoutesListClientProps) {
   const router = useRouter()
+  const { t } = useI18n()
   const [routes, setRoutes] = useState<Route[]>(initialRoutes)
   const [routeToDelete, setRouteToDelete] = useState<Route | null>(null)
 
@@ -44,10 +46,12 @@ export function RoutesListClient({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-700">
-              Kapasitas Penyimpanan:
+              {t("account.routesUsage")}:
             </span>
             <span className="rounded-md bg-[#1B4332]/10 px-2 py-0.5 text-xs font-bold text-[#1B4332]">
-              {maxRoutes !== null ? `${activeCount} dari ${maxRoutes} rute` : `${activeCount} rute (Unlimited)`}
+              {maxRoutes !== null
+                ? t("account.routesCount", { used: activeCount, max: maxRoutes })
+                : `${activeCount} ${t("account.unlimited")}`}
             </span>
             <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
               ({currentPlan} tier)
@@ -61,7 +65,7 @@ export function RoutesListClient({
             className="inline-flex items-center gap-1.5 rounded-xl bg-[#1B4332] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46]"
           >
             <PlusCircle className="h-4 w-4" />
-            <span>Upload Rute Baru</span>
+            <span>{t("routes.uploadNew")}</span>
           </Link>
         </div>
       </div>
@@ -71,10 +75,7 @@ export function RoutesListClient({
         <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <div className="text-sm">
-            <p className="font-semibold">Batas 3 rute tercapai</p>
-            <p className="mt-0.5 text-xs text-amber-800">
-              Kamu sudah menyimpan 3 rute. Hapus salah satu rute, atau daftar early access Pro untuk menyimpan lebih banyak rute.
-            </p>
+            <p className="font-semibold">{t("routes.limitReached")}</p>
           </div>
         </div>
       )}
@@ -85,16 +86,16 @@ export function RoutesListClient({
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-[#1B4332]">
             <Map className="h-8 w-8" />
           </div>
-          <h3 className="mt-4 text-lg font-bold text-gray-900">Belum ada rute tersimpan</h3>
+          <h3 className="mt-4 text-lg font-bold text-gray-900">{t("routes.emptyTitle")}</h3>
           <p className="mt-1 max-w-sm text-sm text-gray-500">
-            Upload file GPX di halaman beranda untuk menganalisis dan menyimpan rute Anda ke akun.
+            {t("routes.emptyDesc")}
           </p>
           <Link
             href="/"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#1B4332] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2D5A46]"
           >
             <PlusCircle className="h-4 w-4" />
-            <span>Upload GPX Sekarang</span>
+            <span>{t("routes.uploadNew")}</span>
           </Link>
         </div>
       ) : (

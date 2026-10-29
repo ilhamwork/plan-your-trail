@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Megaphone, X, ArrowRight } from "lucide-react"
 import { useEntitlements } from "@/lib/entitlements"
 import { trackEvent } from "@/lib/analytics/events"
+import { useI18n } from "@/lib/i18n/context"
 
 const BANNER_STORAGE_KEY = "dismissed_tier_banner_v1"
 
@@ -15,6 +16,7 @@ function subscribe(callback: () => void) {
 
 export function TierAnnouncementBanner() {
   const { isAuthenticated } = useEntitlements()
+  const { t } = useI18n()
   const [localDismissed, setLocalDismissed] = useState(false)
 
   const isSessionDismissed = useSyncExternalStore(
@@ -52,7 +54,7 @@ export function TierAnnouncementBanner() {
   return (
     <div
       role="region"
-      aria-label="Pengumuman perubahan layanan"
+      aria-label={t("home.tierBanner.regionAria")}
       className="border-b border-[#1B4332]/15 bg-[#E9F5EE] text-[#1B4332]"
     >
       <div className="mx-auto flex max-w-7xl items-start justify-between gap-3 px-4 py-2.5 sm:items-center">
@@ -62,10 +64,8 @@ export function TierAnnouncementBanner() {
               <Megaphone className="h-3.5 w-3.5" />
             </span>
             <p className="text-xs leading-relaxed text-[#1B4332]">
-              <span className="font-bold">Pembaruan Akun:</span> Prakiraan
-              cuaca per sesi, label waypoint GPX di chart elevasi, estimasi pace
-              dasar, dan simpan hingga 3 rute (upload s/d 10 MB) kini tersedia
-              dengan akun. Upload tanpa akun dibatasi hingga 5 MB.
+              <span className="font-bold">{t("home.tierBanner.badge")}</span>{" "}
+              {t("home.tierBanner.text")}
             </p>
           </div>
 
@@ -76,7 +76,7 @@ export function TierAnnouncementBanner() {
                 onClick={handleRegisterClick}
                 className="inline-flex items-center gap-1 rounded-lg bg-[#1B4332] px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
-                <span>Daftar Akun</span>
+                <span>{t("home.tierBanner.cta")}</span>
                 <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -86,7 +86,7 @@ export function TierAnnouncementBanner() {
         <button
           type="button"
           onClick={handleDismiss}
-          aria-label="Tutup pengumuman"
+          aria-label={t("home.tierBanner.closeAria")}
           className="shrink-0 rounded-md p-1.5 text-[#1B4332]/70 transition hover:bg-[#1B4332]/10 hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
         >
           <X className="h-4 w-4" />
@@ -95,4 +95,3 @@ export function TierAnnouncementBanner() {
     </div>
   )
 }
-

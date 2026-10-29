@@ -1,5 +1,8 @@
+"use client"
+
 import { memo } from "react"
 import { Flag, User, Calendar, Share2, BookmarkPlus, Check, Loader2 } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface HeaderInfoProps {
   raceName: string
@@ -22,6 +25,8 @@ export const HeaderInfo = memo(function HeaderInfo({
   isSaving,
   isSaved,
 }: HeaderInfoProps) {
+  const { t } = useI18n()
+
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:flex-row md:items-center">
       <div className="flex w-full flex-col gap-1">
@@ -35,7 +40,7 @@ export const HeaderInfo = memo(function HeaderInfo({
               isSaved ? (
                 <span className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
                   <Check className="h-3.5 w-3.5" />
-                  <span>Tersimpan</span>
+                  <span>{t("common.saved") || "Tersimpan"}</span>
                 </span>
               ) : (
                 <button
@@ -43,14 +48,14 @@ export const HeaderInfo = memo(function HeaderInfo({
                   onClick={onSave}
                   disabled={isSaving}
                   className="flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#1B4332] px-3 py-1 text-xs font-semibold text-white shadow-xs transition-all hover:bg-[#2D5A46] disabled:opacity-50"
-                  title="Simpan rute ke akun Anda"
+                  title="Simpan rute"
                 >
                   {isSaving ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <BookmarkPlus className="h-3.5 w-3.5" />
                   )}
-                  <span>{isSaving ? "Menyimpan..." : "Simpan"}</span>
+                  <span>{isSaving ? t("common.loading") : t("common.save")}</span>
                 </button>
               )
             )}
@@ -74,7 +79,7 @@ export const HeaderInfo = memo(function HeaderInfo({
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#2D3436]">
             <Calendar className="h-3.5 w-3.5 text-[#1B4332]" />
             {raceDate
-              ? new Date(raceDate).toLocaleDateString("en-GB", {
+              ? new Date(raceDate).toLocaleDateString("id-ID", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",

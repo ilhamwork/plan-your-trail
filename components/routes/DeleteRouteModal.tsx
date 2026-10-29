@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { AlertTriangle, Loader2 } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface DeleteRouteModalProps {
   isOpen: boolean
@@ -19,6 +20,7 @@ export function DeleteRouteModal({
   onClose,
   onConfirm,
 }: DeleteRouteModalProps) {
+  const { t } = useI18n()
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,7 +62,7 @@ export function DeleteRouteModal({
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
               <AlertTriangle className="h-5 w-5" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Hapus Rute</h3>
+            <h3 className="text-lg font-bold text-gray-900">{t("routes.deleteConfirmTitle")}</h3>
           </div>
 
           <p className="mt-4 text-sm text-gray-600">
@@ -69,7 +71,7 @@ export function DeleteRouteModal({
           </p>
 
           <div className="mt-3 rounded-lg bg-red-50 p-3 text-xs font-medium text-red-800">
-            Rute yang dihapus tidak bisa dikembalikan. File GPX dan hasil analisis akan dihapus secara permanen.
+            {t("routes.deleteConfirmDesc")}
           </div>
 
           {error && (
@@ -83,7 +85,7 @@ export function DeleteRouteModal({
               onClick={onClose}
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
             >
-              Batal
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -92,7 +94,7 @@ export function DeleteRouteModal({
               className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-red-500 disabled:opacity-50"
             >
               {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
-              <span>{isDeleting ? "Menghapus..." : "Hapus Permanen"}</span>
+              <span>{isDeleting ? t("common.loading") : t("routes.deleteConfirmBtn")}</span>
             </button>
           </div>
         </motion.div>
