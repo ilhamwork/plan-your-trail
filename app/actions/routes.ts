@@ -4,7 +4,8 @@ import { promisify } from "node:util"
 import zlib from "node:zlib"
 import { z } from "zod"
 import { getSession } from "@/lib/auth"
-import { can, limits } from "@/lib/entitlements"
+import { can, limits, RATE_LIMITS } from "@/lib/entitlements"
+import { checkRateLimit } from "@/lib/rate-limit"
 import {
   countActiveRoutes,
   createRoute,
@@ -18,37 +19,41 @@ import type { ActionResult, GPXData } from "@/lib/types"
 
 const gzip = promisify(zlib.gzip)
 
-const SaveRouteInputSchema = z.object({
-  name: z.string().trim().min(1, "Nama rute tidak boleh kosong").max(100),
-  gpxContent: z.string().min(10, "Konten GPX tidak valid"),
-  raceDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD")
-    .optional(),
-  runnerName: z.string().max(100).optional(),
-  waypoints: z
-    .array(
-      z.object({
-        id: z.string().optional(),
-        isFromGpx: z.boolean().optional(),
-        name: z.string(),
-        lat: z.number(),
-        lon: z.number(),
-        ele: z.number(),
-        distance: z.number(),
-      })
-    )
-    .optional(),
-})
+const WaypointInputSchema = z
+  .object({
+    id: z.string().optional(),
+    isFromGpx: z.boolean().optional(),
+    name: z.string(),
+    lat: z.number(),
+    lon: z.number(),
+    ele: z.number(),
+    distance: z.number(),
+  })
+  .strict()
 
-const DeleteRouteInputSchema = z.object({
-  routeId: z.string().uuid("ID rute tidak valid"),
-})
+const SaveRouteInputSchema = z
+  .object({
+    name: z.string().trim().min(1, "Nama rute tidak boleh kosong").max(100),
+    gpxContent: z.string().min(10, "Konten GPX tidak valid"),
+    raceDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD")
+      .optional(),
+    runnerName: z.string().max(100).optional(),
+    waypoints: z.array(WaypointInputSchema).optional(),
+  })
+  .strict()
+
+const DeleteRouteInputSchema = z
+  .object({
+    routeId: z.string().uuid("ID rute tidak valid"),
+  })
+  .strict()
 
 /**
  * Server action to save a route.
  * Strictly enforces user authentication, feature entitlements,
- * 3-route limit (Free tier), upload size limits, track simplification,
+ * rate limits, 3-route limit (Free tier), upload size limits, track simplification,
  * and gzipped storage key format gpx/{userId}/{routeId}.gpx.gz.
  */
 export async function saveRouteAction(
@@ -100,6 +105,23 @@ export async function saveRouteAction(
           user.plan === "pro"
             ? "File ini melebihi batas upload 20 MB."
             : "File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB.",
+      },
+    }
+  }
+
+  // Per-account rate limit on route save
+  const rateLimitResult = await checkRateLimit(
+    `route_save:${user.id}`,
+    RATE_LIMITS.saveRoutePerHour,
+    RATE_LIMITS.saveRouteWindowSeconds
+  )
+
+  if (!rateLimitResult.allowed) {
+    return {
+      ok: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Terlalu banyak permintaan penyimpanan rute. Silakan coba lagi nanti.",
       },
     }
   }
@@ -229,7 +251,7 @@ export async function saveRouteAction(
 /**
  * Server action to permanently delete a saved route.
  * Deletes both the database record and the S3/R2 object.
- * Enforces owner-scoping.
+ * Enforces owner-scoping and rate limiting.
  */
 export async function deleteRouteAction(
   rawInput: unknown
@@ -252,6 +274,22 @@ export async function deleteRouteAction(
       error: {
         code: "VALIDATION_ERROR",
         message: "ID rute tidak valid.",
+      },
+    }
+  }
+
+  const rateLimitResult = await checkRateLimit(
+    `route_delete:${session.user.id}`,
+    RATE_LIMITS.deleteRoutePerHour,
+    RATE_LIMITS.deleteRouteWindowSeconds
+  )
+
+  if (!rateLimitResult.allowed) {
+    return {
+      ok: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Terlalu banyak permintaan penghapusan rute. Silakan coba lagi nanti.",
       },
     }
   }

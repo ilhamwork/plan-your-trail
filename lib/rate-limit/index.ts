@@ -1,6 +1,7 @@
 import { db } from "../db"
 import { rateLimit } from "../db/schema"
 import { eq, sql } from "drizzle-orm"
+import { RATE_LIMITS } from "../entitlements/config"
 
 export interface RateLimitResult {
   allowed: boolean
@@ -45,6 +46,14 @@ export async function checkRateLimit(
     }
 
     const current = existing[0]
+    if (!current || typeof current.count !== "number" || !current.windowStart) {
+      return {
+        allowed: true,
+        remaining: Math.max(0, maxAttempts - 1),
+        resetInSeconds: windowSeconds,
+      }
+    }
+
     const elapsedSeconds = Math.floor(
       (now.getTime() - new Date(current.windowStart).getTime()) / 1000
     )
@@ -109,7 +118,7 @@ export async function checkRateLimit(
  */
 export async function checkCooldown(
   key: string,
-  cooldownSeconds: number = 60
+  cooldownSeconds: number = RATE_LIMITS.emailResendCooldownSeconds
 ): Promise<{ allowed: boolean; remainingSeconds: number }> {
   const result = await checkRateLimit(key, 1, cooldownSeconds)
   return {

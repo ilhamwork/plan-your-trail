@@ -2,7 +2,7 @@ import { db } from "../db"
 import { weatherCache } from "../db/schema"
 import { eq } from "drizzle-orm"
 import { getSession, type SessionUser } from "../auth"
-import { can } from "../entitlements"
+import { can, RATE_LIMITS } from "../entitlements"
 import { checkRateLimit } from "../rate-limit"
 
 export type ActionResult<T> =
@@ -21,8 +21,6 @@ export interface WeatherData {
 }
 
 const WEATHER_CACHE_TTL_MS = 6 * 60 * 60 * 1000 // 6 hours
-const MAX_WEATHER_CALLS_PER_DAY = 20
-const SECONDS_PER_DAY = 86400
 
 let customFetch: typeof fetch | null = null
 
@@ -53,12 +51,12 @@ export async function getWeatherForecast(
     }
   }
 
-  // 2. Per-account rate limit (20 calls per day)
+  // 2. Per-account rate limit from config (20 calls per day)
   const rateLimitKey = `weather:${user.id}`
   const limitResult = await checkRateLimit(
     rateLimitKey,
-    MAX_WEATHER_CALLS_PER_DAY,
-    SECONDS_PER_DAY
+    RATE_LIMITS.weatherPerDay,
+    RATE_LIMITS.weatherWindowSeconds
   )
 
   if (!limitResult.allowed) {
@@ -66,7 +64,7 @@ export async function getWeatherForecast(
       ok: false,
       error: {
         code: "RATE_LIMITED",
-        message: `Batas harian analisis cuaca tercapai (${MAX_WEATHER_CALLS_PER_DAY}x/hari). Silakan coba lagi dalam beberapa jam.`,
+        message: `Batas harian analisis cuaca tercapai (${RATE_LIMITS.weatherPerDay}x/hari). Silakan coba lagi dalam beberapa jam.`,
       },
     }
   }

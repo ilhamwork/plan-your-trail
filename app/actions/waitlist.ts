@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { getSession } from "@/lib/auth"
+import { RATE_LIMITS } from "@/lib/entitlements"
 import { checkRateLimit } from "@/lib/rate-limit"
 import {
   createWaitlistEntry,
@@ -9,14 +10,16 @@ import {
 } from "@/lib/db/queries/waitlist"
 import type { ActionResult } from "@/lib/types"
 
-const JoinWaitlistInputSchema = z.object({
-  feature: z
-    .string()
-    .trim()
-    .min(1, "Fitur pemicu waitlist tidak boleh kosong")
-    .max(100),
-  survey: z.record(z.string(), z.unknown()).optional(),
-})
+const JoinWaitlistInputSchema = z
+  .object({
+    feature: z
+      .string()
+      .trim()
+      .min(1, "Fitur pemicu waitlist tidak boleh kosong")
+      .max(100),
+    survey: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
 
 export type JoinWaitlistInput = z.infer<typeof JoinWaitlistInputSchema>
 
@@ -57,11 +60,11 @@ export async function joinWaitlistAction(
 
   const { feature, survey } = parsed.data
 
-  // Rate limit: max 10 waitlist joins per hour per account
+  // Rate limit per account from config
   const rateLimitResult = await checkRateLimit(
     `waitlist:${session.user.id}`,
-    10,
-    3600
+    RATE_LIMITS.waitlistPerHour,
+    RATE_LIMITS.waitlistWindowSeconds
   )
 
   if (!rateLimitResult.allowed) {
