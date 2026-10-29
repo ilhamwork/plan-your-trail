@@ -22,6 +22,7 @@ import { useRunnerSession } from "@/components/trail/hooks/useRunnerSession"
 import { useRouteUpload } from "@/components/trail/hooks/useRouteUpload"
 import { usePendingRouteSave } from "@/components/trail/hooks/usePendingRouteSave"
 import Link from "next/link"
+import { useI18n } from "@/lib/i18n/context"
 
 // ─── Dynamic Component Imports ─────────────────────────────────────
 const MapView = dynamic(
@@ -106,6 +107,7 @@ const Footer = dynamic(
 )
 
 export default function Home() {
+  const { t } = useI18n()
   const { parse: parseGPX } = useGPXParser()
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -262,7 +264,7 @@ export default function Home() {
                       href="/routes"
                       className="rounded-xl bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46]"
                     >
-                      Buka Rute Saya
+                      {t("nav.myRoutes")}
                     </Link>
                   </motion.div>
                 )}
@@ -279,8 +281,8 @@ export default function Home() {
 
                 <GatedPrompt
                   feature="weather_session"
-                  title="Dapatkan analisis lebih lengkap dengan akun"
-                  description="Daftar untuk melihat cuaca per sesi, waypoint di chart elevasi, dan estimasi waktu finish."
+                  title={t("gating.promptTitle")}
+                  description={t("gating.promptDesc")}
                   source="analysis_complete"
                   className="order-0"
                 />

@@ -4,6 +4,9 @@ import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import "./globals.css"
+import ErrorBoundary from "@/components/Error/ErrorBoundary"
+import { I18nProvider } from "@/lib/i18n/context"
+import { getServerLocale } from "@/lib/i18n/server"
 
 const fontSans = Outfit({
   subsets: ["latin"],
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
         alt: "PlanYourTrail — GPX Trail Route Analyzer",
       },
     ],
-    locale: "en_US",
+    locale: "id_ID",
     type: "website",
   },
   twitter: {
@@ -55,18 +58,20 @@ export const metadata: Metadata = {
   },
 }
 
-import ErrorBoundary from "@/components/Error/ErrorBoundary"
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getServerLocale()
+
   return (
-    <html lang="en" className={`${fontSans.variable} font-sans antialiased`}>
+    <html lang={locale} className={`${fontSans.variable} font-sans antialiased`}>
       <head />
       <body>
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <I18nProvider initialLocale={locale}>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </I18nProvider>
         <Analytics />
         <SpeedInsights />
       </body>

@@ -4,6 +4,7 @@ import { memo, useCallback, useRef, useState } from "react"
 import { FileUp, FileCheck, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEntitlements } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 
 interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
@@ -21,6 +22,7 @@ export const UploadCard = memo(function UploadCard({
   isLoading,
 }: UploadCardProps) {
   const { user, limits } = useEntitlements()
+  const { t } = useI18n()
   const [isDragging, setIsDragging] = useState(false)
   const [isLoadingExample, setIsLoadingExample] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -31,18 +33,18 @@ export const UploadCard = memo(function UploadCard({
       if (onError) onError("")
 
       if (!file.name.toLowerCase().endsWith(".gpx")) {
-        if (onError) onError("Format file tidak valid. Silakan upload file berekstensi .gpx")
+        if (onError) onError(t("home.upload.invalidType"))
         return
       }
 
       if (file.size > limits.maxUploadBytes) {
         let msg: string
         if (!user) {
-          msg = "File ini lebih dari 5 MB. Daftar untuk upload sampai 10 MB."
+          msg = t("home.upload.limitAnon")
         } else if (user.plan === "pro") {
-          msg = "File ini melebihi batas upload 20 MB."
+          msg = t("home.upload.limitPro")
         } else {
-          msg = "File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB."
+          msg = t("home.upload.limitFree")
         }
         if (onError) onError(msg)
         return
@@ -55,7 +57,7 @@ export const UploadCard = memo(function UploadCard({
       }
       reader.readAsText(file)
     },
-    [onFileLoaded, onError, limits.maxUploadBytes, user]
+    [onFileLoaded, onError, limits.maxUploadBytes, user, t]
   )
 
   const handleDrop = useCallback(
@@ -138,10 +140,10 @@ export const UploadCard = memo(function UploadCard({
                 <Loader2 className="h-6 w-6 animate-spin text-[#2A9D8F]" />
                 <div className="text-left">
                   <p className="text-sm font-bold text-white">
-                    Processing GPX data...
+                    {t("common.loading")}
                   </p>
                   <p className="text-[11px] font-medium text-white/60">
-                    Running elevation smoothing & route analysis
+                    GPX analysis
                   </p>
                 </div>
               </motion.div>
@@ -161,7 +163,7 @@ export const UploadCard = memo(function UploadCard({
                     {fileName}
                   </p>
                   <p className="text-[10px] font-medium text-white/50">
-                    GPX loaded • Klik untuk ganti (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
+                    GPX loaded • {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB max
                   </p>
                 </div>
               </motion.div>
@@ -178,9 +180,9 @@ export const UploadCard = memo(function UploadCard({
                     <FileUp className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-lg font-bold">Import GPX</p>
+                    <p className="text-lg font-bold">{t("home.upload.dropTitle")}</p>
                     <p className="text-sm text-white/50">
-                      Tarik file ke sini atau klik untuk browse
+                      {t("home.upload.dropSubtitle")}
                     </p>
                     <p className="mt-1 text-[10px] font-medium text-white/30">
                       (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
@@ -219,7 +221,7 @@ export const UploadCard = memo(function UploadCard({
               )}
             </button>
             <p className="text-center text-[11px] font-medium text-gray-400">
-              Don&apos;t have a file? Try with our gpx example.
+              {t("home.upload.exampleBtn")}
             </p>
           </motion.div>
         )}

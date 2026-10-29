@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { User, LogIn, ArrowRight, Sparkles, Check, AlertCircle } from "lucide-react"
 import { trackEvent } from "@/lib/analytics/events"
+import { useI18n } from "@/lib/i18n/context"
 
 interface SessionNameModalProps {
   isOpen: boolean
@@ -12,6 +13,7 @@ interface SessionNameModalProps {
 }
 
 export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
+  const { t } = useI18n()
   const [name, setName] = useState("")
   const [error, setError] = useState("")
 
@@ -76,10 +78,10 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                 PlanYourTrail.run
               </span>
               <h3 className="mt-2 text-xl font-bold tracking-tight">
-                Selamat Datang di PlanYourTrail
+                {t("home.guestModal.title")}
               </h3>
               <p className="mt-1 text-xs text-white/80">
-                Pilih cara kamu ingin mengakses dan menganalisis rute trail running:
+                {t("home.guestModal.desc")}
               </p>
             </div>
 
@@ -94,10 +96,10 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-gray-900">
-                        Masuk ke Akun
+                        {t("home.guestModal.loginLink")}
                       </h4>
                       <p className="text-[11px] text-gray-600">
-                        Akses fitur penuh & riwayat tersimpan
+                        {t("home.guestModal.orLogin")}
                       </p>
                     </div>
                   </div>
@@ -126,18 +128,18 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                   onClick={handleLoginClick}
                   className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1B4332] py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#143326] active:scale-[0.98]"
                 >
-                  Masuk ke Akun
+                  {t("home.guestModal.loginLink")}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
 
                 <div className="mt-2 text-center text-[11px] text-gray-500">
-                  Belum punya akun?{" "}
+                  {t("auth.noAccount")}{" "}
                   <Link
                     href="/register"
                     onClick={handleLoginClick}
                     className="font-semibold text-[#1B4332] underline hover:text-emerald-800"
                   >
-                    Daftar Akun
+                    {t("nav.register")}
                   </Link>
                 </div>
               </div>
@@ -158,7 +160,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-gray-900">
-                      Lanjut sebagai Tamu
+                      {t("home.guestModal.startGuest")}
                     </h4>
                     <p className="text-[11px] text-gray-500">
                       Coba langsung tanpa login (data hilang saat tab ditutup)
@@ -169,7 +171,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                 <div className="mt-3">
                   <label className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                     <span>
-                      Nama Pelari <span className="text-red-500">*</span>
+                      {t("home.guestModal.nameLabel")} <span className="text-red-500">*</span>
                     </span>
                     <span className="text-[10px] font-normal normal-case text-gray-400">
                       Wajib diisi
@@ -186,7 +188,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                         if (error) setError("")
                       }}
                       onKeyDown={handleKeyDown}
-                      placeholder="cth: Kilian Jornet"
+                      placeholder={t("home.guestModal.namePlaceholder")}
                       className={`w-full rounded-lg border bg-white py-2 pr-3 pl-8 text-xs font-medium text-gray-800 transition outline-none focus:ring-1 ${
                         error
                           ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
@@ -208,7 +210,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                   disabled={!name.trim()}
                   className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#1B4332]/30 bg-white py-2.5 text-xs font-bold text-[#1B4332] shadow-xs transition hover:bg-[#1B4332] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
                 >
-                  Mulai sebagai Tamu
+                  {t("home.guestModal.startGuest")}
                 </button>
               </div>
             </div>
@@ -218,4 +220,3 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
     </AnimatePresence>
   )
 }
-

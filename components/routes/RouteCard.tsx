@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Calendar, Download, Trash2, ArrowUpRight, TrendingUp, Navigation } from "lucide-react"
 import type { Route } from "@/lib/db/schema"
+import { useI18n } from "@/lib/i18n/context"
 
 interface RouteCardProps {
   route: Route
@@ -10,6 +11,7 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, onDelete }: RouteCardProps) {
+  const { t } = useI18n()
   const metrics = route.metrics as {
     stats?: {
       totalDistance?: number
@@ -52,7 +54,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
             )}
           </div>
           <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
-            Tersimpan
+            {t("common.saved")}
           </span>
         </div>
 
@@ -63,7 +65,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
               <Navigation className="h-3.5 w-3.5" />
             </div>
             <div>
-              <div className="text-[11px] font-medium text-gray-500">Jarak</div>
+              <div className="text-[11px] font-medium text-gray-500">{t("routes.cardDistance")}</div>
               <div className="text-sm font-bold text-gray-900">{distanceKm} km</div>
             </div>
           </div>
@@ -73,14 +75,14 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
               <TrendingUp className="h-3.5 w-3.5" />
             </div>
             <div>
-              <div className="text-[11px] font-medium text-gray-500">Elev. Gain</div>
+              <div className="text-[11px] font-medium text-gray-500">{t("routes.cardGain")}</div>
               <div className="text-sm font-bold text-gray-900">+{elevationGainM} m</div>
             </div>
           </div>
         </div>
 
         <div className="mt-3 text-[11px] text-gray-400">
-          Disimpan pada {formattedDate}
+          {t("routes.cardCreated")} {formattedDate}
         </div>
       </div>
 
@@ -91,10 +93,10 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
             href={`/api/routes/${route.id}/gpx`}
             download
             className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-            title="Download file GPX asli"
+            title="Download file GPX"
           >
             <Download className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Download</span>
+            <span className="hidden sm:inline">{t("common.download")}</span>
           </a>
 
           <button
@@ -104,7 +106,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
             title="Hapus rute"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Hapus</span>
+            <span className="hidden sm:inline">{t("common.delete")}</span>
           </button>
         </div>
 
