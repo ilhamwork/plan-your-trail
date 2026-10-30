@@ -4,10 +4,8 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Share2, Download, Share } from "lucide-react"
 import { toPng } from "html-to-image"
-import { supabase } from "@/lib/supabase"
 import { ShareCard } from "./ShareCard"
 import type { GPXData } from "@/lib/types"
-import { formatKm } from "@/lib/format"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -42,22 +40,8 @@ export function ShareModal({
     return () => window.removeEventListener("resize", checkIsMobile)
   }, [])
 
-  const recordShareTelemetry = async (type: "download" | "native_share") => {
-    if (!route) return
-    try {
-      await supabase.from("user_shares").insert([
-        {
-          user_name: userName,
-          race_name: raceName,
-          race_date: raceDate,
-          share_type: type,
-          distance: parseFloat(formatKm(route.stats.totalDistance, 2)),
-          elevation_gain: route.stats.elevationGain,
-        },
-      ])
-    } catch (err) {
-      console.error("Failed to record share telemetry:", err)
-    }
+  const recordShareTelemetry = async () => {
+    // Telemetry hook placeholder
   }
 
   const generateImageBlob = async (): Promise<Blob | null> => {
@@ -97,7 +81,7 @@ export function ShareModal({
       link.click()
       URL.revokeObjectURL(url)
       // Record telemetry
-      await recordShareTelemetry("download")
+      await recordShareTelemetry()
     }
     setIsDownloading(false)
   }
@@ -124,7 +108,7 @@ export function ShareModal({
             text: "Check out my route analysis on Plan Your Trail!",
           })
           // Record telemetry
-          await recordShareTelemetry("native_share")
+          await recordShareTelemetry()
         } else {
           alert("Your browser doesn't support file sharing.")
         }

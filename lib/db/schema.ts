@@ -150,6 +150,36 @@ export const dailyAnalytics = pgTable("daily_analytics", {
     .defaultNow(),
 })
 
+// ============================================================================
+// Auxiliary Tables (Feedback & Invoice)
+// ============================================================================
+
+export const feedback = pgTable("feedback", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name"),
+  email: text("email"),
+  message: text("message").notNull(),
+  runnerName: text("runner_name"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+export const invoices = pgTable("invoices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  invoiceDate: date("invoice_date").notNull(),
+  clientName: text("client_name"),
+  clientCompany: text("client_company").notNull(),
+  clientAddress: text("client_address"),
+  items: jsonb("items").notNull().default([]),
+  taxPercentage: text("tax_percentage").default("0"),
+  totalAmount: text("total_amount").notNull().default("0"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
 // Type exports
 export type User = typeof user.$inferSelect
 export type NewUser = typeof user.$inferInsert
@@ -171,3 +201,9 @@ export type NewRateLimit = typeof rateLimit.$inferInsert
 
 export type DailyAnalytics = typeof dailyAnalytics.$inferSelect
 export type NewDailyAnalytics = typeof dailyAnalytics.$inferInsert
+
+export type Feedback = typeof feedback.$inferSelect
+export type NewFeedback = typeof feedback.$inferInsert
+
+export type Invoice = typeof invoices.$inferSelect
+export type NewInvoice = typeof invoices.$inferInsert

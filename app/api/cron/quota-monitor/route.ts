@@ -19,7 +19,7 @@ export interface QuotaMetrics {
 
 /**
  * E7 Quota Monitor Cron Route (PRD Section 9.6).
- * Monitors Postgres DB size against Supabase Free 500 MB cap (warns at 80%)
+ * Monitors Postgres DB size against configured cap (warns at 80%)
  * and daily email resend triggers against Resend Free 100/day cap (warns at 70%).
  */
 export async function GET(request: Request) {
@@ -59,15 +59,15 @@ export async function GET(request: Request) {
       0
     )
 
-    const dbUsageRatio = dbSizeBytes / OPS_QUOTAS.supabaseMaxDbBytes
+    const dbUsageRatio = dbSizeBytes / OPS_QUOTAS.maxDbBytes
     const emailUsageRatio = dailyEmailResends / OPS_QUOTAS.resendDailyLimit
 
     const warnings: string[] = []
-    if (dbUsageRatio >= OPS_QUOTAS.supabaseWarnRatio) {
+    if (dbUsageRatio >= OPS_QUOTAS.dbWarnRatio) {
       warnings.push(
         `Database usage at ${(dbUsageRatio * 100).toFixed(1)}% (${Math.round(
           dbSizeBytes / (1024 * 1024)
-        )} MB / ${Math.round(OPS_QUOTAS.supabaseMaxDbBytes / (1024 * 1024))} MB)`
+        )} MB / ${Math.round(OPS_QUOTAS.maxDbBytes / (1024 * 1024))} MB)`
       )
     }
 
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 
     const metrics: QuotaMetrics = {
       dbSizeBytes,
-      dbMaxBytes: OPS_QUOTAS.supabaseMaxDbBytes,
+      dbMaxBytes: OPS_QUOTAS.maxDbBytes,
       dbUsageRatio: Number(dbUsageRatio.toFixed(4)),
       totalUsers: userCountRow?.total ?? 0,
       totalRoutes: routeCountRow?.total ?? 0,

@@ -1,8 +1,9 @@
 "use server"
 
-import { createClient } from "@supabase/supabase-js"
+import { eq, desc } from "drizzle-orm"
 import { headers } from "next/headers"
-import type { Database } from "@/lib/database.types"
+import { db } from "@/lib/db"
+import { invoices } from "@/lib/db/schema"
 import { isInvoiceAuthBypassed, verifyInvoiceBasicAuth } from "@/lib/auth/basic"
 import { computeInvoiceTotals } from "@/lib/invoice/totals"
 
@@ -58,40 +59,21 @@ function isValidInvoiceInput(input: SaveInvoiceInput): boolean {
   )
 }
 
-/** Normalize client input into a DB row. `total_amount` from the client is ignored and recomputed. */
 function toInvoiceRow(input: SaveInvoiceInput) {
   const { taxPercentage, total } = computeInvoiceTotals(
     input.items,
     input.tax_percentage
   )
   return {
-    invoice_number: input.invoice_number.trim(),
-    invoice_date: input.invoice_date,
-    client_name: input.client_name?.trim() || "",
-    client_company: input.client_company.trim(),
-    client_address: input.client_address?.trim() || "",
+    invoiceNumber: input.invoice_number.trim(),
+    invoiceDate: input.invoice_date,
+    clientName: input.client_name?.trim() || "",
+    clientCompany: input.client_company.trim(),
+    clientAddress: input.client_address?.trim() || "",
     items: input.items,
-    tax_percentage: taxPercentage,
-    total_amount: total,
+    taxPercentage: String(taxPercentage),
+    totalAmount: String(total),
   }
-}
-
-function getServerSupabase() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in server environment"
-    )
-  }
-
-  return createClient<Database>(supabaseUrl, serviceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  })
 }
 
 export async function getInvoicesAction(): Promise<{
@@ -100,21 +82,31 @@ export async function getInvoicesAction(): Promise<{
 }> {
   try {
     await assertInvoiceAuth()
-    const supabase = getServerSupabase()
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .select(
-        "id, invoice_number, invoice_date, client_name, client_company, total_amount, created_at"
-      )
-      .order("created_at", { ascending: false })
+    const rows = await db
+      .select({
+        id: invoices.id,
+        invoice_number: invoices.invoiceNumber,
+        invoice_date: invoices.invoiceDate,
+        client_name: invoices.clientName,
+        client_company: invoices.clientCompany,
+        total_amount: invoices.totalAmount,
+        created_at: invoices.createdAt,
+      })
+      .from(invoices)
+      .orderBy(desc(invoices.createdAt))
 
-    if (error) {
-      console.error("Error fetching invoices:", error)
-      return { data: null, error: "Failed to fetch invoices" }
-    }
+    const formatted: InvoiceRecord[] = rows.map((r) => ({
+      id: r.id,
+      invoice_number: r.invoice_number,
+      invoice_date: r.invoice_date,
+      client_name: r.client_name ?? "",
+      client_company: r.client_company,
+      total_amount: Number(r.total_amount) || 0,
+      created_at: r.created_at.toISOString(),
+    }))
 
-    return { data: (data as InvoiceRecord[]) ?? [], error: null }
+    return { data: formatted, error: null }
   } catch (err) {
     console.error("getInvoicesAction error:", err)
     return {
@@ -126,11 +118,6 @@ export async function getInvoicesAction(): Promise<{
 
 const ROMAN_MONTHS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
 
-/**
- * Suggest the next invoice number as INV/<month>/<year>/<seq>.
- * The sequence is derived from the highest existing sequence instead of the
- * row count, so deleting an invoice can never produce a duplicate number.
- */
 export async function getNextInvoiceNumberAction(): Promise<{
   invoiceNumber: string
   error: string | null
@@ -141,18 +128,12 @@ export async function getNextInvoiceNumberAction(): Promise<{
 
   try {
     await assertInvoiceAuth()
-    const supabase = getServerSupabase()
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("invoice_number")
+    const rows = await db
+      .select({ invoiceNumber: invoices.invoiceNumber })
+      .from(invoices)
 
-    if (error) {
-      console.error("Error reading invoice numbers:", error)
-      return { invoiceNumber: format(1), error: "Failed to read invoice numbers" }
-    }
-
-    const taken = new Set((data ?? []).map((row) => row.invoice_number))
+    const taken = new Set(rows.map((row) => row.invoiceNumber))
     let maxSeq = 0
     for (const number of taken) {
       const seq = parseInt(number.split("/").pop() ?? "", 10)
@@ -179,20 +160,31 @@ export async function getInvoiceByIdAction(id: string): Promise<{
 }> {
   try {
     await assertInvoiceAuth()
-    const supabase = getServerSupabase()
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .eq("id", id)
-      .single()
+    const [row] = await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.id, id))
+      .limit(1)
 
-    if (error) {
-      console.error("Error fetching invoice:", error)
+    if (!row) {
       return { data: null, error: "Invoice not found" }
     }
 
-    return { data: data as InvoiceDetail, error: null }
+    const detail: InvoiceDetail = {
+      id: row.id,
+      invoice_number: row.invoiceNumber,
+      invoice_date: row.invoiceDate,
+      client_name: row.clientName ?? "",
+      client_company: row.clientCompany,
+      client_address: row.clientAddress ?? "",
+      items: (row.items as InvoiceItem[]) ?? [],
+      tax_percentage: Number(row.taxPercentage) || 0,
+      total_amount: Number(row.totalAmount) || 0,
+      created_at: row.createdAt.toISOString(),
+    }
+
+    return { data: detail, error: null }
   } catch (err) {
     console.error("getInvoiceByIdAction error:", err)
     return {
@@ -213,20 +205,12 @@ export async function createInvoiceAction(input: SaveInvoiceInput): Promise<{
       return { id: null, error: "Invalid invoice data" }
     }
 
-    const supabase = getServerSupabase()
+    const [created] = await db
+      .insert(invoices)
+      .values(toInvoiceRow(input))
+      .returning({ id: invoices.id })
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .insert([toInvoiceRow(input)])
-      .select("id")
-      .single()
-
-    if (error) {
-      console.error("Error saving invoice:", error)
-      return { id: null, error: "Failed to save invoice to database" }
-    }
-
-    return { id: data?.id ?? null, error: null }
+    return { id: created?.id ?? null, error: null }
   } catch (err) {
     console.error("createInvoiceAction error:", err)
     return {
@@ -250,15 +234,13 @@ export async function updateInvoiceAction(
       return { success: false, error: "Invalid invoice data" }
     }
 
-    const supabase = getServerSupabase()
+    const [updated] = await db
+      .update(invoices)
+      .set(toInvoiceRow(input))
+      .where(eq(invoices.id, id))
+      .returning({ id: invoices.id })
 
-    const { error } = await supabase
-      .from("invoices")
-      .update(toInvoiceRow(input))
-      .eq("id", id)
-
-    if (error) {
-      console.error("Error updating invoice:", error)
+    if (!updated) {
       return { success: false, error: "Failed to update invoice in database" }
     }
 

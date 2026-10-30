@@ -161,7 +161,7 @@ describe("E7 Ops: Cron Authentication, Keep-Alive, Quota Monitor & Health", () =
 
     it("returns warning status when DB size >= 80% or Resend daily emails >= 70%", async () => {
       const warnDbBytes = Math.ceil(
-        OPS_QUOTAS.supabaseMaxDbBytes * OPS_QUOTAS.supabaseWarnRatio
+        OPS_QUOTAS.maxDbBytes * OPS_QUOTAS.dbWarnRatio
       )
       const mockExecute = vi.fn().mockResolvedValue([
         { size_bytes: warnDbBytes }, // 400 MB (80% of 500 MB)

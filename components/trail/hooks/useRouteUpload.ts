@@ -3,8 +3,6 @@
 import { useState, useCallback } from "react"
 import type { GPXData, Waypoint } from "@/lib/types"
 import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
-import { supabase } from "@/lib/supabase"
-import { formatKm } from "@/lib/format"
 import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements } from "@/lib/entitlements"
 import { useI18n } from "@/lib/i18n/context"
@@ -42,12 +40,7 @@ export function useRouteUpload({
   const [isParsingGPX, setIsParsingGPX] = useState(false)
 
   const finishUpload = useCallback(
-    async (
-      parsed: GPXData,
-      name: string,
-      details: RouteDetailsData,
-      runnerName: string
-    ) => {
+    async (parsed: GPXData, name: string) => {
       // Update UI state immediately so route rendering is never blocked by network/telemetry
       setGpxData(parsed)
       setFileName(name)
@@ -61,25 +54,6 @@ export function useRouteUpload({
       setTempRoute(null)
       setTempFileName("")
       setIsSubmittingDetails(false)
-
-      // Fire-and-forget telemetry with short timeout so unreachable/slow Supabase never hangs upload
-      void Promise.race([
-        supabase.from("user_routes").insert([
-          {
-            user_name: runnerName,
-            race_name: details.raceName,
-            race_date: details.raceDate,
-            file_name: name,
-            distance: parseFloat(formatKm(parsed.stats.totalDistance, 2)),
-            elevation_gain: parsed.stats.elevationGain,
-          },
-        ]),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Telemetry timeout")), 3000)
-        ),
-      ]).catch(() => {
-        // Ignore telemetry errors silently
-      })
     },
     [onWaypointsLoaded]
   )
@@ -129,7 +103,7 @@ export function useRouteUpload({
             raceDate: today,
           }
           setRouteDetails(exampleDetails)
-          await finishUpload(parsed, name, exampleDetails, sessionRunnerName)
+          await finishUpload(parsed, name)
           return
         }
 
@@ -168,15 +142,10 @@ export function useRouteUpload({
     async (e: React.FormEvent) => {
       e.preventDefault()
       if (tempRoute && tempFileName) {
-        await finishUpload(
-          tempRoute,
-          tempFileName,
-          routeDetails,
-          sessionRunnerName
-        )
+        await finishUpload(tempRoute, tempFileName)
       }
     },
-    [tempRoute, tempFileName, finishUpload, routeDetails, sessionRunnerName]
+    [tempRoute, tempFileName, finishUpload]
   )
 
   const handleDetailsCancel = useCallback(() => {
