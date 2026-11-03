@@ -15,6 +15,7 @@ describe("lib/db owner-scoped queries", () => {
     expect(routeQueries.getRoute.length).toBe(2)
     expect(routeQueries.countActiveRoutes.length).toBe(1)
     expect(routeQueries.createRoute.length).toBe(2)
+    expect(routeQueries.updateRoute.length).toBe(3)
     expect(routeQueries.hideRoute.length).toBe(2)
     expect(routeQueries.deleteRoute.length).toBe(2)
   })
@@ -83,6 +84,34 @@ describe("lib/db owner-scoped queries", () => {
 
     const route = await routeQueries.getRoute("user-A", "route-belonging-to-user-B")
     expect(route).toBeNull()
+
+    setDbForTesting(null)
+  })
+
+  it("updateRoute filters update by userId and routeId", async () => {
+    const mockReturning = vi.fn().mockResolvedValue([{ id: "route-1", name: "New Name" }])
+    const mockWhere = vi.fn().mockReturnValue({
+      returning: mockReturning,
+    })
+    const mockSet = vi.fn().mockReturnValue({
+      where: mockWhere,
+    })
+    const mockUpdate = vi.fn().mockReturnValue({
+      set: mockSet,
+    })
+
+    setDbForTesting({
+      update: mockUpdate,
+    } as unknown as Parameters<typeof setDbForTesting>[0])
+
+    const updated = await routeQueries.updateRoute("user-A", "route-1", {
+      name: "New Name",
+    })
+
+    expect(mockUpdate).toHaveBeenCalled()
+    expect(mockSet).toHaveBeenCalledWith({ name: "New Name" })
+    expect(mockWhere).toHaveBeenCalled()
+    expect(updated).toEqual({ id: "route-1", name: "New Name" })
 
     setDbForTesting(null)
   })

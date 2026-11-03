@@ -71,6 +71,26 @@ export async function createRoute(
 }
 
 /**
+ * Owner-scoped helper to update an existing route's metadata or metrics.
+ */
+export async function updateRoute(
+  userId: string,
+  routeId: string,
+  data: {
+    name?: string
+    metrics?: unknown
+  }
+): Promise<Route | null> {
+  const [updated] = await db
+    .update(route)
+    .set(data)
+    .where(and(eq(route.userId, userId), eq(route.id, routeId)))
+    .returning()
+
+  return updated ?? null
+}
+
+/**
  * Owner-scoped helper to mark a route as hidden (e.g. on tier downgrade).
  */
 export async function hideRoute(

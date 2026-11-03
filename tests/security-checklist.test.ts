@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { saveRouteAction, deleteRouteAction } from "@/app/actions/routes"
+import { saveRouteAction, updateRouteAction, deleteRouteAction } from "@/app/actions/routes"
 import { joinWaitlistAction } from "@/app/actions/waitlist"
 import { fetchWeatherAction } from "@/app/actions/weather"
 import { GET as downloadGpxGET } from "@/app/api/routes/[id]/gpx/route"
@@ -46,6 +46,23 @@ describe("AGENTS.md Section 8: Security Checklist Verification", () => {
         name: "My Route",
         gpxContent: validGpx,
         isAdmin: true,
+      })
+
+      expect(res.ok).toBe(false)
+      if (!res.ok) {
+        expect(res.error.code).toBe("VALIDATION_ERROR")
+      }
+    })
+
+    it("updateRouteAction rejects unknown fields", async () => {
+      setSessionForTesting({
+        user: { id: "user-1", email: "u@test.com", plan: "free" },
+      })
+
+      const res = await updateRouteAction({
+        routeId: "a0000000-0000-4000-8000-000000000001",
+        name: "Renamed Route",
+        extraField: "not-allowed",
       })
 
       expect(res.ok).toBe(false)
