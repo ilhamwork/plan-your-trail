@@ -32,7 +32,7 @@ describe("lib/env", () => {
 
   it("fails validation when URL is invalid", () => {
     const result = envSchema.safeParse({
-      NEXT_PUBLIC_SUPABASE_URL: "not-a-valid-url",
+      NEXT_PUBLIC_APP_URL: "not-a-valid-url",
     })
     expect(result.success).toBe(false)
   })

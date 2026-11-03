@@ -4,10 +4,7 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(3000),
 
-  // Existing legacy/invoice vars (kept optional with fallbacks to avoid breaking existing deployments)
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  // Invoice Basic Auth (Node runtime Server Actions)
   INVOICE_ADMIN_USER: z.string().optional(),
   INVOICE_ADMIN_PASSWORD: z.string().optional(),
 

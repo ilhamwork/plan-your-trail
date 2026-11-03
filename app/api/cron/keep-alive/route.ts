@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 /**
  * E7 Keep-Alive & Maintenance Cron Route.
- * Prevents Supabase Free auto-pause and purges expired weather_cache
+ * Performs database keep-alive query and purges expired weather_cache
  * and stale rate_limit rows (>24 hours old).
  */
 export async function GET(request: Request) {

@@ -217,6 +217,7 @@ export async function saveRouteAction(
     await createRoute(user.id, {
       id: routeId,
       name: parsed.data.name,
+      userName: parsed.data.runnerName || user.name || null,
       metrics,
       trackSimplified,
       gpxObjectKey,

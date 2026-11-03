@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Send, MessageSquare, User, Mail, CheckCircle2 } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { sendFeedbackAction } from "@/lib/feedback/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -33,16 +33,16 @@ export function FeedbackModal({
     setError(null)
 
     try {
-      const { error: dbError } = await supabase.from("feedback").insert([
-        {
-          name: name.trim() || null,
-          email: email.trim() || null,
-          message: message.trim(),
-          runner_name: runnerName || null,
-        },
-      ])
+      const result = await sendFeedbackAction({
+        name: name.trim() || null,
+        email: email.trim() || null,
+        message: message.trim(),
+        runnerName: runnerName || null,
+      })
 
-      if (dbError) throw dbError
+      if (!result.success) {
+        throw new Error(result.error || "Failed to send feedback.")
+      }
 
       setIsSuccess(true)
       // Reset form after a delay

@@ -8,6 +8,20 @@
       "when": 1793002561613,
       "tag": "0000_great_taskmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793677582445,
+      "tag": "0001_rename_route_and_add_route_analysis",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793678935380,
+      "tag": "0002_add_user_name_to_saved_route_and_route_analysis",
+      "breakpoints": true
     }
   ]
 }

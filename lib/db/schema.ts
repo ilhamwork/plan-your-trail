@@ -100,16 +100,34 @@ export const profile = pgTable("profile", {
     .defaultNow(),
 })
 
-export const route = pgTable("route", {
+export const savedRoute = pgTable("saved_route", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  userName: text("user_name"),
   name: text("name").notNull(),
   metrics: jsonb("metrics").notNull(),
   trackSimplified: jsonb("track_simplified").notNull(),
   gpxObjectKey: text("gpx_object_key").notNull(),
   hidden: boolean("hidden").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+// Alias for backwards compatibility across existing code
+export const route = savedRoute
+
+export const routeAnalysis = pgTable("route_analysis", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // Nullable for anonymous uploads
+  userName: text("user_name"),
+  fileName: text("file_name").notNull(),
+  fileSizeBytes: integer("file_size_bytes").notNull(),
+  source: text("source").notNull().default("upload"), // 'upload' | 'example'
+  metrics: jsonb("metrics").notNull(), // stats: totalDistance, elevationGain, etc.
+  pointCount: integer("point_count").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -150,6 +168,36 @@ export const dailyAnalytics = pgTable("daily_analytics", {
     .defaultNow(),
 })
 
+// ============================================================================
+// Auxiliary Tables (Feedback & Invoice)
+// ============================================================================
+
+export const feedback = pgTable("feedback", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name"),
+  email: text("email"),
+  message: text("message").notNull(),
+  runnerName: text("runner_name"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+export const invoices = pgTable("invoices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  invoiceDate: date("invoice_date").notNull(),
+  clientName: text("client_name"),
+  clientCompany: text("client_company").notNull(),
+  clientAddress: text("client_address"),
+  items: jsonb("items").notNull().default([]),
+  taxPercentage: text("tax_percentage").default("0"),
+  totalAmount: text("total_amount").notNull().default("0"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
 // Type exports
 export type User = typeof user.$inferSelect
 export type NewUser = typeof user.$inferInsert
@@ -157,8 +205,13 @@ export type NewUser = typeof user.$inferInsert
 export type Profile = typeof profile.$inferSelect
 export type NewProfile = typeof profile.$inferInsert
 
-export type Route = typeof route.$inferSelect
-export type NewRoute = typeof route.$inferInsert
+export type SavedRoute = typeof savedRoute.$inferSelect
+export type NewSavedRoute = typeof savedRoute.$inferInsert
+export type Route = SavedRoute
+export type NewRoute = NewSavedRoute
+
+export type RouteAnalysis = typeof routeAnalysis.$inferSelect
+export type NewRouteAnalysis = typeof routeAnalysis.$inferInsert
 
 export type Waitlist = typeof waitlist.$inferSelect
 export type NewWaitlist = typeof waitlist.$inferInsert
@@ -171,3 +224,9 @@ export type NewRateLimit = typeof rateLimit.$inferInsert
 
 export type DailyAnalytics = typeof dailyAnalytics.$inferSelect
 export type NewDailyAnalytics = typeof dailyAnalytics.$inferInsert
+
+export type Feedback = typeof feedback.$inferSelect
+export type NewFeedback = typeof feedback.$inferInsert
+
+export type Invoice = typeof invoices.$inferSelect
+export type NewInvoice = typeof invoices.$inferInsert

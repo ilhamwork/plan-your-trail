@@ -20,7 +20,7 @@ export function getDb(): PostgresJsDatabase<typeof schema> {
       throw new Error("DATABASE_URL is not configured")
     }
 
-    // In transaction pooler mode (Supabase/PgBouncer), prepared statements must be disabled
+    // In transaction pooler mode (e.g. PgBouncer), prepared statements must be disabled
     client = postgres(databaseUrl, {
       prepare: false,
       connect_timeout: 10,

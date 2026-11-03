@@ -3,13 +3,12 @@
 import { useState, useCallback } from "react"
 import type { GPXData, Waypoint } from "@/lib/types"
 import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
-import { supabase } from "@/lib/supabase"
-import { formatKm } from "@/lib/format"
 import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements } from "@/lib/entitlements"
 import { useI18n } from "@/lib/i18n/context"
+import { recordRouteAnalysisAction } from "@/app/actions/analysis"
 
-const EXAMPLE_FILE_NAME = "Rinjani-162K-2025.gpx"
+const EXAMPLE_FILE_NAME = "Rinjani-36K-2026.gpx"
 
 interface UseRouteUploadOptions {
   parseGPX: (content: string) => Promise<GPXData>
@@ -42,12 +41,7 @@ export function useRouteUpload({
   const [isParsingGPX, setIsParsingGPX] = useState(false)
 
   const finishUpload = useCallback(
-    async (
-      parsed: GPXData,
-      name: string,
-      details: RouteDetailsData,
-      runnerName: string
-    ) => {
+    async (parsed: GPXData, name: string) => {
       // Update UI state immediately so route rendering is never blocked by network/telemetry
       setGpxData(parsed)
       setFileName(name)
@@ -61,25 +55,6 @@ export function useRouteUpload({
       setTempRoute(null)
       setTempFileName("")
       setIsSubmittingDetails(false)
-
-      // Fire-and-forget telemetry with short timeout so unreachable/slow Supabase never hangs upload
-      void Promise.race([
-        supabase.from("user_routes").insert([
-          {
-            user_name: runnerName,
-            race_name: details.raceName,
-            race_date: details.raceDate,
-            file_name: name,
-            distance: parseFloat(formatKm(parsed.stats.totalDistance, 2)),
-            elevation_gain: parsed.stats.elevationGain,
-          },
-        ]),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Telemetry timeout")), 3000)
-        ),
-      ]).catch(() => {
-        // Ignore telemetry errors silently
-      })
     },
     [onWaypointsLoaded]
   )
@@ -120,16 +95,32 @@ export function useRouteUpload({
           pointCount: parsed.trackPoints.length,
         })
 
+        // Save metrics to database without uploading GPX to object storage (non-blocking)
+        recordRouteAnalysisAction({
+          fileName: name,
+          userName: sessionRunnerName || undefined,
+          fileSizeBytes: content.length,
+          source: source === "example" ? "example" : "upload",
+          pointCount: parsed.trackPoints.length,
+          metrics: {
+            stats: parsed.stats,
+            bounds: parsed.bounds,
+            center: parsed.center,
+          },
+        }).catch((recordErr) => {
+          console.warn("Could not record route analysis metrics:", recordErr)
+        })
+
         const today = new Date().toISOString().split("T")[0]
 
         // If example file, skip modal and auto-fill
         if (name === EXAMPLE_FILE_NAME) {
           const exampleDetails = {
-            raceName: "Rinjani 162K",
+            raceName: "Rinjani 36K",
             raceDate: today,
           }
           setRouteDetails(exampleDetails)
-          await finishUpload(parsed, name, exampleDetails, sessionRunnerName)
+          await finishUpload(parsed, name)
           return
         }
 
@@ -168,15 +159,10 @@ export function useRouteUpload({
     async (e: React.FormEvent) => {
       e.preventDefault()
       if (tempRoute && tempFileName) {
-        await finishUpload(
-          tempRoute,
-          tempFileName,
-          routeDetails,
-          sessionRunnerName
-        )
+        await finishUpload(tempRoute, tempFileName)
       }
     },
-    [tempRoute, tempFileName, finishUpload, routeDetails, sessionRunnerName]
+    [tempRoute, tempFileName, finishUpload]
   )
 
   const handleDetailsCancel = useCallback(() => {

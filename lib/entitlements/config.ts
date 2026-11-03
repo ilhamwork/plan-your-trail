@@ -42,11 +42,11 @@ export const GPX_BOUNDS = {
 } as const
 
 /**
- * Operational free-tier quota thresholds (PRD Section 9.6 & E7).
+ * Operational database and service quota thresholds (PRD Section 9.6 & E7).
  */
 export const OPS_QUOTAS = {
-  supabaseMaxDbBytes: 500 * MB,
-  supabaseWarnRatio: 0.8,
+  maxDbBytes: 500 * MB,
+  dbWarnRatio: 0.8,
   resendDailyLimit: 100,
   resendWarnRatio: 0.7,
 } as const
