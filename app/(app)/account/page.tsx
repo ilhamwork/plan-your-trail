@@ -118,7 +118,7 @@ export default async function AccountPage() {
                   Fitur Pro (Segera Hadir di 2027)
                 </h4>
                 <p className="mt-0.5 text-xs text-amber-800">
-                  Manajemen waypoint kustom (tambah & edit pos), prakiraan cuaca per jam, cutoff estimator per checkpoint, ekspor PDF race brief,
+                  Manajemen waypoint kustom tanpa batas, prakiraan cuaca per jam, cutoff estimator per checkpoint, ekspor PDF race brief,
                   dan penyimpanan rute tanpa batas.
                 </p>
               </div>

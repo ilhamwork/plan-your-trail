@@ -32,14 +32,15 @@ function isProLaunched(): boolean {
 }
 
 /**
- * Access decision matrix implemented strictly per AGENTS.md Section 5.
+ * Access decision matrix implemented per AGENTS.md Section 5.
+ * Free & Pro registered users have access to waypoint_management (with tier-specific limits).
  *
  * @param user Current session user or null for Anonymous
  * @param feature Feature name
  */
 export function can(user: SessionUser | null, feature: Feature): boolean {
   if (!user) {
-    // Anonymous has no access to any of the 12 gated features
+    // Anonymous has no access to gated features
     return false
   }
 
@@ -50,14 +51,14 @@ export function can(user: SessionUser | null, feature: Feature): boolean {
     // Features for all registered accounts (Free and Pro)
     case "weather_session":
     case "waypoint_gpx_chart":
+    case "waypoint_user_chart":
+    case "waypoint_management":
     case "pace_basic":
     case "save_route":
     case "download_gpx":
       return true
 
     // Pro-only features: locked until Pro launch, then requires pro plan
-    case "waypoint_management":
-    case "waypoint_user_chart":
     case "nutrition_notes":
     case "weather_hourly":
     case "cutoff_estimator":
@@ -71,18 +72,19 @@ export function can(user: SessionUser | null, feature: Feature): boolean {
   }
 }
 
-
 /**
- * Upload size limits and route count limits per tier.
+ * Upload size limits, route count limits, and custom waypoint limits per tier.
  */
 export function limits(user: SessionUser | null): {
   maxUploadBytes: number
   maxSavedRoutes: number | null
+  maxCustomWaypoints: number | null
 } {
   if (!user) {
     return {
       maxUploadBytes: TIER_LIMITS.anonymous.maxUploadBytes,
       maxSavedRoutes: TIER_LIMITS.anonymous.maxSavedRoutes,
+      maxCustomWaypoints: TIER_LIMITS.anonymous.maxCustomWaypoints,
     }
   }
 
@@ -90,11 +92,13 @@ export function limits(user: SessionUser | null): {
     return {
       maxUploadBytes: TIER_LIMITS.pro.maxUploadBytes,
       maxSavedRoutes: TIER_LIMITS.pro.maxSavedRoutes,
+      maxCustomWaypoints: TIER_LIMITS.pro.maxCustomWaypoints,
     }
   }
 
   return {
     maxUploadBytes: TIER_LIMITS.free.maxUploadBytes,
     maxSavedRoutes: TIER_LIMITS.free.maxSavedRoutes,
+    maxCustomWaypoints: TIER_LIMITS.free.maxCustomWaypoints,
   }
 }

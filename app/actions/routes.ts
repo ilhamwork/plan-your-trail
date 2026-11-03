@@ -142,6 +142,23 @@ export async function saveRouteAction(
     }
   }
 
+  // Check max custom waypoints limit
+  if (
+    parsed.data.waypoints &&
+    userLimits.maxCustomWaypoints !== null
+  ) {
+    const customWaypoints = parsed.data.waypoints.filter((wp) => !wp.isFromGpx)
+    if (customWaypoints.length > userLimits.maxCustomWaypoints) {
+      return {
+        ok: false,
+        error: {
+          code: "WAYPOINT_LIMIT_REACHED",
+          message: `Akun Free hanya dapat menambahkan hingga ${userLimits.maxCustomWaypoints} waypoint kustom. Upgrade ke Pro untuk waypoint tanpa batas.`,
+        },
+      }
+    }
+  }
+
   // Parse GPX and extract trackPoints & stats
   let parsedGpx: GPXData
   try {

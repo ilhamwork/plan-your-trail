@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useState } from "react"
+import { memo, useState, useMemo } from "react"
 import {
   Plus,
   MapPin,
@@ -11,12 +11,14 @@ import {
   Check,
   Download,
   Lock,
+  Sparkles,
 } from "lucide-react"
 import type { Waypoint, TrackPoint } from "@/lib/types"
 import { downloadGPX } from "@/lib/gpx-export"
 import { formatKm, formatKmLabel } from "@/lib/format"
 import { useEntitlements } from "@/lib/entitlements"
 import { trackEvent } from "@/lib/analytics/events"
+import { joinWaitlistAction } from "@/app/actions/waitlist"
 import { ComingSoonLock } from "./ComingSoonLock"
 
 interface WaypointPanelProps {
@@ -38,7 +40,7 @@ export const WaypointPanel = memo(function WaypointPanel({
   onEdit,
   onRemove,
 }: WaypointPanelProps) {
-  const { can } = useEntitlements()
+  const { can, limits, user } = useEntitlements()
   const canManageWaypoints = can("waypoint_management")
   const canDownloadGpx = can("download_gpx")
 
@@ -47,6 +49,39 @@ export const WaypointPanel = memo(function WaypointPanel({
   const [error, setError] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isJoiningWaitlist, setIsJoiningWaitlist] = useState(false)
+  const [isJoinedWaitlist, setIsJoinedWaitlist] = useState(false)
+
+  const isPro = user?.plan === "pro"
+  const maxCustom = limits.maxCustomWaypoints
+
+  // Count only custom waypoints added by the user
+  const customWaypointsCount = useMemo(
+    () => waypoints.filter((wp) => !wp.isFromGpx).length,
+    [waypoints]
+  )
+
+  const isLimitReached =
+    !isPro && maxCustom !== null && customWaypointsCount >= maxCustom
+
+  const handleJoinProWaitlist = async () => {
+    if (!user || isJoiningWaitlist || isJoinedWaitlist) return
+    setIsJoiningWaitlist(true)
+    try {
+      const res = await joinWaitlistAction({ feature: "waypoint_management" })
+      if (res.ok) {
+        setIsJoinedWaitlist(true)
+        trackEvent("waitlist_joined", {
+          feature: "waypoint_management",
+          source: "waypoint_panel_limit",
+        })
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsJoiningWaitlist(false)
+    }
+  }
 
   const routeName = fileName
     ? fileName.replace(/\.gpx$/i, "")
@@ -88,6 +123,14 @@ export const WaypointPanel = memo(function WaypointPanel({
 
   const handleSubmit = () => {
     if (!canManageWaypoints) return
+
+    // Prevent adding new waypoints if limit is reached
+    if (!editingId && isLimitReached) {
+      setError(
+        `Batas ${maxCustom} waypoint kustom tercapai. Upgrade ke Pro untuk waypoint tanpa batas.`
+      )
+      return
+    }
 
     setError("")
     const trimmedName = name.trim()
@@ -148,14 +191,18 @@ export const WaypointPanel = memo(function WaypointPanel({
             <h3 className="text-sm font-bold text-[#2D3436]">
               {editingId ? "Edit Waypoint" : "Waypoint Rute"}
             </h3>
-            {canManageWaypoints ? (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
-                Pro
-              </span>
-            ) : (
+            {!user || !canManageWaypoints ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
                 <Lock className="h-2.5 w-2.5" />
-                Khusus Pro
+                Perlu Akun
+              </span>
+            ) : isPro ? (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                Pro (Unlimited)
+              </span>
+            ) : (
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
+                Free ({customWaypointsCount}/{maxCustom ?? 3} Waypoint)
               </span>
             )}
           </div>
@@ -189,6 +236,38 @@ export const WaypointPanel = memo(function WaypointPanel({
       {/* Input row or Pro Gated Prompt */}
       {canManageWaypoints ? (
         <div className="border-b border-gray-50 bg-gray-50/50 px-4 pt-3 pb-2">
+          {/* Limit Reached Banner for Free Users */}
+          {isLimitReached && !editingId && (
+            <div className="mb-2.5 rounded-lg border border-amber-200 bg-amber-50/80 p-2.5 text-xs">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-1.5 text-amber-900">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                  <span>
+                    Batas {maxCustom} waypoint kustom tercapai. Mau tambah tanpa batas?
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleJoinProWaitlist}
+                  disabled={isJoiningWaitlist || isJoinedWaitlist}
+                  className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md bg-[#1B4332] px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#143326] disabled:opacity-60"
+                >
+                  {isJoinedWaitlist ? (
+                    <>
+                      <Check className="h-3 w-3" />
+                      <span>Terdaftar Waitlist Pro</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 text-amber-300" />
+                      <span>Daftar Early Access Pro</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <input
               type="text"
@@ -198,8 +277,13 @@ export const WaypointPanel = memo(function WaypointPanel({
                 setError("")
               }}
               onKeyDown={handleKeyDown}
-              placeholder="Nama waypoint (cth: WS 1 Water)"
-              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
+              disabled={isLimitReached && !editingId}
+              placeholder={
+                isLimitReached && !editingId
+                  ? `Batas ${maxCustom} waypoint tercapai`
+                  : "Nama waypoint (cth: WS 1 Water)"
+              }
+              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
             />
             <div className="relative w-24 shrink-0">
               <input
@@ -210,11 +294,12 @@ export const WaypointPanel = memo(function WaypointPanel({
                   setError("")
                 }}
                 onKeyDown={handleKeyDown}
+                disabled={isLimitReached && !editingId}
                 placeholder="0.0"
                 min={0}
                 max={totalDistanceKm}
                 step={0.01}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-7 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-7 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
               />
               <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] font-semibold text-gray-400">
                 km
@@ -242,8 +327,13 @@ export const WaypointPanel = memo(function WaypointPanel({
               ) : (
                 <button
                   onClick={handleSubmit}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1B4332] text-white shadow-xs transition hover:bg-[#143326] active:scale-95"
-                  title="Tambah waypoint"
+                  disabled={isLimitReached}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1B4332] text-white shadow-xs transition hover:bg-[#143326] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  title={
+                    isLimitReached
+                      ? `Batas ${maxCustom} waypoint kustom tercapai`
+                      : "Tambah waypoint"
+                  }
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -263,8 +353,9 @@ export const WaypointPanel = memo(function WaypointPanel({
           <ComingSoonLock
             feature="waypoint_management"
             title="Manajemen Waypoint"
-            description="Tambah dan edit pos air atau checkpoint kustom di peta & chart rute."
+            description="Tambah dan edit pos atau checkpoint hingga 3 waypoint kustom di peta & chart rute."
             source="waypoint_panel_gated"
+            badgeText="Buka di Akun Free"
             variant="card"
           />
         </div>
@@ -291,6 +382,11 @@ export const WaypointPanel = memo(function WaypointPanel({
                 <span className="truncate text-xs font-medium text-[#2D3436]">
                   {wp.name}
                 </span>
+                {wp.isFromGpx && (
+                  <span className="rounded bg-gray-100 px-1 py-0.5 text-[9px] font-medium text-gray-500">
+                    GPX
+                  </span>
+                )}
               </div>
 
               {canManageWaypoints && (

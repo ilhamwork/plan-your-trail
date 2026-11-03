@@ -150,6 +150,101 @@ describe("app/actions/routes", () => {
     }
   })
 
+  it("enforces Free tier max 3 custom waypoints limit", async () => {
+    setSessionForTesting({
+      user: { id: "user-123", email: "user@test.com", plan: "free" },
+    })
+
+    const mockWhere = vi.fn().mockResolvedValue([{ total: 1 }])
+    const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+    const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+    setDbForTesting({ select: mockSelect } as unknown as Parameters<typeof setDbForTesting>[0])
+
+    // Submit 4 custom waypoints (!isFromGpx)
+    const customWaypoints = [1, 2, 3, 4].map((i) => ({
+      name: `WS ${i}`,
+      lat: -8.34,
+      lon: 116.45,
+      ele: 1000,
+      distance: i * 1000,
+      isFromGpx: false,
+    }))
+
+    const res = await saveRouteAction({
+      name: "Route with 4 custom waypoints",
+      gpxContent: sampleGPX,
+      waypoints: customWaypoints,
+    })
+
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.error.code).toBe("WAYPOINT_LIMIT_REACHED")
+      expect(res.error.message).toContain("Akun Free hanya dapat menambahkan hingga 3 waypoint kustom")
+    }
+  })
+
+  it("allows Free tier to save up to 3 custom waypoints alongside GPX waypoints", async () => {
+    setSessionForTesting({
+      user: { id: "user-123", email: "user@test.com", plan: "free" },
+    })
+
+    const mockWhere = vi.fn().mockResolvedValue([{ total: 1 }])
+    const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+    const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+    const mockReturning = vi.fn().mockImplementation((val) => [val])
+    const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
+    const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
+    setDbForTesting({ select: mockSelect, insert: mockInsert } as unknown as Parameters<typeof setDbForTesting>[0])
+
+    // 3 custom waypoints + 2 GPX waypoints
+    const mixedWaypoints = [
+      { name: "GPX Pos 1", lat: -8.34, lon: 116.45, ele: 1000, distance: 500, isFromGpx: true },
+      { name: "GPX Pos 2", lat: -8.345, lon: 116.455, ele: 1050, distance: 1500, isFromGpx: true },
+      { name: "Custom 1", lat: -8.35, lon: 116.46, ele: 1100, distance: 2000, isFromGpx: false },
+      { name: "Custom 2", lat: -8.355, lon: 116.465, ele: 1150, distance: 3000, isFromGpx: false },
+      { name: "Custom 3", lat: -8.36, lon: 116.47, ele: 1200, distance: 4000, isFromGpx: false },
+    ]
+
+    const res = await saveRouteAction({
+      name: "Mixed Waypoints Route",
+      gpxContent: sampleGPX,
+      waypoints: mixedWaypoints,
+    })
+
+    expect(res.ok).toBe(true)
+  })
+
+  it("allows Pro user to save more than 3 custom waypoints", async () => {
+    setSessionForTesting({
+      user: { id: "user-pro", email: "pro@test.com", plan: "pro" },
+    })
+
+    const mockWhere = vi.fn().mockResolvedValue([{ total: 1 }])
+    const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+    const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+    const mockReturning = vi.fn().mockImplementation((val) => [val])
+    const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
+    const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
+    setDbForTesting({ select: mockSelect, insert: mockInsert } as unknown as Parameters<typeof setDbForTesting>[0])
+
+    // 5 custom waypoints
+    const proWaypoints = [1, 2, 3, 4, 5].map((i) => ({
+      name: `Pro WS ${i}`,
+      lat: -8.34,
+      lon: 116.45,
+      ele: 1000,
+      distance: i * 1000,
+      isFromGpx: false,
+    }))
+
+    const res = await saveRouteAction({
+      name: "Pro Route with 5 custom waypoints",
+      gpxContent: sampleGPX,
+      waypoints: proWaypoints,
+    })
+
+    expect(res.ok).toBe(true)
+  })
   it("deleteRouteAction requires authentication and verifies owner", async () => {
     setSessionForTesting(null)
 

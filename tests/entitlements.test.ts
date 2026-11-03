@@ -43,10 +43,11 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       }
     })
 
-    it("returns anonymous limits (5MB, 0 saved routes)", () => {
+    it("returns anonymous limits (5MB, 0 saved routes, 0 custom waypoints)", () => {
       const res = limits(null)
       expect(res.maxUploadBytes).toBe(TIER_LIMITS.anonymous.maxUploadBytes)
       expect(res.maxSavedRoutes).toBe(0)
+      expect(res.maxCustomWaypoints).toBe(0)
     })
   })
 
@@ -55,18 +56,18 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       _setProLaunchedForTesting(false)
     })
 
-    it("allows standard Free features", () => {
+    it("allows standard Free features and waypoint management", () => {
       expect(can(freeUser, "weather_session")).toBe(true)
       expect(can(freeUser, "waypoint_gpx_chart")).toBe(true)
+      expect(can(freeUser, "waypoint_user_chart")).toBe(true)
+      expect(can(freeUser, "waypoint_management")).toBe(true)
       expect(can(freeUser, "pace_basic")).toBe(true)
       expect(can(freeUser, "save_route")).toBe(true)
       expect(can(freeUser, "download_gpx")).toBe(true)
     })
 
-    it("denies Pro-only features including waypoint_management", () => {
+    it("denies Pro-only features", () => {
       const proOnlyFeatures: Feature[] = [
-        "waypoint_management",
-        "waypoint_user_chart",
         "nutrition_notes",
         "weather_hourly",
         "cutoff_estimator",
@@ -80,10 +81,11 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       }
     })
 
-    it("returns free limits (10MB, 3 saved routes)", () => {
+    it("returns free limits (10MB, 3 saved routes, 3 custom waypoints)", () => {
       const res = limits(freeUser)
       expect(res.maxUploadBytes).toBe(TIER_LIMITS.free.maxUploadBytes)
       expect(res.maxSavedRoutes).toBe(3)
+      expect(res.maxCustomWaypoints).toBe(3)
     })
   })
 
@@ -92,16 +94,14 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       _setProLaunchedForTesting(true)
     })
 
-    it("still allows standard Free features", () => {
+    it("still allows standard Free features and waypoint management", () => {
       expect(can(freeUser, "weather_session")).toBe(true)
       expect(can(freeUser, "waypoint_gpx_chart")).toBe(true)
+      expect(can(freeUser, "waypoint_user_chart")).toBe(true)
+      expect(can(freeUser, "waypoint_management")).toBe(true)
       expect(can(freeUser, "pace_basic")).toBe(true)
       expect(can(freeUser, "save_route")).toBe(true)
       expect(can(freeUser, "download_gpx")).toBe(true)
-    })
-
-    it("locks waypoint_management for Free users", () => {
-      expect(can(freeUser, "waypoint_management")).toBe(false)
     })
 
     it("denies Pro-only features", () => {
@@ -116,23 +116,24 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       _setProLaunchedForTesting(false)
     })
 
-    it("allows standard Free features", () => {
+    it("allows standard Free features and waypoint management", () => {
       expect(can(proUser, "weather_session")).toBe(true)
       expect(can(proUser, "waypoint_gpx_chart")).toBe(true)
+      expect(can(proUser, "waypoint_user_chart")).toBe(true)
+      expect(can(proUser, "waypoint_management")).toBe(true)
     })
 
-    it("keeps Pro-only features locked before Pro launch (including waypoint_management)", () => {
-      expect(can(proUser, "waypoint_management")).toBe(false)
+    it("keeps unlaunched Pro-only features locked before Pro launch", () => {
       expect(can(proUser, "weather_hourly")).toBe(false)
       expect(can(proUser, "export_pdf")).toBe(false)
       expect(can(proUser, "cutoff_estimator")).toBe(false)
     })
 
-
-    it("returns pro limits (20MB, null maxSavedRoutes)", () => {
+    it("returns pro limits (20MB, null maxSavedRoutes, null maxCustomWaypoints)", () => {
       const res = limits(proUser)
       expect(res.maxUploadBytes).toBe(TIER_LIMITS.pro.maxUploadBytes)
       expect(res.maxSavedRoutes).toBeNull()
+      expect(res.maxCustomWaypoints).toBeNull()
     })
   })
 
@@ -147,10 +148,11 @@ describe("E3: Entitlements Access Decision Matrix (AGENTS.md Section 5)", () => 
       }
     })
 
-    it("returns pro limits (20MB, null maxSavedRoutes)", () => {
+    it("returns pro limits (20MB, null maxSavedRoutes, null maxCustomWaypoints)", () => {
       const res = limits(proUser)
       expect(res.maxUploadBytes).toBe(TIER_LIMITS.pro.maxUploadBytes)
       expect(res.maxSavedRoutes).toBeNull()
+      expect(res.maxCustomWaypoints).toBeNull()
     })
   })
 })
