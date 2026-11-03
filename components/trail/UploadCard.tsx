@@ -83,9 +83,9 @@ export const UploadCard = memo(function UploadCard({
       e.stopPropagation()
       setIsLoadingExample(true)
       try {
-        const response = await fetch("/Rinjani-162K-2025.gpx")
+        const response = await fetch("/Rinjani-36K-2026.gpx")
         const content = await response.text()
-        onFileLoaded(content, "Rinjani-162K-2025.gpx")
+        onFileLoaded(content, "Rinjani-36K-2026.gpx")
       } catch (err) {
         console.error("Failed to load example:", err)
       } finally {

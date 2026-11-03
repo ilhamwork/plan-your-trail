@@ -26,7 +26,7 @@ Upload a GPX file and instantly get an interactive map, elevation profile, segme
 | Styling      | Tailwind CSS v4 + shadcn/ui          |
 | Map          | MapLibre GL JS + Terrarium DEM tiles |
 | Charts       | Recharts                             |
-| GPX Parsing  | fast-xml-parser / Web Worker                    |
+| GPX Parsing  | fast-xml-parser / Web Worker         |
 | Image Export | html-to-image                        |
 | Animations   | Framer Motion                        |
 | Weather      | Open-Meteo (Historical + Forecast)   |
@@ -92,7 +92,7 @@ plan-your-trail/
 │   ├── segment-analysis.ts  # Segment detection logic
 │   └── utils.ts             # Utility functions
 └── public/
-    └── Rinjani-162K-2025.gpx # Sample GPX file for testing
+    └── Rinjani-36K-2025.gpx # Sample GPX file for testing
 ```
 
 ## 🎨 Design

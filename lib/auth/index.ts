@@ -6,6 +6,7 @@ import { getProfile } from "../db/queries/profiles"
 export type SessionUser = {
   id: string
   email: string
+  name?: string | null
   plan: "free" | "pro"
 }
 
@@ -56,6 +57,7 @@ export async function getSession(): Promise<{ user: SessionUser } | null> {
       user: {
         id: session.user.id,
         email: session.user.email,
+        name: session.user.name,
         plan,
       },
     }

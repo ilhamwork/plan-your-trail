@@ -6,8 +6,9 @@ import type { RouteDetailsData } from "@/components/trail/ModalFormInfo"
 import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements } from "@/lib/entitlements"
 import { useI18n } from "@/lib/i18n/context"
+import { recordRouteAnalysisAction } from "@/app/actions/analysis"
 
-const EXAMPLE_FILE_NAME = "Rinjani-162K-2025.gpx"
+const EXAMPLE_FILE_NAME = "Rinjani-36K-2026.gpx"
 
 interface UseRouteUploadOptions {
   parseGPX: (content: string) => Promise<GPXData>
@@ -94,12 +95,28 @@ export function useRouteUpload({
           pointCount: parsed.trackPoints.length,
         })
 
+        // Save metrics to database without uploading GPX to object storage (non-blocking)
+        recordRouteAnalysisAction({
+          fileName: name,
+          userName: sessionRunnerName || undefined,
+          fileSizeBytes: content.length,
+          source: source === "example" ? "example" : "upload",
+          pointCount: parsed.trackPoints.length,
+          metrics: {
+            stats: parsed.stats,
+            bounds: parsed.bounds,
+            center: parsed.center,
+          },
+        }).catch((recordErr) => {
+          console.warn("Could not record route analysis metrics:", recordErr)
+        })
+
         const today = new Date().toISOString().split("T")[0]
 
         // If example file, skip modal and auto-fill
         if (name === EXAMPLE_FILE_NAME) {
           const exampleDetails = {
-            raceName: "Rinjani 162K",
+            raceName: "Rinjani 36K",
             raceDate: today,
           }
           setRouteDetails(exampleDetails)

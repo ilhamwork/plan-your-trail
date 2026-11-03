@@ -1,6 +1,15 @@
 import { and, desc, eq, count } from "drizzle-orm"
 import { db } from "../client"
-import { route, type Route, type NewRoute } from "../schema"
+import {
+  savedRoute,
+  route,
+  type SavedRoute,
+  type Route,
+  type NewSavedRoute,
+  type NewRoute,
+} from "../schema"
+
+export { savedRoute, type SavedRoute, type NewSavedRoute }
 
 /**
  * Owner-scoped query helper for listing non-hidden routes.

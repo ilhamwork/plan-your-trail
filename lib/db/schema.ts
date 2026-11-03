@@ -100,16 +100,34 @@ export const profile = pgTable("profile", {
     .defaultNow(),
 })
 
-export const route = pgTable("route", {
+export const savedRoute = pgTable("saved_route", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  userName: text("user_name"),
   name: text("name").notNull(),
   metrics: jsonb("metrics").notNull(),
   trackSimplified: jsonb("track_simplified").notNull(),
   gpxObjectKey: text("gpx_object_key").notNull(),
   hidden: boolean("hidden").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+// Alias for backwards compatibility across existing code
+export const route = savedRoute
+
+export const routeAnalysis = pgTable("route_analysis", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // Nullable for anonymous uploads
+  userName: text("user_name"),
+  fileName: text("file_name").notNull(),
+  fileSizeBytes: integer("file_size_bytes").notNull(),
+  source: text("source").notNull().default("upload"), // 'upload' | 'example'
+  metrics: jsonb("metrics").notNull(), // stats: totalDistance, elevationGain, etc.
+  pointCount: integer("point_count").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -187,8 +205,13 @@ export type NewUser = typeof user.$inferInsert
 export type Profile = typeof profile.$inferSelect
 export type NewProfile = typeof profile.$inferInsert
 
-export type Route = typeof route.$inferSelect
-export type NewRoute = typeof route.$inferInsert
+export type SavedRoute = typeof savedRoute.$inferSelect
+export type NewSavedRoute = typeof savedRoute.$inferInsert
+export type Route = SavedRoute
+export type NewRoute = NewSavedRoute
+
+export type RouteAnalysis = typeof routeAnalysis.$inferSelect
+export type NewRouteAnalysis = typeof routeAnalysis.$inferInsert
 
 export type Waitlist = typeof waitlist.$inferSelect
 export type NewWaitlist = typeof waitlist.$inferInsert
