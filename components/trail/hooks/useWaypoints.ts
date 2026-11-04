@@ -6,8 +6,11 @@ import { interpolateCoordinatesForDistance } from "@/lib/gpx/interpolate"
 import { buildWaypointSegments } from "@/lib/segment-analysis"
 import { trackEvent } from "@/lib/analytics/events"
 
-export function useWaypoints(gpxData: GPXData | null) {
-  const [waypoints, setWaypoints] = useState<Waypoint[]>([])
+export function useWaypoints(
+  gpxData: GPXData | null,
+  initialWaypoints: Waypoint[] = []
+) {
+  const [waypoints, setWaypoints] = useState<Waypoint[]>(initialWaypoints)
 
   const handleAddWaypoint = useCallback(
     (name: string, distanceKm: number) => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { saveRouteAction, deleteRouteAction } from "@/app/actions/routes"
+import { saveRouteAction, updateRouteAction, deleteRouteAction } from "@/app/actions/routes"
 import { setSessionForTesting } from "@/lib/auth"
 import { setDbForTesting } from "@/lib/db/client"
 import { createInMemoryStorage, _setStorageBackendForTesting } from "@/lib/storage"
@@ -245,6 +245,137 @@ describe("app/actions/routes", () => {
 
     expect(res.ok).toBe(true)
   })
+  it("updateRouteAction requires authentication", async () => {
+    setSessionForTesting(null)
+
+    const res = await updateRouteAction({
+      routeId: "a0000000-0000-4000-8000-000000000001",
+      name: "New Name",
+    })
+
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.error.code).toBe("UNAUTHORIZED")
+    }
+  })
+
+  it("updateRouteAction returns NOT_FOUND if route belongs to different user", async () => {
+    setSessionForTesting({
+      user: { id: "user-A", email: "a@test.com", plan: "free" },
+    })
+
+    const mockLimit = vi.fn().mockResolvedValue([])
+    const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
+    const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+    const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+    setDbForTesting({ select: mockSelect } as unknown as Parameters<typeof setDbForTesting>[0])
+
+    const res = await updateRouteAction({
+      routeId: "a0000000-0000-4000-8000-000000000001",
+      name: "Renamed",
+    })
+
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.error.code).toBe("NOT_FOUND")
+    }
+  })
+
+  it("updateRouteAction enforces Free tier custom waypoint limits", async () => {
+    setSessionForTesting({
+      user: { id: "user-A", email: "a@test.com", plan: "free" },
+    })
+
+    const customWaypoints = [1, 2, 3, 4].map((i) => ({
+      name: `WS ${i}`,
+      lat: -8.34,
+      lon: 116.45,
+      ele: 1000,
+      distance: i * 1000,
+      isFromGpx: false,
+    }))
+
+    const res = await updateRouteAction({
+      routeId: "a0000000-0000-4000-8000-000000000001",
+      waypoints: customWaypoints,
+    })
+
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.error.code).toBe("WAYPOINT_LIMIT_REACHED")
+    }
+  })
+
+  it("updateRouteAction successfully updates route name, raceDate, and waypoints", async () => {
+    const userId = "user-123"
+    const routeId = "a0000000-0000-4000-8000-000000000001"
+    setSessionForTesting({
+      user: { id: userId, email: "user@test.com", plan: "free" },
+    })
+
+    // Mock getRoute returning current route
+    const existingRoute = {
+      id: routeId,
+      userId,
+      name: "Original Name",
+      metrics: {
+        stats: { totalDistance: 10000 },
+        raceDate: "2026-10-01",
+        runnerName: "Andi",
+        waypoints: [],
+      },
+      gpxObjectKey: `gpx/${userId}/${routeId}.gpx.gz`,
+      hidden: false,
+    }
+    const mockLimit = vi.fn().mockResolvedValue([existingRoute])
+    const mockWhereGet = vi.fn().mockReturnValue({ limit: mockLimit })
+    const mockFromGet = vi.fn().mockReturnValue({ where: mockWhereGet })
+    const mockSelect = vi.fn().mockReturnValue({ from: mockFromGet })
+
+    // Mock updateRoute returning updated route
+    const updatedRoute = {
+      ...existingRoute,
+      name: "Updated Race Name",
+    }
+    const mockReturning = vi.fn().mockResolvedValue([updatedRoute])
+    const mockWhereUpdate = vi.fn().mockReturnValue({ returning: mockReturning })
+    const mockSet = vi.fn().mockReturnValue({ where: mockWhereUpdate })
+    const mockUpdate = vi.fn().mockReturnValue({ set: mockSet })
+
+    setDbForTesting({
+      select: mockSelect,
+      update: mockUpdate,
+    } as unknown as Parameters<typeof setDbForTesting>[0])
+
+    const res = await updateRouteAction({
+      routeId,
+      name: "Updated Race Name",
+      raceDate: "2026-11-20",
+      waypoints: [
+        { name: "WS 1", lat: -8.34, lon: 116.45, ele: 1000, distance: 3000, isFromGpx: false },
+      ],
+    })
+
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.data.name).toBe("Updated Race Name")
+      expect(res.data.routeId).toBe(routeId)
+    }
+
+    expect(mockUpdate).toHaveBeenCalled()
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Updated Race Name",
+        metrics: expect.objectContaining({
+          raceDate: "2026-11-20",
+          waypoints: expect.arrayContaining([
+            expect.objectContaining({ name: "WS 1" }),
+          ]),
+        }),
+      })
+    )
+  })
+
   it("deleteRouteAction requires authentication and verifies owner", async () => {
     setSessionForTesting(null)
 

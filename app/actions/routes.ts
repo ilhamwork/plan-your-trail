@@ -10,6 +10,7 @@ import {
   countActiveRoutes,
   createRoute,
   getRoute,
+  updateRoute,
   deleteRoute,
 } from "@/lib/db/queries/routes"
 import { putObject, deleteObject } from "@/lib/storage"
@@ -47,6 +48,19 @@ const SaveRouteInputSchema = z
 const DeleteRouteInputSchema = z
   .object({
     routeId: z.string().uuid("ID rute tidak valid"),
+  })
+  .strict()
+
+const UpdateRouteInputSchema = z
+  .object({
+    routeId: z.string().uuid("ID rute tidak valid"),
+    name: z.string().trim().min(1, "Nama rute tidak boleh kosong").max(100).optional(),
+    raceDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD")
+      .optional()
+      .nullable(),
+    waypoints: z.array(WaypointInputSchema).optional(),
   })
   .strict()
 
@@ -351,5 +365,130 @@ export async function deleteRouteAction(
     data: {
       success: true,
     },
+  }
+}
+
+/**
+ * Server action to update a saved route (name, raceDate, waypoints).
+ * Enforces authentication, owner scoping, rate limits, and custom waypoint limits.
+ */
+export async function updateRouteAction(
+  rawInput: unknown
+): Promise<ActionResult<{ routeId: string; name: string }>> {
+  const session = await getSession()
+  if (!session?.user) {
+    return {
+      ok: false,
+      error: {
+        code: "UNAUTHORIZED",
+        message: "Silakan masuk untuk mengubah rute.",
+      },
+    }
+  }
+
+  const user = session.user
+  if (!can(user, "save_route")) {
+    return {
+      ok: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Paket Anda tidak memiliki izin untuk mengubah rute.",
+      },
+    }
+  }
+
+  const parsed = UpdateRouteInputSchema.safeParse(rawInput)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: parsed.error.issues[0]?.message || "Input rute tidak valid.",
+      },
+    }
+  }
+
+  // Check waypoint limits
+  const userLimits = limits(user)
+  if (parsed.data.waypoints && userLimits.maxCustomWaypoints !== null) {
+    const customWaypoints = parsed.data.waypoints.filter((wp) => !wp.isFromGpx)
+    if (customWaypoints.length > userLimits.maxCustomWaypoints) {
+      return {
+        ok: false,
+        error: {
+          code: "WAYPOINT_LIMIT_REACHED",
+          message: `Akun Free hanya dapat menambahkan hingga ${userLimits.maxCustomWaypoints} waypoint kustom. Upgrade ke Pro untuk waypoint tanpa batas.`,
+        },
+      }
+    }
+  }
+
+  // Rate limiting
+  const rateLimitResult = await checkRateLimit(
+    `route_update:${user.id}`,
+    RATE_LIMITS.saveRoutePerHour,
+    RATE_LIMITS.saveRouteWindowSeconds
+  )
+  if (!rateLimitResult.allowed) {
+    return {
+      ok: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Terlalu banyak permintaan pembaruan rute. Silakan coba lagi nanti.",
+      },
+    }
+  }
+
+  // Owner-scoped check
+  const existingRoute = await getRoute(user.id, parsed.data.routeId)
+  if (!existingRoute) {
+    return {
+      ok: false,
+      error: {
+        code: "NOT_FOUND",
+        message: "Rute tidak ditemukan atau Anda tidak memiliki akses.",
+      },
+    }
+  }
+
+  const currentMetrics = (existingRoute.metrics as Record<string, unknown>) || {}
+  const updatedMetrics = {
+    ...currentMetrics,
+    ...(parsed.data.raceDate !== undefined ? { raceDate: parsed.data.raceDate ?? undefined } : {}),
+    ...(parsed.data.waypoints !== undefined ? { waypoints: parsed.data.waypoints } : {}),
+  }
+
+  try {
+    const updated = await updateRoute(user.id, parsed.data.routeId, {
+      ...(parsed.data.name ? { name: parsed.data.name } : {}),
+      metrics: updatedMetrics,
+    })
+
+    if (!updated) {
+      return {
+        ok: false,
+        error: {
+          code: "NOT_FOUND",
+          message: "Gagal memperbarui rute.",
+        },
+      }
+    }
+
+    return {
+      ok: true,
+      data: {
+        routeId: updated.id,
+        name: updated.name,
+      },
+    }
+  } catch (err) {
+    console.error("Failed to update route in DB:", err)
+    return {
+      ok: false,
+      error: {
+        code: "DB_ERROR",
+        message: "Gagal memperbarui rute ke database.",
+      },
+    }
   }
 }

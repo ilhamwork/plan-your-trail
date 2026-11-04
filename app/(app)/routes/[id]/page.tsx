@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { requireUser } from "@/lib/auth"
 import { getRoute } from "@/lib/db/queries/routes"
 import { Header } from "@/components/trail/Header"
+import { TierAnnouncementBanner } from "@/components/trail/TierAnnouncementBanner"
 import { RouteDetailView } from "@/components/routes/RouteDetailView"
 import { analyzeSegments, buildWaypointSegments } from "@/lib/segment-analysis"
 import type { GPXData, RouteStats, TrackPoint, Waypoint } from "@/lib/types"
@@ -10,9 +11,20 @@ interface RouteDetailPageProps {
   params: Promise<{ id: string }> | { id: string }
 }
 
-export async function generateMetadata() {
-  return {
-    title: "Detail Rute | PlanYourTrail.run",
+export async function generateMetadata({ params }: RouteDetailPageProps) {
+  try {
+    const user = await requireUser()
+    const resolvedParams = await Promise.resolve(params)
+    const savedRoute = await getRoute(user.id, resolvedParams.id)
+    return {
+      title: savedRoute
+        ? `${savedRoute.name} — Analisis Rute | PlanYourTrail.run`
+        : "Detail Rute | PlanYourTrail.run",
+    }
+  } catch {
+    return {
+      title: "Detail Rute | PlanYourTrail.run",
+    }
   }
 }
 
@@ -57,15 +69,20 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
       <Header />
+      <TierAnnouncementBanner />
 
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6">
         <RouteDetailView
           routeId={savedRoute.id}
           routeName={savedRoute.name}
           gpxData={gpxData}
           raceDate={metrics.raceDate}
-          runnerName={metrics.runnerName}
-          createdAt={savedRoute.createdAt ? new Date(savedRoute.createdAt).toISOString() : undefined}
+          runnerName={metrics.runnerName || savedRoute.userName || undefined}
+          createdAt={
+            savedRoute.createdAt
+              ? new Date(savedRoute.createdAt).toISOString()
+              : undefined
+          }
         />
       </main>
     </div>
