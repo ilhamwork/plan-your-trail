@@ -244,20 +244,20 @@ export function RouteDetailView({
       <div className="flex items-center justify-between">
         <Link
           href="/routes"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1B4332] transition hover:underline"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-semibold text-[#1B4332] transition hover:bg-white/60 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-4 w-4" />
           <span>Kembali ke Rute Saya</span>
         </Link>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400">
-            <Cloud className="h-3 w-3 text-emerald-600" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#4B5563] shadow-2xs">
+            <Cloud className="h-3.5 w-3.5 text-[#1B4332]" />
             ID: {routeId.slice(0, 8)}
           </span>
         </div>
       </div>
 
-      {/* Main Analysis Grid — Identical to app/page.tsx layout */}
+      {/* Main Analysis Grid - Identical to app/page.tsx layout */}
       <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_420px] lg:items-start lg:gap-6">
         {/* Left Column (Main Analysis Content on Desktop) */}
         <div className="contents lg:flex lg:flex-col lg:gap-5">
@@ -362,68 +362,70 @@ export function RouteDetailView({
           </motion.div>
         </div>
 
-        {/* Right Column (Sidebar — Sticky on Desktop) */}
+        {/* Right Column (Sidebar - Sticky on Desktop) */}
         <div className="contents lg:sticky lg:top-15 lg:flex lg:flex-col lg:gap-5">
-          {/* Saved Route Actions Card — Replaces UploadCard */}
+          {/* Saved Route Actions Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="order-1 lg:order-0"
           >
-            <div className="overflow-hidden rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
-                    <CloudCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3 py-1 text-xs font-semibold text-[#1B4332]">
+                    <CloudCheck className="h-3.5 w-3.5 text-[#1B4332]" />
                     Rute Tersimpan di Cloud
                   </span>
                   {formattedDate && (
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-xs text-[#4B5563]">
                       Tersimpan sejak {formattedDate}
                     </p>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsEditingDetails(true)}
-                    className="rounded-lg border border-gray-200 bg-white p-2 text-xs font-semibold text-gray-700 shadow-xs transition hover:border-[#1B4332] hover:bg-gray-50 active:scale-95"
+                    className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#2D3436] transition hover:border-[#1B4332] hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
                     title="Ubah Nama & Tanggal Race"
+                    aria-label="Ubah Nama & Tanggal Race"
                   >
-                    <Pencil className="h-3.5 w-3.5 text-gray-600" />
+                    <Pencil className="h-4 w-4" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setShowDeleteModal(true)}
-                    className="rounded-lg border border-red-200 bg-red-50/60 p-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 active:scale-95"
+                    className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-red-200 bg-red-50/70 text-[#B91C1C] transition hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C] active:scale-95"
                     title="Hapus Rute"
+                    aria-label="Hapus Rute"
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+              <div className="mt-4 flex items-center gap-2.5 border-t border-[#E5E7EB] pt-4">
                 <a
                   href={`/api/routes/${routeId}/gpx`}
                   download
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-xs transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-white active:scale-95"
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-4 text-xs font-semibold text-[#2D3436] transition hover:bg-[#1B4332] hover:border-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.99]"
                   title="Download file GPX asli dari cloud"
                 >
-                  <Download className="h-3.5 w-3.5" />
+                  <Download className="h-4 w-4" />
                   <span>Download GPX Asli</span>
                 </a>
 
                 <button
                   type="button"
                   onClick={() => setShowShareModal(true)}
-                  className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-[#1B4332] shadow-xs transition hover:bg-[#1B4332]/5 active:scale-95"
+                  className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-4 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.99]"
                   title="Bagikan rute"
                 >
-                  <Share2 className="h-3.5 w-3.5" />
+                  <Share2 className="h-4 w-4" />
                   <span>Bagikan</span>
                 </button>
               </div>

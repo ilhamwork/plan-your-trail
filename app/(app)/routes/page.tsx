@@ -15,16 +15,16 @@ export default async function RoutesPage() {
   const userLimits = limits(user)
 
   return (
-    <div className="min-h-screen bg-[#FAF6F1]">
+    <div className="min-h-screen bg-[#FAF6F1] pb-24 sm:pb-14">
       <Header />
 
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-[#1B4332] sm:text-3xl">
+          <h1 className="text-3xl font-bold tracking-tight text-[#2D3436]">
             Rute Saya
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Daftar rute trail running yang tersimpan di akun Anda.
+          <p className="mt-1 text-sm text-[#4B5563]">
+            Koleksi rute trail running yang tersimpan di akun kamu dan siap dianalisis kapan saja.
           </p>
         </div>
 

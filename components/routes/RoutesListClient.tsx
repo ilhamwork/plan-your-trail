@@ -41,28 +41,26 @@ export function RoutesListClient({
 
   return (
     <div>
-      {/* Quota & Limit Notice */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">
-              {t("account.routesUsage")}:
-            </span>
-            <span className="rounded-md bg-[#1B4332]/10 px-2 py-0.5 text-xs font-bold text-[#1B4332]">
+      {/* Quota & Action Bar */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 py-1.5 text-xs font-semibold text-[#2D3436] shadow-2xs">
+            <span className="text-[#4B5563]">{t("account.routesUsage")}:</span>
+            <span className="font-bold text-[#1B4332]">
               {maxRoutes !== null
                 ? t("account.routesCount", { used: activeCount, max: maxRoutes })
-                : `${activeCount} ${t("account.unlimited")}`}
+                : `${activeCount} (${t("account.unlimited")})`}
             </span>
-            <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-              ({currentPlan} tier)
-            </span>
-          </div>
+          </span>
+          <span className="rounded-full bg-[#F1EDE8] px-3 py-1 text-xs font-semibold text-[#1B4332]">
+            Paket {currentPlan === "pro" ? "Pro" : "Free"}
+          </span>
         </div>
 
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#1B4332] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46]"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-5 text-sm font-semibold text-[#FAF6F1] shadow-xs transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
           >
             <PlusCircle className="h-4 w-4" />
             <span>{t("routes.uploadNew")}</span>
@@ -72,8 +70,11 @@ export function RoutesListClient({
 
       {/* Limit Reached Banner */}
       {isLimitReached && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+        <div
+          role="status"
+          className="mb-8 flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900"
+        >
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
           <div className="text-sm">
             <p className="font-semibold">{t("routes.limitReached")}</p>
           </div>
@@ -82,24 +83,26 @@ export function RoutesListClient({
 
       {/* Routes Grid or Empty State */}
       {routes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-[#1B4332]">
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-[#E5E7EB] bg-white px-6 py-14 text-center shadow-[0_6px_20px_rgba(0,0,0,0.04)] sm:px-12">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FAF6F1] text-[#1B4332]">
             <Map className="h-8 w-8" />
           </div>
-          <h3 className="mt-4 text-lg font-bold text-gray-900">{t("routes.emptyTitle")}</h3>
-          <p className="mt-1 max-w-sm text-sm text-gray-500">
+          <h2 className="mt-5 text-xl font-bold text-[#2D3436]">
+            {t("routes.emptyTitle")}
+          </h2>
+          <p className="mt-1.5 max-w-sm text-sm text-[#4B5563]">
             {t("routes.emptyDesc")}
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#1B4332] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2D5A46]"
+            className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-6 text-sm font-semibold text-[#FAF6F1] shadow-xs transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
           >
             <PlusCircle className="h-4 w-4" />
             <span>{t("routes.uploadNew")}</span>
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {routes.map((route) => (
             <RouteCard
               key={route.id}

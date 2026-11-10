@@ -11,28 +11,28 @@ const FEATURES = [
     title: "Route Map",
     desc: "Interactive 3D map",
     color: "text-[#2A9D8F]",
-    bg: "bg-[#2A9D8F]/5",
+    bg: "bg-[#2A9D8F]/10",
   },
   {
     icon: BarChart3,
     title: "Elevation Profile",
     desc: "Detailed elevation chart",
-    color: "text-[#F4A261]",
-    bg: "bg-[#F4A261]/5",
+    color: "text-[#E76F51]",
+    bg: "bg-[#E76F51]/10",
   },
   {
     icon: Waypoints,
     title: "Segment Breakdown",
     desc: "Auto-detected segments",
-    color: "text-[#E9C46A]",
-    bg: "bg-[#E9C46A]/5",
+    color: "text-[#1B4332]",
+    bg: "bg-[#1B4332]/10",
   },
   {
     icon: CloudSun,
     title: "Weather Forecast",
     desc: "Forecast along the route",
     color: "text-[#457B9D]",
-    bg: "bg-[#457B9D]/5",
+    bg: "bg-[#457B9D]/10",
   },
 ]
 
@@ -94,10 +94,10 @@ export function EmptyState({
         transition={{ delay: 0.3 }}
         className="mt-6 text-center"
       >
-        <p className="text-lg font-semibold text-gray-500">
+        <p className="text-lg font-semibold text-[#4B5563]">
           Analyze your trail route.
         </p>
-        <p className="text-lg font-semibold text-gray-500">
+        <p className="text-lg font-semibold text-[#4B5563]">
           Plan your strategy.
         </p>
       </motion.div>
@@ -112,13 +112,13 @@ export function EmptyState({
         {FEATURES.map((f) => (
           <div
             key={f.title}
-            className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+            className="rounded-xl border border-[#E5E7EB] bg-white p-4 shadow-xs"
           >
             <div className={`mb-2 inline-flex rounded-lg p-2 ${f.bg}`}>
               <f.icon className={`h-5 w-5 ${f.color}`} />
             </div>
             <p className="text-sm font-semibold text-[#2D3436]">{f.title}</p>
-            <p className="text-xs text-gray-400">{f.desc}</p>
+            <p className="text-xs text-[#4B5563]">{f.desc}</p>
           </div>
         ))}
       </motion.div>

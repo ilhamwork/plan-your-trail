@@ -107,7 +107,7 @@ export const UploadCard = memo(function UploadCard({
       <div className="flex flex-col gap-4">
         <div
           className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
-            hasFile ? "p-3" : "p-10 text-center"
+            hasFile ? "p-3" : "p-8 text-center sm:p-10"
           } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""} ${
             isBusy ? "pointer-events-none opacity-90" : ""
           }`}
@@ -142,7 +142,7 @@ export const UploadCard = memo(function UploadCard({
                   <p className="text-sm font-bold text-white">
                     {t("common.loading")}
                   </p>
-                  <p className="text-[11px] font-medium text-white/60">
+                  <p className="text-[11px] font-medium text-[#FAF6F1]/80">
                     GPX analysis
                   </p>
                 </div>
@@ -162,7 +162,7 @@ export const UploadCard = memo(function UploadCard({
                   <p className="truncate text-sm font-bold text-white">
                     {fileName}
                   </p>
-                  <p className="text-[10px] font-medium text-white/50">
+                  <p className="text-[10px] font-medium text-[#FAF6F1]/80">
                     GPX loaded • {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB max
                   </p>
                 </div>
@@ -180,11 +180,13 @@ export const UploadCard = memo(function UploadCard({
                     <FileUp className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-lg font-bold">{t("home.upload.dropTitle")}</p>
-                    <p className="text-sm text-white/50">
+                    <p className="text-lg font-bold text-[#FAF6F1]">
+                      {t("home.upload.dropTitle")}
+                    </p>
+                    <p className="text-sm text-[#FAF6F1]/80">
                       {t("home.upload.dropSubtitle")}
                     </p>
-                    <p className="mt-1 text-[10px] font-medium text-white/30">
+                    <p className="mt-1 text-[11px] font-medium text-[#FAF6F1]/75">
                       (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
                     </p>
                   </div>
@@ -202,27 +204,25 @@ export const UploadCard = memo(function UploadCard({
             className="flex flex-col items-center gap-3"
           >
             <div className="flex w-full items-center gap-3">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                OR
+              <div className="h-px flex-1 bg-[#E5E7EB]" />
+              <span className="text-xs font-medium text-[#4B5563]">
+                atau
               </span>
-              <div className="h-px flex-1 bg-gray-200" />
+              <div className="h-px flex-1 bg-[#E5E7EB]" />
             </div>
 
             <button
+              type="button"
               onClick={handleLoadExample}
               disabled={isBusy}
-              className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#E76F51] bg-white px-4 py-2 text-sm font-black text-[#E76F51] shadow-sm transition-all hover:bg-[#E76F51] hover:text-white active:scale-[0.98] disabled:opacity-50"
+              className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#1B4332] bg-white px-4 py-2 text-sm font-semibold text-[#1B4332] shadow-2xs transition-all hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.98] disabled:opacity-50"
             >
               {isLoadingExample ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#E76F51]/20 border-t-[#E76F51]" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B4332]/20 border-t-[#1B4332]" />
               ) : (
                 "Try GPX Example"
               )}
             </button>
-            <p className="text-center text-[11px] font-medium text-gray-400">
-              {t("home.upload.exampleBtn")}
-            </p>
           </motion.div>
         )}
       </div>
@@ -233,7 +233,8 @@ export const UploadCard = memo(function UploadCard({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-2 text-center text-sm text-red-500"
+            role="alert"
+            className="mt-2 text-center text-sm font-medium text-[#B91C1C]"
           >
             {error}
           </motion.p>

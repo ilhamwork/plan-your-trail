@@ -38,9 +38,10 @@ export function SignOutButton({ className, children }: SignOutButtonProps) {
       type="button"
       onClick={handleSignOut}
       disabled={loading}
+      aria-label="Keluar dari akun"
       className={
         className ||
-        "inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+        "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-4 py-2 text-sm font-semibold text-[#2D3436] transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50"
       }
     >
       {loading ? (

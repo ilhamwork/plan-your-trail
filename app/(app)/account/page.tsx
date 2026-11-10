@@ -2,131 +2,230 @@ import Link from "next/link"
 import { requireUser } from "@/lib/auth"
 import { limits } from "@/lib/entitlements"
 import { SignOutButton } from "@/components/auth/SignOutButton"
+import { Header } from "@/components/trail/Header"
 import {
   CloudSun,
   MapPin,
   Clock,
-  Sparkles,
-  ArrowLeft,
-  CheckCircle2,
+  Compass,
+  Route as RouteIcon,
+  ShieldCheck,
+  HardDriveUpload,
+  FolderHeart,
+  ChevronRight,
 } from "lucide-react"
-
-
 
 export const dynamic = "force-dynamic"
 
 export default async function AccountPage() {
   const user = await requireUser()
   const userLimits = limits(user)
+  const initial = user.email.charAt(0).toUpperCase()
+  const maxUploadMb = Math.round(userLimits.maxUploadBytes / (1024 * 1024))
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        {/* Navigation back */}
-        <div className="mb-6 flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs hover:bg-gray-100"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Kembali ke Analisis</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-              <CheckCircle2 className="h-3 w-3" />
-              Paket: {user.plan.toUpperCase()}
-            </span>
-          </div>
+    <div className="min-h-screen bg-[#FAF6F1] pb-24 sm:pb-14">
+      <Header />
+
+      <main className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
+        {/* Page Heading */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-[#2D3436]">
+            Profil
+          </h1>
+          <p className="mt-1 text-sm text-[#4B5563]">
+            Kelola informasi akun, kuota penyimpanan rute, dan fitur analisis trail kamu.
+          </p>
         </div>
 
-        {/* Profile Card */}
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1B4332] text-xl font-bold text-white shadow-xs">
-                {user.email.charAt(0).toUpperCase()}
+        {/* Two-column Airbnb Profile Layout */}
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr] lg:gap-12">
+          {/* Left Column: Airbnb Identity Card */}
+          <div className="rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-[0_6px_20px_rgba(0,0,0,0.06)]">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#1B4332] text-3xl font-bold text-[#FAF6F1] shadow-sm">
+                {initial}
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{user.email}</h1>
-              </div>
+              <h2 className="mt-4 max-w-full truncate text-lg font-bold text-[#2D3436]">
+                {user.email}
+              </h2>
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3.5 py-1 text-xs font-semibold text-[#1B4332]">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Paket {user.plan === "pro" ? "Pro" : "Free"}</span>
+              </span>
             </div>
-            <div>
-              <SignOutButton />
-            </div>
-          </div>
 
-          {/* Tier Limits & Benefits */}
-          <div className="mt-8">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">
-              Batas & Fitur Paket Kamu
-            </h2>
+            <div className="my-6 border-t border-[#E5E7EB]" />
 
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-4">
-                <div className="text-xs font-medium text-gray-500">
-                  Batas Ukuran Upload GPX
-                </div>
-                <div className="mt-1 text-2xl font-bold text-gray-900">
-                  {Math.round(userLimits.maxUploadBytes / (1024 * 1024))} MB
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Dua kali lipat dari batas upload anonim (5 MB).
-                </p>
+            <dl className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <dt className="text-[#4B5563]">Batas upload GPX</dt>
+                <dd className="font-semibold text-[#2D3436]">{maxUploadMb} MB</dd>
               </div>
-
-              <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-4">
-                <div className="text-xs font-medium text-gray-500">
-                  Kapasitas Penyimpanan Rute
-                </div>
-                <div className="mt-1 text-2xl font-bold text-gray-900">
-                  {userLimits.maxSavedRoutes ?? "Unlimited"} Rute
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Akses rute tersimpan dari perangkat mana saja.
-                </p>
+              <div className="flex items-center justify-between">
+                <dt className="text-[#4B5563]">Kapasitas rute</dt>
+                <dd className="font-semibold text-[#2D3436]">
+                  {userLimits.maxSavedRoutes ?? "Tanpa batas"}{" "}
+                  {userLimits.maxSavedRoutes !== null ? "rute" : ""}
+                </dd>
               </div>
-            </div>
-          </div>
+            </dl>
 
-          {/* Active Features */}
-          <div className="mt-8 border-t border-gray-100 pt-6">
-            <h3 className="text-sm font-bold text-gray-900">
-              Fitur Aktif di Akun Kamu
-            </h3>
-            <ul className="mt-3 space-y-2 text-xs text-gray-600">
-              <li className="flex items-center gap-2">
-                <CloudSun className="h-4 w-4 text-[#2A9D8F]" />
-                <span>Prakiraan cuaca per sesi (Pagi, Siang, Sore, Malam) untuk setiap rute</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-[#E76F51]" />
-                <span>Waypoint GPX dengan label jarak di chart elevasi</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#F4A261]" />
-                <span>Estimasi waktu finish dasar berdasarkan input pace (min/km)</span>
-              </li>
-            </ul>
-          </div>
+            <div className="mt-6 space-y-2.5">
+              <Link
+                href="/routes"
+                className="flex h-11 w-full items-center justify-between rounded-xl bg-[#FAF6F1] px-4 text-sm font-semibold text-[#1B4332] transition hover:bg-[#F1EDE8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <RouteIcon className="h-4 w-4" />
+                  <span>Lihat Rute Tersimpan</span>
+                </span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
 
-          {/* Pro Teaser */}
-          <div className="mt-8 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
-            <div className="flex items-start gap-3">
-              <Sparkles className="mt-0.5 h-5 w-5 text-amber-600" />
-              <div>
-                <h4 className="text-sm font-semibold text-amber-900">
-                  Fitur Pro (Segera Hadir di 2027)
-                </h4>
-                <p className="mt-0.5 text-xs text-amber-800">
-                  Manajemen waypoint kustom tanpa batas, prakiraan cuaca per jam, cutoff estimator per checkpoint, ekspor PDF race brief,
-                  dan penyimpanan rute tanpa batas.
-                </p>
-              </div>
+              <SignOutButton className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-4 text-sm font-semibold text-[#2D3436] transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50">
+                <span>Keluar dari Akun</span>
+              </SignOutButton>
             </div>
           </div>
 
+          {/* Right Column: Quota Tiles & Feature Rows */}
+          <div className="space-y-8">
+            {/* Quota Section */}
+            <section aria-labelledby="quota-heading">
+              <h2
+                id="quota-heading"
+                className="text-xl font-bold tracking-tight text-[#2D3436]"
+              >
+                Kuota & Penyimpanan
+              </h2>
+              <p className="mt-1 text-sm text-[#4B5563]">
+                Kapasitas aktif pada paket {user.plan === "pro" ? "Pro" : "Free"} kamu saat ini.
+              </p>
+
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
+                    <HardDriveUpload className="h-5 w-5" />
+                  </div>
+                  <div className="mt-4 text-2xl font-bold text-[#2D3436]">
+                    {maxUploadMb} MB
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold text-[#2D3436]">
+                    Batas Ukuran Upload GPX
+                  </div>
+                  <p className="mt-1 text-xs text-[#4B5563]">
+                    Dua kali lipat dari batas ukuran file pengunjung anonim (5 MB).
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
+                    <FolderHeart className="h-5 w-5" />
+                  </div>
+                  <div className="mt-4 text-2xl font-bold text-[#2D3436]">
+                    {userLimits.maxSavedRoutes ?? "Tanpa Batas"}{" "}
+                    {userLimits.maxSavedRoutes !== null ? "Rute" : ""}
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold text-[#2D3436]">
+                    Kapasitas Penyimpanan Cloud
+                  </div>
+                  <p className="mt-1 text-xs text-[#4B5563]">
+                    Sinkronisasi otomatis agar rute dapat dibuka dari perangkat mana saja.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Active Features List (Airbnb Settings Row Style) */}
+            <section
+              aria-labelledby="active-features-heading"
+              className="rounded-2xl border border-[#E5E7EB] bg-white px-6 py-2"
+            >
+              <div className="border-b border-[#E5E7EB] py-4">
+                <h2
+                  id="active-features-heading"
+                  className="text-lg font-bold text-[#2D3436]"
+                >
+                  Fitur Aktif di Akun Kamu
+                </h2>
+              </div>
+
+              <ul className="divide-y divide-[#E5E7EB]">
+                <li className="flex items-start gap-4 py-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/10 text-[#2A9D8F]">
+                    <CloudSun className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#2D3436]">
+                      Prakiraan Cuaca per Sesi
+                    </p>
+                    <p className="mt-0.5 text-xs text-[#4B5563]">
+                      Data suhu, peluang hujan, dan kecepatan angin untuk sesi Pagi, Siang, Sore, serta Malam di koordinat rute.
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex items-start gap-4 py-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E76F51]/10 text-[#E76F51]">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#2D3436]">
+                      Waypoint GPX pada Grafik Elevasi
+                    </p>
+                    <p className="mt-0.5 text-xs text-[#4B5563]">
+                      Penanda pos pemeriksaan dan jarak kilometer tampil langsung di atas profil elevasi.
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex items-start gap-4 py-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1B4332]/10 text-[#1B4332]">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#2D3436]">
+                      Kalkulator Estimasi Waktu Finish
+                    </p>
+                    <p className="mt-0.5 text-xs text-[#4B5563]">
+                      Perhitungan total waktu tempuh berdasarkan target pace (menit/km) dan total tanjakan rute.
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </section>
+
+            {/* Pro Roadmap Banner */}
+            <section
+              aria-labelledby="pro-roadmap-heading"
+              className="rounded-2xl border border-[#E5E7EB] bg-white p-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F1EDE8] text-[#1B4332]">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3
+                      id="pro-roadmap-heading"
+                      className="text-base font-bold text-[#2D3436]"
+                    >
+                      Rencana Fitur Pro
+                    </h3>
+                    <span className="rounded-full bg-[#F1EDE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+                      Segera Hadir 2027
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
+                    Manajemen waypoint kustom dan catatan nutrisi, prakiraan cuaca per jam, kalkulator cutoff time tiap pos, ekspor PDF race brief, serta kapasitas penyimpanan rute tanpa batas.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

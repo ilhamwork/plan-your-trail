@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: RouteDetailPageProps) {
     const savedRoute = await getRoute(user.id, resolvedParams.id)
     return {
       title: savedRoute
-        ? `${savedRoute.name} — Analisis Rute | PlanYourTrail.run`
+        ? `${savedRoute.name} - Analisis Rute | PlanYourTrail.run`
         : "Detail Rute | PlanYourTrail.run",
     }
   } catch {
@@ -67,7 +67,7 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF6F1]">
+    <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-0">
       <Header />
       <TierAnnouncementBanner />
 

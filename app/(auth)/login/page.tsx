@@ -20,11 +20,6 @@ function LoginForm() {
   const [isOffline, setIsOffline] = useState(false)
 
   useEffect(() => {
-    const prevBodyOverflow = document.body.style.overflow
-    const prevHtmlOverflow = document.documentElement.style.overflow
-    document.body.style.overflow = "hidden"
-    document.documentElement.style.overflow = "hidden"
-
     if (typeof navigator !== "undefined") {
       setIsOffline(!navigator.onLine)
     }
@@ -34,8 +29,6 @@ function LoginForm() {
     window.addEventListener("online", handleOnline)
     window.addEventListener("offline", handleOffline)
     return () => {
-      document.body.style.overflow = prevBodyOverflow
-      document.documentElement.style.overflow = prevHtmlOverflow
       window.removeEventListener("online", handleOnline)
       window.removeEventListener("offline", handleOffline)
     }
@@ -113,7 +106,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex h-dvh flex-col items-center justify-center overflow-hidden bg-white px-4 sm:px-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-md">
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
@@ -274,7 +267,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-dvh items-center justify-center overflow-hidden bg-white">
+        <div className="flex min-h-screen items-center justify-center bg-white">
           <Loader2 className="h-8 w-8 animate-spin text-[#1B4332]" />
         </div>
       }

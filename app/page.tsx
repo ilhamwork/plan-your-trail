@@ -227,7 +227,7 @@ export default function Home() {
   }, [gpxData, sortedWaypoints])
 
   return (
-    <div className="min-h-screen bg-[#FAF6F1]">
+    <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-0">
       <Header />
       <TierAnnouncementBanner />
 
