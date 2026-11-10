@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Loader2, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
@@ -11,6 +11,17 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const prevBodyOverflow = document.body.style.overflow
+    const prevHtmlOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = "hidden"
+    document.documentElement.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prevBodyOverflow
+      document.documentElement.style.overflow = prevHtmlOverflow
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,118 +53,118 @@ export default function ForgotPasswordPage() {
 
       setSuccess(true)
     } catch (err) {
-      setError(parseAuthError(err, "Terjadi gangguan koneksi atau server. Silakan coba lagi nanti."))
+      setError(
+        parseAuthError(
+          err,
+          "Terjadi gangguan koneksi atau server. Silakan coba lagi nanti."
+        )
+      )
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Link href="/">
-            <div className="flex items-center gap-2 rounded-xl bg-[#1B4332] px-4 py-2 shadow-md">
-              <Image
-                src="/text-logo-white.png"
-                alt="PlanYourTrail"
-                width={140}
-                height={35}
-                priority
-              />
-            </div>
+    <div className="flex h-dvh flex-col items-center justify-center overflow-hidden bg-white px-4 sm:px-6">
+      <div className="w-full max-w-md">
+        {/* Brand mark & heading */}
+        <div className="flex flex-col items-center text-center">
+          <Link
+            href="/"
+            className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1B4332]"
+          >
+            <Image
+              src="/text-logo.png"
+              alt="PlanYourTrail"
+              width={148}
+              height={36}
+              priority
+              className="h-auto w-36"
+            />
           </Link>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#2D3436]">
+            Lupa Kata Sandi
+          </h2>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Masukkan email akun kamu untuk menerima tautan atur ulang kata sandi.
+          </p>
         </div>
-        <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
-          Lupa Kata Sandi
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Masukkan email akun kamu untuk menerima tautan atur ulang kata sandi.
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="rounded-2xl border border-gray-100 bg-white px-6 py-8 shadow-sm sm:px-10">
-          {success ? (
-            <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                <CheckCircle className="h-6 w-6 text-emerald-600" />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">
-                Periksa Email Kamu
-              </h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Jika email <span className="font-semibold text-gray-900">{email}</span> terdaftar,
-                kami telah mengirimkan petunjuk untuk mengatur ulang kata sandi.
-              </p>
-              <div className="mt-6">
-                <Link
-                  href="/login"
-                  className="inline-flex w-full justify-center rounded-lg bg-[#1B4332] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#143326]"
-                >
-                  Kembali ke Halaman Masuk
-                </Link>
-              </div>
+        {success ? (
+          <div className="mt-5 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+              <CheckCircle className="h-6 w-6 text-emerald-700" />
             </div>
-          ) : (
-            <>
-              {error && (
-                <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Alamat Email
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="runner@example.com"
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1B4332] focus:outline-hidden focus:ring-1 focus:ring-[#1B4332]"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex w-full justify-center rounded-lg bg-[#1B4332] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#143326] focus:outline-hidden disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      "Kirim Tautan Atur Ulang"
-                    )}
-                  </button>
-                </div>
-              </form>
-
-              <div className="mt-6 text-center">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Kembali ke Halaman Masuk</span>
-                </Link>
+            <h3 className="mt-4 text-lg font-semibold text-[#2D3436]">
+              Periksa Email Kamu
+            </h3>
+            <p className="mt-2 text-sm text-[#6B7280]">
+              Jika email <span className="font-semibold text-[#2D3436]">{email}</span> terdaftar,
+              kami telah mengirimkan petunjuk untuk mengatur ulang kata sandi.
+            </p>
+            <div className="mt-5">
+              <Link
+                href="/login"
+                className="flex h-12 w-full items-center justify-center rounded-xl bg-[#1B4332] px-4 text-base font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              >
+                Kembali ke Halaman Masuk
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            {error && (
+              <div
+                role="alert"
+                className="mt-4 flex items-start gap-2.5 rounded-xl border border-[#B91C1C]/30 bg-red-50 p-3 text-xs font-medium text-[#B91C1C]"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
               </div>
-            </>
-          )}
-        </div>
+            )}
+
+            <form className="mt-5 space-y-3" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="email" className="sr-only">
+                  Alamat Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Alamat email"
+                  className="block h-12 w-full rounded-xl border border-[#6B7280] bg-white px-4 text-base text-[#2D3436] placeholder:text-[#6B7280] transition outline-none focus-visible:border-[#1B4332] focus-visible:ring-2 focus-visible:ring-[#1B4332]/25"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-[#1B4332] px-4 text-base font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "Kirim Tautan Atur Ulang"
+                )}
+              </button>
+            </form>
+
+            <div className="mt-4 flex justify-center">
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-semibold text-[#1B4332] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Kembali ke Halaman Masuk</span>
+              </Link>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

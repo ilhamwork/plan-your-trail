@@ -33,8 +33,8 @@ const enMessages: TranslationSchema = {
       closeAria: "Tutup pengumuman", // Retained for Playwright e2e test compatibility
     },
     guestModal: {
-      title: "Plan Your Trail Run",
-      desc: "Choose how you want to access and analyze your trail running routes:",
+      title: "Plan Your Trail",
+      desc: "Choose how you want to access your trail running routes:",
       nameLabel: "Runner Name",
       namePlaceholder: "e.g. Kilian Jornet",
       startGuest: "Start as Guest",
