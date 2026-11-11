@@ -54,23 +54,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-4 py-8 sm:px-6 sm:py-12">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center bg-white px-4 py-8 sm:min-h-screen sm:px-6 sm:py-12">
       <div className="w-full max-w-md">
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
-          <Link
-            href="/"
-            className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1B4332]"
-          >
-            <Image
-              src="/text-logo.png"
-              alt="PlanYourTrail"
-              width={148}
-              height={36}
-              priority
-              className="h-auto w-36"
-            />
-          </Link>
           <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#2D3436]">
             Lupa Kata Sandi
           </h2>

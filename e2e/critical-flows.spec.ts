@@ -103,9 +103,17 @@ test.describe("Sprint 6 Critical Flows: Tier Banner, Anonymous Analysis, Gating 
     page,
     request,
   }) => {
-    // 1. /routes redirects unauthenticated visitor to /login
-    await page.goto("/routes")
+    // 1. /account redirects unauthenticated visitor to /login, while /routes shows guest CTA
+    await page.goto("/account")
     await expect(page).toHaveURL(/.*\/login.*/)
+
+    await page.goto("/routes")
+    await expect(
+      page.getByRole("heading", { name: "Simpan & Kelola Koleksi Rute Kamu" })
+    ).toBeVisible()
+    await expect(
+      page.getByRole("link", { name: "Masuk ke Akun" })
+    ).toBeVisible()
 
     // 2. /api/routes/[id]/gpx returns 401 when unauthenticated
     const gpxRes = await request.get(
