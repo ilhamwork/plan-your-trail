@@ -85,10 +85,10 @@ export function GatedPrompt({
             <Lock className="h-4 w-4" />
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <h4 className="heading-4 text-gray-900 dark:text-gray-100">
               {title}
             </h4>
-            <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
+            <p className="mt-0.5 body-sm dark:text-gray-400">
               {description}
             </p>
             <div className="mt-3 flex items-center gap-2">

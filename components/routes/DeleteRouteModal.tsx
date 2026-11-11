@@ -89,13 +89,13 @@ export function DeleteRouteModal({
             </div>
             <h3
               id="delete-route-title"
-              className="text-lg font-bold text-[#2D3436]"
+              className="heading-3"
             >
               {t("routes.deleteConfirmTitle")}
             </h3>
           </div>
 
-          <p className="mt-4 text-sm text-[#4B5563]">
+          <p className="mt-4 body-base text-[#4B5563]">
             Apakah Anda yakin ingin menghapus rute{" "}
             <span className="font-semibold text-[#2D3436]">
               &ldquo;{routeName}&rdquo;

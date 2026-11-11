@@ -80,11 +80,11 @@ export const ElevationChart = memo(function ElevationChart({
         <div>
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-[#F4A261]" />
-            <h3 className="text-sm font-bold text-[#2D3436]">
+            <h3 className="heading-3">
               Profil Elevasi
             </h3>
           </div>
-          <p className="mt-0.5 text-xs text-gray-400">
+          <p className="mt-0.5 body-sm">
             Geser kursor untuk melihat elevasi dan lokasi pada peta
           </p>
         </div>

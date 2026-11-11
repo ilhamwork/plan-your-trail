@@ -12,11 +12,11 @@ export const Footer = memo(function Footer({ runnerName }: FooterProps) {
 
   return (
     <footer className="pt-4 text-center">
-      <p className="text-sm text-[#4B5563] italic">
+      <p className="body-base text-[#4B5563] italic">
         Built by trail runner, for trail runners.
       </p>
       <div className="mt-3 flex flex-col items-center gap-1">
-        <p className="text-xs text-[#4B5563]">
+        <p className="body-sm text-[#4B5563]">
           Found a bug or have an idea?{" "}
           <button
             type="button"
@@ -26,7 +26,7 @@ export const Footer = memo(function Footer({ runnerName }: FooterProps) {
             Send feedback.
           </button>
         </p>
-        <p className="text-xs text-[#4B5563]">
+        <p className="body-sm text-[#4B5563]">
           © {new Date().getFullYear()} by{" "}
           <a
             href="https://instagram.com/ilhamontrail"

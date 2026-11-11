@@ -30,10 +30,10 @@ export default async function AccountPage() {
       <main className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
         {/* Page Heading */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-[#2D3436]">
+          <h1 className="heading-1">
             Profil
           </h1>
-          <p className="mt-1 text-sm text-[#4B5563]">
+          <p className="mt-1 text-subhead">
             Kelola informasi akun, kuota penyimpanan rute, dan fitur analisis trail kamu.
           </p>
         </div>
@@ -46,7 +46,7 @@ export default async function AccountPage() {
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#1B4332] text-3xl font-bold text-[#FAF6F1] shadow-sm">
                 {initial}
               </div>
-              <h2 className="mt-4 max-w-full truncate text-lg font-bold text-[#2D3436]">
+              <h2 className="heading-3 mt-4 max-w-full truncate text-base sm:text-lg font-bold tracking-tight text-[#2D3436]">
                 {user.email}
               </h2>
               <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3.5 py-1 text-xs font-semibold text-[#1B4332]">
@@ -95,11 +95,11 @@ export default async function AccountPage() {
             <section aria-labelledby="quota-heading">
               <h2
                 id="quota-heading"
-                className="text-xl font-bold tracking-tight text-[#2D3436]"
+                className="heading-2"
               >
                 Kuota & Penyimpanan
               </h2>
-              <p className="mt-1 text-sm text-[#4B5563]">
+              <p className="mt-1 text-subhead">
                 Kapasitas aktif pada paket {user.plan === "pro" ? "Pro" : "Free"} kamu saat ini.
               </p>
 
@@ -145,7 +145,7 @@ export default async function AccountPage() {
               <div className="border-b border-[#E5E7EB] py-4">
                 <h2
                   id="active-features-heading"
-                  className="text-lg font-bold text-[#2D3436]"
+                  className="heading-2"
                 >
                   Fitur Aktif di Akun Kamu
                 </h2>

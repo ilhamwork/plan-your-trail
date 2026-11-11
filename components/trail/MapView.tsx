@@ -86,7 +86,7 @@ export function MapView({
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <Map className="h-4 w-4 text-[#2A9D8F]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">Route Map</h3>
+          <h3 className="heading-3">Route Map</h3>
         </div>
         <div className="flex items-center gap-3">
           <button

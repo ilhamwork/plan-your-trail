@@ -73,7 +73,7 @@ export function FeedbackModal({
           >
             <div className="bg-[#1B4332] p-4 text-white">
               <div className="flex items-center justify-between">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
+                <h3 className="heading-3 flex items-center gap-2 text-white">
                   <MessageSquare className="h-5 w-5" />
                   Send Feedback
                 </h3>

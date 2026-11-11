@@ -38,11 +38,11 @@ export const SegmentList = memo(function SegmentList({
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <Waypoints className="h-4 w-4 text-[#E9C46A]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">
+          <h3 className="heading-3">
             Segment Breakdown
           </h3>
         </div>
-        <p className="mt-0.5 text-xs text-gray-400">
+        <p className="mt-0.5 body-sm">
           {tab === "waypoints"
             ? `${waypointSegments.length} segments • Based on checkpoint`
             : `${segments.length} segments • Based on gradient`}
@@ -142,7 +142,7 @@ function WaypointSegmentRow({
       >
         <div className="flex flex-1 items-center gap-2">
           <p
-            className={`text-sm font-semibold ${expanded ? "text-white" : "text-[#2D3436]"}`}
+            className={`heading-4 ${expanded ? "text-white" : "text-[#2D3436]"}`}
           >
             {segment.name}
           </p>

@@ -3,7 +3,6 @@
 import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import Image from "next/image"
 import { Loader2, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
 import { authClient, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 
@@ -73,10 +72,10 @@ function ResetPasswordForm() {
       <div className="w-full max-w-md">
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
-          <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#2D3436]">
+          <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
             Atur Ulang Kata Sandi
-          </h2>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          </h1>
+          <p className="mt-1 text-subhead text-sm sm:text-base text-[#4B5563]">
             Masukkan kata sandi baru untuk akun kamu.
           </p>
         </div>
@@ -86,10 +85,10 @@ function ResetPasswordForm() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="h-6 w-6 text-emerald-700" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-[#2D3436]">
+            <h2 className="mt-4 heading-2 text-xl sm:text-2xl font-bold tracking-tight text-[#2D3436]">
               Kata Sandi Berhasil Diperbarui
-            </h3>
-            <p className="mt-2 text-sm text-[#6B7280]">
+            </h2>
+            <p className="mt-2 text-subhead">
               Kata sandi kamu telah berhasil diubah. Silakan masuk dengan kata sandi baru kamu.
             </p>
             <div className="mt-5">

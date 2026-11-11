@@ -5,11 +5,11 @@ export function DonationSection() {
     <div className="rounded-2xl border border-[#1B4332]/10 bg-white p-6 text-center">
       <div className="mb-3 flex items-center justify-center gap-2">
         <Heart className="h-5 w-5 fill-[#E76F51] text-[#E76F51]" />
-        <span className="text-sm font-bold tracking-wider text-[#1B4332] uppercase">
+        <span className="heading-4 text-[#1B4332] uppercase tracking-wider">
           Support Development
         </span>
       </div>
-      <p className="mx-auto mb-4 max-w-md text-sm text-gray-600">
+      <p className="mx-auto mb-4 max-w-md body-base text-[#4B5563]">
         Planning your next adventure trail with this tool? Help support its growth
         for the trail community.
       </p>

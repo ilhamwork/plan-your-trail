@@ -36,8 +36,8 @@ export function ModalFormInfo({
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
           >
             <div className="bg-[#1B4332] p-5 text-white">
-              <h3 className="text-xl font-bold">Race Details</h3>
-              <p className="mt-1 text-sm text-white/80">
+              <h3 className="heading-2 text-white">Race Details</h3>
+              <p className="mt-1 text-subhead text-white/85">
                 Please provide information about this race.
               </p>
             </div>
@@ -45,7 +45,7 @@ export function ModalFormInfo({
             <form onSubmit={onSubmit} className="p-5">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
+                  <label className="text-overline mb-1.5 block text-gray-500">
                     Race Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">

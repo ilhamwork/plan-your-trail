@@ -123,14 +123,14 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
           <div className="flex items-start justify-between gap-2">
             <Link
               href={`/routes/${route.id}`}
-              className="line-clamp-1 text-base font-bold text-[#2D3436] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              className="heading-3 line-clamp-1 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               title={route.name}
             >
               {route.name}
             </Link>
           </div>
 
-          <p className="mt-1 text-sm font-medium text-[#4B5563]">
+          <p className="mt-1 body-medium text-[#4B5563]">
             <span>
               {t("routes.cardDistance")} {distanceKm} km
             </span>
@@ -142,7 +142,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
             </span>
           </p>
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#4B5563]">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 body-sm">
             {metrics?.raceDate ? (
               <span className="inline-flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5 text-[#1B4332]" />

@@ -139,7 +139,7 @@ export function ShareModal({
             className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-              <h3 className="flex items-center gap-2 text-lg font-bold text-[#1B4332]">
+              <h3 className="heading-3 flex items-center gap-2 text-[#1B4332]">
                 <Share2 className="h-5 w-5 text-[#2A9D8F]" />
                 Share Stats
               </h3>
@@ -154,10 +154,10 @@ export function ShareModal({
             <div className="px-6 py-8">
               <div className="space-y-6">
                 <div className="space-y-1 text-center">
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="body-medium text-[#4B5563]">
                     Your route stats are ready to share
                   </p>
-                  <p className="text-sm leading-relaxed text-gray-400">
+                  <p className="body-sm text-[#6B7280]">
                     Don&apos;t forget to tag{" "}
                     <span className="font-semibold text-[#1B4332]">
                       @ilhamontrail

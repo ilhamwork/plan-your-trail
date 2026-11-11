@@ -31,7 +31,7 @@ export const HeaderInfo = memo(function HeaderInfo({
     <div className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:flex-row md:items-center">
       <div className="flex w-full flex-col gap-1">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-[#1B4332]">
+          <h2 className="heading-2 flex items-center gap-2 text-[#1B4332]">
             <Flag className="h-5 w-5 text-[#2A9D8F]" />
             {raceName || "Unnamed Route"}
           </h2>

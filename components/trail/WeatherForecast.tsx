@@ -245,7 +245,7 @@ export const WeatherForecast = memo(function WeatherForecast({
         <div className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CloudSun className="h-4 w-4 text-[#457B9D]" />
-            <h3 className="text-sm font-bold text-[#2D3436]">
+            <h3 className="heading-3">
               Prakiraan Cuaca Rute
             </h3>
           </div>
@@ -278,10 +278,10 @@ export const WeatherForecast = memo(function WeatherForecast({
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1B4332]/10 text-[#1B4332]">
               <Lock className="h-5 w-5" />
             </div>
-            <h4 className="mt-2 text-sm font-bold text-gray-900">
+            <h4 className="heading-4 text-gray-900 mt-2">
               Buka Prakiraan Cuaca Lengkap
             </h4>
-            <p className="mt-1 max-w-sm text-xs text-gray-600">
+            <p className="body-sm text-gray-600 mt-1 max-w-sm">
               Daftar dalam 30 detik untuk melihat prakiraan cuaca per sesi
               (Pagi, Siang, Sore, Malam) di lokasi rute.
             </p>
@@ -318,18 +318,18 @@ export const WeatherForecast = memo(function WeatherForecast({
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <CloudSun className="h-4 w-4 text-[#457B9D]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">
+          <h3 className="heading-3">
             Prakiraan Cuaca Rute
           </h3>
         </div>
-        <p className="mt-0.5 text-xs text-gray-400">
+        <p className="mt-0.5 body-sm">
           Prakiraan cuaca per sesi race day di titik rute
         </p>
       </div>
 
       <div className="grid lg:grid-cols-2">
         <div className="px-4 pt-3 pb-2">
-          <p className="mb-1.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
+          <p className="mb-1.5 text-overline">
             Lokasi
           </p>
           <div className="relative">

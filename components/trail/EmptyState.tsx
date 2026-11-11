@@ -67,7 +67,7 @@ export function EmptyState({
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 text-center"
         >
-          <h2 className="text-2xl font-bold text-[#1B4332]">
+          <h2 className="heading-2 text-[#1B4332]">
             Hello, {sessionRunnerName}!
           </h2>
         </motion.div>
@@ -94,10 +94,10 @@ export function EmptyState({
         transition={{ delay: 0.3 }}
         className="mt-6 text-center"
       >
-        <p className="text-lg font-semibold text-[#4B5563]">
+        <p className="text-subhead font-medium text-[#4B5563]">
           Analyze your trail route.
         </p>
-        <p className="text-lg font-semibold text-[#4B5563]">
+        <p className="text-subhead font-medium text-[#4B5563]">
           Plan your strategy.
         </p>
       </motion.div>
@@ -117,8 +117,8 @@ export function EmptyState({
             <div className={`mb-2 inline-flex rounded-lg p-2 ${f.bg}`}>
               <f.icon className={`h-5 w-5 ${f.color}`} />
             </div>
-            <p className="text-sm font-semibold text-[#2D3436]">{f.title}</p>
-            <p className="text-xs text-[#4B5563]">{f.desc}</p>
+            <p className="heading-4">{f.title}</p>
+            <p className="body-sm">{f.desc}</p>
           </div>
         ))}
       </motion.div>

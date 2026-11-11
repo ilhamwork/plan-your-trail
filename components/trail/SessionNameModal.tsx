@@ -101,7 +101,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
               />
               <p
                 id="session-modal-desc"
-                className="mt-1.5 text-sm text-[#6B7280]"
+                className="mt-1.5 text-subhead"
               >
                 {t("home.guestModal.desc")}
               </p>

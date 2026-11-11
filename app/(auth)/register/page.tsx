@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { Loader2, AlertCircle, CheckCircle, WifiOff } from "lucide-react"
 import { signUp, signIn, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 import { trackEvent } from "@/lib/analytics/events"
@@ -105,10 +104,10 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
-          <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#2D3436]">
+          <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
             Daftar Akun
-          </h2>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          </h1>
+          <p className="mt-1 text-subhead text-sm sm:text-base text-[#4B5563]">
             Simpan hingga 3 rute, buka cuaca per sesi, dan hitung estimasi pace.
           </p>
         </div>
@@ -118,10 +117,10 @@ export default function RegisterPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="h-6 w-6 text-emerald-700" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-[#2D3436]">
+            <h2 className="mt-4 heading-2 text-xl sm:text-2xl font-bold tracking-tight text-[#2D3436]">
               Verifikasi Email Kamu
-            </h3>
-            <p className="mt-2 text-sm text-[#6B7280]">
+            </h2>
+            <p className="mt-2 text-subhead text-sm sm:text-base text-[#4B5563]">
               Kami telah mengirimkan tautan verifikasi ke{" "}
               <span className="font-semibold text-[#2D3436]">{email}</span>.
               Silakan buka email kamu dan klik tautan untuk mengaktifkan akun.

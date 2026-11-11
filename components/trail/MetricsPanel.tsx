@@ -119,7 +119,7 @@ export const MetricsPanel = memo(function MetricsPanel({ stats }: MetricsPanelPr
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1">
-              <p className="text-[11px] font-medium tracking-wide text-gray-400">
+              <p className="body-sm-medium text-[#4B5563]">
                 {card.label}
               </p>
               {card.tooltip && (
@@ -144,7 +144,7 @@ export const MetricsPanel = memo(function MetricsPanel({ stats }: MetricsPanelPr
                 </div>
               )}
             </div>
-            <p className="text-lg leading-tight font-bold text-[#2D3436]">
+            <p className="heading-3 leading-tight text-[#2D3436]">
               {card.value}
             </p>
           </div>

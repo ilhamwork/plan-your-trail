@@ -188,7 +188,7 @@ export const WaypointPanel = memo(function WaypointPanel({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-[#E76F51]" />
-            <h3 className="text-sm font-bold text-[#2D3436]">
+            <h3 className="heading-3">
               {editingId ? "Edit Waypoint" : "Waypoint Rute"}
             </h3>
             {!user || !canManageWaypoints ? (
@@ -226,7 +226,7 @@ export const WaypointPanel = memo(function WaypointPanel({
             Download GPX
           </button>
         </div>
-        <p className="mt-0.5 text-xs text-gray-400">
+        <p className="mt-0.5 body-sm">
           {editingId
             ? "Ubah rincian waypoint terpilih"
             : "Kelola checkpoint, pos air, atau aid station"}
@@ -364,7 +364,7 @@ export const WaypointPanel = memo(function WaypointPanel({
       {/* Waypoint List */}
       <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
         {sorted.length === 0 ? (
-          <div className="py-8 text-center text-xs text-gray-400">
+          <div className="py-8 text-center body-sm text-gray-400">
             {canManageWaypoints
               ? "Belum ada waypoint. Tambahkan pos air atau aid station pertama kamu."
               : "Tidak ada waypoint pada file GPX ini."}
@@ -379,7 +379,7 @@ export const WaypointPanel = memo(function WaypointPanel({
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-800">
                   {formatKmLabel(wp.distance)}
                 </span>
-                <span className="truncate text-xs font-medium text-[#2D3436]">
+                <span className="truncate body-sm-medium text-[#2D3436]">
                   {wp.name}
                 </span>
                 {wp.isFromGpx && (

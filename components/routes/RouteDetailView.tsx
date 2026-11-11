@@ -379,7 +379,7 @@ export function RouteDetailView({
                     Rute Tersimpan di Cloud
                   </span>
                   {formattedDate && (
-                    <p className="text-xs text-[#4B5563]">
+                    <p className="body-sm text-[#4B5563]">
                       Tersimpan sejak {formattedDate}
                     </p>
                   )}

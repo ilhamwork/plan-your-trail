@@ -3,7 +3,6 @@
 import { Suspense, useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
 import { Loader2, AlertCircle, WifiOff } from "lucide-react"
 import { signIn, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 
@@ -110,10 +109,10 @@ function LoginForm() {
       <div className="w-full max-w-md">
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
-          <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#2D3436]">
+          <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
             Masuk ke Akun Kamu
-          </h2>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          </h1>
+          <p className="mt-1 text-subhead text-sm sm:text-base text-[#4B5563]">
             Akses rute tersimpan dan prakiraan cuaca jalur lari kamu.
           </p>
         </div>

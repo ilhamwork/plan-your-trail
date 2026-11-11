@@ -75,13 +75,13 @@ export function ComingSoonLock({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h4 className="text-sm font-semibold text-amber-950">{title}</h4>
+                <h4 className="heading-4 text-amber-950">{title}</h4>
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
                   {badgeText}
                 </span>
               </div>
               {description && (
-                <p className="mt-1 text-xs text-amber-800/90">{description}</p>
+                <p className="mt-1 body-sm text-amber-800/90">{description}</p>
               )}
               {errorMsg && (
                 <p className="mt-1 text-xs text-red-600">{errorMsg}</p>

@@ -39,8 +39,8 @@ export default function InvoiceList() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black text-[#1B4332]">Invoices</h1>
-            <p className="text-gray-500">View generated invoices.</p>
+            <h1 className="heading-1 text-[#1B4332]">Invoices</h1>
+            <p className="text-subhead">View generated invoices.</p>
           </div>
           <Link href="/invoice/create">
             <Button>

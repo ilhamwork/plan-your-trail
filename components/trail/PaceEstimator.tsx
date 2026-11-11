@@ -61,7 +61,7 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <div className="flex items-center gap-2">
             <Timer className="h-4 w-4 text-[#2A9D8F]" />
-            <h3 className="text-sm font-bold text-[#2D3436]">
+            <h3 className="heading-3">
               Estimasi Waktu Finish Rute
             </h3>
           </div>
@@ -88,10 +88,10 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1B4332]/10 text-[#1B4332]">
               <Lock className="h-4 w-4" />
             </div>
-            <h4 className="mt-2 text-sm font-bold text-gray-900">
+            <h4 className="heading-4 text-gray-900 mt-2">
               Hitung Estimasi Finish Race
             </h4>
-            <p className="mt-1 max-w-sm text-xs text-gray-600">
+            <p className="body-sm text-gray-600 mt-1 max-w-sm">
               Daftar untuk menghitung estimasi waktu finish rute
               berdasarkan target pace dan km effort elevasi.
             </p>
@@ -121,11 +121,11 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <Timer className="h-4 w-4 text-[#2A9D8F]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">
+          <h3 className="heading-3">
             Estimasi Waktu Finish
           </h3>
         </div>
-        <p className="mt-0.5 text-xs text-gray-400">
+        <p className="mt-0.5 body-sm">
           Kalkulasi estimasi total waktu tempuh berdasarkan target pace rata-rata
         </p>
       </div>
@@ -134,7 +134,7 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
         {/* Pace Input Row */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+            <label className="text-overline block">
               Target Pace Rata-Rata
             </label>
             <div className="mt-1.5 flex items-center gap-1.5">

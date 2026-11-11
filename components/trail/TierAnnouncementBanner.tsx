@@ -63,7 +63,7 @@ export function TierAnnouncementBanner() {
             <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#1B4332]/10 text-[#1B4332] sm:mt-0">
               <Megaphone className="h-3.5 w-3.5" />
             </span>
-            <p className="text-xs leading-relaxed text-[#1B4332]">
+            <p className="body-sm leading-relaxed text-[#1B4332]">
               <span className="font-bold">{t("home.tierBanner.badge")}</span>{" "}
               {t("home.tierBanner.text")}
             </p>

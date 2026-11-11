@@ -87,10 +87,10 @@ export function RoutesListClient({
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FAF6F1] text-[#1B4332]">
             <Map className="h-8 w-8" />
           </div>
-          <h2 className="mt-5 text-xl font-bold text-[#2D3436]">
+          <h2 className="heading-2 mt-5">
             {t("routes.emptyTitle")}
           </h2>
-          <p className="mt-1.5 max-w-sm text-sm text-[#4B5563]">
+          <p className="text-subhead mt-1.5 max-w-sm">
             {t("routes.emptyDesc")}
           </p>
           <Link

@@ -88,11 +88,11 @@ export const GradientDistribution = memo(function GradientDistribution({ points 
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-[#F4A261]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">
+          <h3 className="heading-3">
             Gradient Distribution
           </h3>
         </div>
-        <p className="mt-0.5 text-xs text-gray-400">
+        <p className="mt-0.5 body-sm">
           Terrain breakdown calculated from GPX track points
         </p>
       </div>
@@ -121,15 +121,15 @@ export const GradientDistribution = memo(function GradientDistribution({ points 
             >
               <div className="flex items-center gap-1.5">
                 {cat.icon}
-                <span className="text-[10px] font-semibold tracking-wider text-gray-400">
+                <span className="body-sm-medium text-[#4B5563]">
                   {cat.label}
                 </span>
               </div>
-              <p className={`text-2xl leading-none font-bold ${cat.textColor}`}>
+              <p className={`heading-1 leading-none ${cat.textColor}`}>
                 {cat.percentage}
                 <span className="text-sm font-medium">%</span>
               </p>
-              <p className="text-[11px] text-gray-400">{fmtKm(cat.distance)}</p>
+              <p className="body-sm text-[#4B5563]">{fmtKm(cat.distance)}</p>
             </div>
           ))}
         </div>

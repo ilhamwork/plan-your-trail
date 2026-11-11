@@ -29,10 +29,10 @@ class ErrorBoundary extends React.Component<Props, State> {
       return (
         <div className="flex min-h-screen items-center justify-center bg-[#FAF6F1] p-4 text-center">
           <div className="max-w-md rounded-2xl bg-white p-8 shadow-sm">
-            <h2 className="mb-2 text-xl font-bold text-[#2D3436]">
+            <h2 className="heading-2 mb-2">
               Something went wrong
             </h2>
-            <p className="mb-6 text-sm text-gray-500">
+            <p className="text-subhead mb-6">
               An unexpected error has occurred. Please reload the page to try
               again.
             </p>

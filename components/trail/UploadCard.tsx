@@ -180,13 +180,13 @@ export const UploadCard = memo(function UploadCard({
                     <FileUp className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-[#FAF6F1]">
+                    <p className="heading-3 text-[#FAF6F1]">
                       {t("home.upload.dropTitle")}
                     </p>
-                    <p className="text-sm text-[#FAF6F1]/80">
+                    <p className="body-base text-[#FAF6F1]/80">
                       {t("home.upload.dropSubtitle")}
                     </p>
-                    <p className="mt-1 text-[11px] font-medium text-[#FAF6F1]/75">
+                    <p className="mt-1 body-sm text-[#FAF6F1]/75">
                       (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
                     </p>
                   </div>
