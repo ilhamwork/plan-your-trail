@@ -22,6 +22,7 @@ export interface RouteStats {
   elevationLoss: number; // meters
   highestPoint: number; // meters
   lowestPoint: number; // meters
+  averageElevation?: number; // meters
   waypointCount: number;
 }
 

@@ -101,9 +101,11 @@ export function computeGPXData(extracted: ExtractedGPX): GPXData {
   let elevationLoss = 0;
   let highestPoint = -Infinity;
   let lowestPoint = Infinity;
+  let elevationSum = 0;
   let pendingEle = trackPoints[0]?.ele ?? 0; // track "last confirmed" elevation
 
   for (let i = 0; i < trackPoints.length; i++) {
+    elevationSum += trackPoints[i].ele;
     if (trackPoints[i].ele > highestPoint) highestPoint = trackPoints[i].ele;
     if (trackPoints[i].ele < lowestPoint) lowestPoint = trackPoints[i].ele;
 
@@ -223,6 +225,7 @@ export function computeGPXData(extracted: ExtractedGPX): GPXData {
     elevationLoss: Math.round(elevationLoss),
     highestPoint: Math.round(highestPoint),
     lowestPoint: Math.round(lowestPoint),
+    averageElevation: Math.round(elevationSum / trackPoints.length),
     waypointCount: waypoints.length,
   };
 

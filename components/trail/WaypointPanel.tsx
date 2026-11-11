@@ -11,7 +11,7 @@ import {
   Check,
   Download,
   Lock,
-  Sparkles,
+  Flag,
 } from "lucide-react"
 import type { Waypoint, TrackPoint } from "@/lib/types"
 import { downloadGPX } from "@/lib/gpx-export"
@@ -259,7 +259,7 @@ export const WaypointPanel = memo(function WaypointPanel({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-3 w-3 text-amber-300" />
+                      <Flag className="h-3 w-3 text-amber-300" />
                       <span>Daftar Early Access Pro</span>
                     </>
                   )}

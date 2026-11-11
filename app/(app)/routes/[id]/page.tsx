@@ -2,7 +2,6 @@ import { notFound } from "next/navigation"
 import { requireUser } from "@/lib/auth"
 import { getRoute } from "@/lib/db/queries/routes"
 import { Header } from "@/components/trail/Header"
-import { TierAnnouncementBanner } from "@/components/trail/TierAnnouncementBanner"
 import { RouteDetailView } from "@/components/routes/RouteDetailView"
 import { analyzeSegments, buildWaypointSegments } from "@/lib/segment-analysis"
 import type { GPXData, RouteStats, TrackPoint, Waypoint } from "@/lib/types"
@@ -56,9 +55,20 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
   const segments = analyzeSegments(trackPoints)
   const waypointSegments = buildWaypointSegments(trackPoints, waypoints)
 
+  const computedAvgElevation =
+    metrics.stats.averageElevation ??
+    (trackPoints.length > 0
+      ? Math.round(
+          trackPoints.reduce((sum, p) => sum + p.ele, 0) / trackPoints.length
+        )
+      : Math.round((metrics.stats.highestPoint + metrics.stats.lowestPoint) / 2))
+
   const gpxData: GPXData = {
     trackPoints,
-    stats: metrics.stats,
+    stats: {
+      ...metrics.stats,
+      averageElevation: computedAvgElevation,
+    },
     segments,
     waypointSegments,
     waypoints,
@@ -69,7 +79,6 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
   return (
     <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-0">
       <Header />
-      <TierAnnouncementBanner />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <RouteDetailView

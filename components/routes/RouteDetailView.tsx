@@ -39,14 +39,6 @@ const MapView = dynamic(
   }
 )
 
-const ElevationChart = dynamic(
-  () =>
-    import("@/components/trail/ElevationChart").then(
-      (mod) => mod.ElevationChart
-    ),
-  { ssr: false }
-)
-
 const GradientDistribution = dynamic(
   () =>
     import("@/components/trail/GradientDistribution").then(
@@ -227,8 +219,10 @@ export function RouteDetailView({
       trackPoints: gpxData.trackPoints,
       waypoints: sortedWaypoints,
       bounds: gpxData.bounds,
+      stats: gpxData.stats,
+      routeName: routeDetails.raceName || routeName,
     }
-  }, [gpxData, sortedWaypoints])
+  }, [gpxData, sortedWaypoints, routeDetails.raceName, routeName])
 
   const formattedDate = createdAt
     ? new Intl.DateTimeFormat("id-ID", {
@@ -290,42 +284,29 @@ export function RouteDetailView({
             </motion.div>
           )}
 
-          {/* Map */}
+          {/* Map & Elevation Chart Section */}
           {mapProps && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="order-4 lg:order-0"
+              className="order-3 lg:order-0"
             >
               <MapView
                 {...mapProps}
                 hoveredPoint={hoveredPoint}
                 highlightRange={highlightRange}
                 onHover={setHoveredPoint}
+                onClearHighlight={clearHighlight}
               />
             </motion.div>
           )}
-
-          {/* Elevation chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="order-5 lg:order-0"
-          >
-            <ElevationChart
-              trackPoints={gpxData.trackPoints}
-              waypoints={sortedWaypoints}
-              onHover={setHoveredPoint}
-            />
-          </motion.div>
 
           {/* Segments */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.4 }}
             className="order-7 lg:order-0"
           >
             <SegmentList
@@ -342,7 +323,7 @@ export function RouteDetailView({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.5 }}
             className="order-8 lg:order-0"
           >
             <GradientDistribution points={gpxData.trackPoints} />
@@ -352,7 +333,7 @@ export function RouteDetailView({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            transition={{ delay: 0.6 }}
             className="order-9 lg:order-0"
           >
             <WeatherForecast
@@ -455,7 +436,7 @@ export function RouteDetailView({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="order-3 lg:order-0"
+            className="order-4 lg:order-0"
           >
             <MetricsPanel stats={gpxData.stats} />
           </motion.div>
@@ -465,7 +446,7 @@ export function RouteDetailView({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.42 }}
-            className="order-4 lg:order-0"
+            className="order-5 lg:order-0"
           >
             <PaceEstimator
               stats={gpxData.stats}

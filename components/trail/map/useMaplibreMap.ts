@@ -114,7 +114,7 @@ export function useMaplibreMap({
         new maplibregl.NavigationControl({ visualizePitch: true }),
         "top-left"
       )
-      map.addControl(new maplibregl.ScaleControl(), "bottom-left")
+      map.addControl(new maplibregl.ScaleControl(), "top-left")
 
       map.on("load", () => {
         if (cancelled) return
@@ -415,9 +415,27 @@ export function useMaplibreMap({
     }
   }, [])
 
+  const resetView = useCallback(() => {
+    const map = maplibreMapRef.current
+    if (!map || !maplibreReady) return
+    map.fitBounds(
+      [
+        [bounds[0][1], bounds[0][0]],
+        [bounds[1][1], bounds[1][0]],
+      ],
+      {
+        padding: 50,
+        pitch: is3D ? 60 : 0,
+        bearing: is3D ? -20 : 0,
+        duration: 800,
+      }
+    )
+  }, [bounds, is3D, maplibreReady])
+
   return {
     mapReady: maplibreReady,
     maplibreReady,
     resize,
+    resetView,
   }
 }

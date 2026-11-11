@@ -65,6 +65,7 @@ const enMessages: TranslationSchema = {
     elevLoss: "Elevation Loss (D-)",
     maxElev: "Highest Point",
     minElev: "Lowest Point",
+    avgElev: "Average Elevation",
     avgGrade: "Average Grade",
     estTime: "Estimated Time",
     movingTime: "Moving Time",

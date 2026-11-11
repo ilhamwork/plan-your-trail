@@ -1,28 +1,6 @@
 import { test, expect } from "@playwright/test"
 
-test.describe("Sprint 6 Critical Flows: Tier Banner, Anonymous Analysis, Gating & Security", () => {
-  test("tier announcement banner is visible, links to /register, and persists dismissal in sessionStorage", async ({
-    page,
-  }) => {
-    await page.goto("/")
-
-    const banner = page.getByRole("region", {
-      name: "Pengumuman perubahan layanan",
-    })
-    await expect(banner).toBeVisible()
-    await expect(banner).toContainText("Pembaruan Akun:")
-    await expect(
-      banner.getByRole("link", { name: "Daftar Akun" })
-    ).toHaveAttribute("href", "/register")
-
-    await banner.getByRole("button", { name: "Tutup pengumuman" }).click()
-    await expect(banner).not.toBeVisible()
-
-    // Reload within the same session — banner must remain dismissed (PRD 6.3)
-    await page.reload()
-    await expect(banner).not.toBeVisible()
-  })
-
+test.describe("Sprint 6 Critical Flows: Anonymous Analysis, Gating & Security", () => {
   test("anonymous GPX analysis displays locked states for weather, pace estimator, and waypoint management, and persists pending route on save", async ({
     page,
   }) => {

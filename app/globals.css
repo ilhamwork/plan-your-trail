@@ -267,6 +267,7 @@
 }
 
 /* Standalone typography classes for direct stylesheet compatibility */
+@layer components {
 .heading-hero {
     font-family: var(--font-heading);
     font-size: var(--text-hero);
@@ -367,6 +368,7 @@
     text-transform: uppercase;
     color: var(--text-muted);
 }
+}
 
 /* Tooltip styles */
 .hover-tooltip {
@@ -409,4 +411,10 @@
 }
 .maplibregl-popup-tip {
     border-top-color: #2D3436 !important;
+}
+.maplibregl-ctrl-top-left {
+    margin-top: 58px !important;
+}
+.maplibregl-ctrl-bottom-right {
+    margin-bottom: 28px !important;
 }

@@ -63,6 +63,7 @@ const idMessages = {
     elevLoss: "Elevasi Turun (D-)",
     maxElev: "Titik Tertinggi",
     minElev: "Titik Terendah",
+    avgElev: "Elevasi Rata-rata",
     avgGrade: "Kemiringan Rata-rata",
     estTime: "Estimasi Waktu",
     movingTime: "Waktu Bergerak",

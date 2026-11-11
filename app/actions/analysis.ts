@@ -11,6 +11,7 @@ const RouteStatsSchema = z.object({
   elevationLoss: z.number().nonnegative(),
   highestPoint: z.number(),
   lowestPoint: z.number(),
+  averageElevation: z.number().optional(),
   waypointCount: z.number().int().nonnegative(),
 })
 

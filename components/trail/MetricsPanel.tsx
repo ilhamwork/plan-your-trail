@@ -8,6 +8,7 @@ import {
   TrendingDown,
   ArrowUpRight,
   ArrowDownLeft,
+  Activity,
   Zap,
   HelpCircle,
 } from "lucide-react"
@@ -99,6 +100,15 @@ export const MetricsPanel = memo(function MetricsPanel({ stats }: MetricsPanelPr
       color: "text-[#457B9D]",
       bg: "bg-[#457B9D]/5",
     },
+    {
+      id: "avgElev",
+      icon: Activity,
+      label: t("metrics.avgElev"),
+      value: `${stats.averageElevation ?? Math.round((stats.highestPoint + stats.lowestPoint) / 2)} m`,
+      color: "text-[#1B4332]",
+      bg: "bg-[#1B4332]/5",
+      tooltip: "Average altitude across all track points",
+    },
   ]
 
   return (
@@ -112,7 +122,7 @@ export const MetricsPanel = memo(function MetricsPanel({ stats }: MetricsPanelPr
         <motion.div
           key={card.id}
           variants={item}
-          className="flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm"
+          className="flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm last:col-span-2"
         >
           <div className={`rounded-lg p-1.5 ${card.bg}`}>
             <card.icon className={`h-4 w-4 ${card.color}`} />

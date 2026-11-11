@@ -10,7 +10,6 @@ import { useGPXParser } from "@/lib/use-gpx-parser"
 import { useHighlightRange } from "@/lib/use-highlight-range"
 
 import { Header } from "@/components/trail/Header"
-import { TierAnnouncementBanner } from "@/components/trail/TierAnnouncementBanner"
 import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { MetricsPanel } from "@/components/trail/MetricsPanel"
@@ -35,14 +34,6 @@ const MapView = dynamic(
       </div>
     ),
   }
-)
-
-const ElevationChart = dynamic(
-  () =>
-    import("@/components/trail/ElevationChart").then(
-      (mod) => mod.ElevationChart
-    ),
-  { ssr: false }
 )
 
 const WeatherForecast = dynamic(
@@ -223,13 +214,16 @@ export default function Home() {
       trackPoints: gpxData.trackPoints,
       waypoints: sortedWaypoints,
       bounds: gpxData.bounds,
+      stats: gpxData.stats,
+      routeName:
+        routeDetails.raceName ||
+        (fileName ? fileName.replace(/\.gpx$/i, "") : "Rute Trail"),
     }
-  }, [gpxData, sortedWaypoints])
+  }, [gpxData, sortedWaypoints, routeDetails.raceName, fileName])
 
   return (
     <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-0">
       <Header />
-      <TierAnnouncementBanner />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <AnimatePresence mode="wait">
@@ -288,43 +282,29 @@ export default function Home() {
                 />
 
 
-                {/* Map */}
-
+                {/* Map & Elevation Chart Section */}
                 {mapProps && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="order-4 lg:order-0"
+                    className="order-3 lg:order-0"
                   >
                     <MapView
                       {...mapProps}
                       hoveredPoint={hoveredPoint}
                       highlightRange={highlightRange}
                       onHover={setHoveredPoint}
+                      onClearHighlight={clearHighlight}
                     />
                   </motion.div>
                 )}
-
-                {/* Elevation chart */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="order-5 lg:order-0"
-                >
-                  <ElevationChart
-                    trackPoints={gpxData.trackPoints}
-                    waypoints={sortedWaypoints}
-                    onHover={setHoveredPoint}
-                  />
-                </motion.div>
 
                 {/* Segments */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
+                  transition={{ delay: 0.4 }}
                   className="order-7 lg:order-0"
                 >
                   <SegmentList
@@ -341,7 +321,7 @@ export default function Home() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
+                  transition={{ delay: 0.5 }}
                   className="order-8 lg:order-0"
                 >
                   <GradientDistribution points={gpxData.trackPoints} />
@@ -351,7 +331,7 @@ export default function Home() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 }}
+                  transition={{ delay: 0.6 }}
                   className="order-9 lg:order-0"
                 >
                   <WeatherForecast
@@ -401,7 +381,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="order-3 lg:order-0"
+                  className="order-4 lg:order-0"
                 >
                   <MetricsPanel stats={gpxData.stats} />
                 </motion.div>
@@ -411,7 +391,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.42 }}
-                  className="order-4 lg:order-0"
+                  className="order-5 lg:order-0"
                 >
                   <PaceEstimator
                     stats={gpxData.stats}

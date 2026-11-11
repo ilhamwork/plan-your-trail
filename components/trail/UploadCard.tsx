@@ -176,17 +176,17 @@ export const UploadCard = memo(function UploadCard({
                 className="flex flex-col items-center gap-4"
               >
                 <div className="flex flex-col items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-                    <FileUp className="h-6 w-6 text-white" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
+                    <FileUp className="h-6 w-6 text-[#FAF6F1]" />
                   </div>
                   <div>
-                    <p className="heading-3 text-[#FAF6F1]">
+                    <p className="text-lg font-bold tracking-tight text-[#FAF6F1]">
                       {t("home.upload.dropTitle")}
                     </p>
-                    <p className="body-base text-[#FAF6F1]/80">
+                    <p className="mt-1 text-sm font-medium text-[#FAF6F1]/90">
                       {t("home.upload.dropSubtitle")}
                     </p>
-                    <p className="mt-1 body-sm text-[#FAF6F1]/75">
+                    <p className="mt-1 text-xs font-medium text-[#FAF6F1]/80">
                       (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
                     </p>
                   </div>

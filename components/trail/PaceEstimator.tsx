@@ -223,16 +223,16 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
                   <tr key={i} className="hover:bg-gray-50/50">
                     <td className="px-3 py-2 font-medium text-gray-800">{wp.name}</td>
                     <td className="px-3 py-2">{(wp.distance / 1000).toFixed(1)} km</td>
-                    <td className="px-3 py-2 text-gray-400">—</td>
-                    <td className="px-3 py-2 text-gray-400">—</td>
+                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
+                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
                   </tr>
                 ))}
                 {waypoints.length === 0 && (
                   <tr>
-                    <td className="px-3 py-2 text-gray-800 font-medium">Contoh Pos 1</td>
+                    <td className="px-3 py-2 text-gray-800 font-medium">[Contoh Pos]</td>
                     <td className="px-3 py-2">12.5 km</td>
-                    <td className="px-3 py-2 text-gray-400">—</td>
-                    <td className="px-3 py-2 text-gray-400">—</td>
+                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
+                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
                   </tr>
                 )}
               </tbody>
