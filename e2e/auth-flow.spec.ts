@@ -82,9 +82,6 @@ test.describe("E2 Auth UI & Anonymous Navigation", () => {
 
     await page.getByRole("button", { name: "Try GPX Example" }).click()
     await expect(
-      page.getByText("Dapatkan analisis lebih lengkap dengan akun")
-    ).toBeVisible({ timeout: 15000 })
-    await expect(
       page.getByText("Manajemen Waypoint")
     ).toBeVisible({ timeout: 15000 })
   })

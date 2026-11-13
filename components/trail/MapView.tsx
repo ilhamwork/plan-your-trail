@@ -15,6 +15,9 @@ import {
   X,
   ChevronUp,
   BarChart3,
+  Heart,
+  Share,
+  Loader2,
 } from "lucide-react"
 import "maplibre-gl/dist/maplibre-gl.css"
 import { ElevationChart } from "./ElevationChart"
@@ -30,6 +33,17 @@ interface MapViewProps {
   highlightRange?: HighlightRange | null
   onHover?: (point: TrackPoint | null) => void
   onClearHighlight?: () => void
+  onPrevSegment?: () => void
+  onNextSegment?: () => void
+  hasPrevSegment?: boolean
+  hasNextSegment?: boolean
+  currentSegmentLabel?: string
+  onSave?: () => void
+  isSaving?: boolean
+  isSaved?: boolean
+  onShare?: () => void
+  isSharing?: boolean
+  topLeftSlot?: React.ReactNode
 }
 
 export function MapView({
@@ -42,6 +56,17 @@ export function MapView({
   highlightRange,
   onHover,
   onClearHighlight,
+  onPrevSegment,
+  onNextSegment,
+  hasPrevSegment = false,
+  hasNextSegment = false,
+  currentSegmentLabel,
+  onSave,
+  isSaving = false,
+  isSaved = false,
+  onShare,
+  isSharing = false,
+  topLeftSlot,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
@@ -119,10 +144,10 @@ export function MapView({
   return (
     <section
       aria-label="Peta Rute dan Profil Elevasi"
-      className={`overflow-hidden transition-all duration-300 ${
+      className={`w-full transition-all duration-300 ${
         isFullscreen
-          ? "fixed inset-0 z-1003 flex flex-col bg-[#1B4332]"
-          : "rounded-3xl border border-[#E5E7EB] bg-white shadow-sm"
+          ? "fixed inset-0 z-1003 flex flex-col bg-[#FAF6F1]"
+          : ""
       }`}
     >
       {/* Spatial Map Stage */}
@@ -142,10 +167,12 @@ export function MapView({
           style={{ position: "relative" }}
         />
 
-        {/* Floating Top Controls Overlay (Reference-inspired spatial header) */}
+        {/* Floating Top Overlay: Left (Back/Slot + Map Controls) & Right (Share + Love/Save) */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 p-3 sm:p-4">
-          {/* Left: Recenter / Fit Route Button */}
-          <div className="pointer-events-auto flex items-center gap-2">
+          {/* Left: Optional back/upload action + Map View Controls */}
+          <div className="pointer-events-auto flex flex-wrap items-center gap-2">
+            {topLeftSlot}
+
             <button
               type="button"
               onClick={handleRecenter}
@@ -155,15 +182,7 @@ export function MapView({
             >
               <LocateFixed className="h-4 w-4" />
             </button>
-          </div>
 
-          {/* Center: Route Title Pill */}
-          <div className="pointer-events-auto hidden max-w-xs truncate rounded-full border border-[#D1D5DB] bg-white/95 px-4 py-2 text-xs font-bold text-[#2D3436] shadow-md sm:block">
-            {routeName || "Peta Rute Trail"}
-          </div>
-
-          {/* Right: 3D, Satellite Layer, and Fullscreen Controls */}
-          <div className="pointer-events-auto flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIs3D(!is3D)}
@@ -216,17 +235,59 @@ export function MapView({
               )}
             </button>
           </div>
+
+          {/* Right: Share & Love (Save Route) Actions (Airbnb-inspired top-right overlay) */}
+          <div className="pointer-events-auto flex items-center gap-2">
+            {onShare && (
+              <button
+                type="button"
+                onClick={onShare}
+                disabled={isSharing}
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white/95 text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:opacity-50"
+                title="Bagikan rute"
+                aria-label="Bagikan rute"
+              >
+                <Share className="h-4 w-4" />
+              </button>
+            )}
+
+            {(onSave || isSaved) && (
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={isSaving || (!onSave && isSaved)}
+                className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border shadow-md transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:opacity-80 ${
+                  isSaved
+                    ? "border-[#E76F51]/40 bg-white text-[#E76F51]"
+                    : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#E76F51] hover:text-[#E76F51]"
+                }`}
+                title={isSaved ? "Rute tersimpan" : "Simpan rute"}
+                aria-label={isSaved ? "Tersimpan" : "Simpan rute"}
+                aria-pressed={isSaved}
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-[#1B4332]" />
+                ) : (
+                  <Heart
+                    className={`h-4 w-4 transition-transform ${
+                      isSaved ? "fill-[#E76F51] text-[#E76F51] scale-110" : ""
+                    }`}
+                  />
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Docked Bottom Sheet for Elevation Profile (Normal & Fullscreen) */}
+      {/* Elevation Profile Section (Flat, no card, no margin/padding) */}
       {showChart ? (
         <div
-          className={`relative z-20 -mt-6 rounded-t-3xl bg-white pt-4 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] ${
-            isFullscreen ? "mx-auto w-full max-w-5xl" : ""
+          className={`relative z-20 border-b p-4 border-[#E5E7EB] ${
+            isFullscreen ? "mx-auto w-full max-w-5xl bg-[#FAF6F1]" : ""
           }`}
         >
-          {/* Center Circular Toggle Button on the Sheet Seam */}
+          {/* Center Circular Toggle Button on the Seam */}
           <div className="absolute -top-5 left-1/2 z-30 -translate-x-1/2">
             <button
               type="button"
@@ -247,16 +308,21 @@ export function MapView({
             hoveredPoint={activeHoveredPoint}
             highlightRange={highlightRange}
             onClearHighlight={onClearHighlight}
+            onPrevSegment={onPrevSegment}
+            onNextSegment={onNextSegment}
+            hasPrevSegment={hasPrevSegment}
+            hasNextSegment={hasNextSegment}
+            currentSegmentLabel={currentSegmentLabel}
             onHover={handleHover}
             embedded
           />
         </div>
       ) : (
-        <div className="relative z-20 -mt-6 flex justify-center rounded-t-3xl bg-white py-3 shadow-[0_-6px_18px_rgba(0,0,0,0.08)]">
+        <div className="relative z-20 flex justify-center border-b border-[#E5E7EB] py-3">
           <button
             type="button"
             onClick={() => setShowChart(true)}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[#D1D5DB] bg-[#FAF6F1] px-4 py-2 text-xs font-bold text-[#1B4332] shadow-xs transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[#D1D5DB] bg-white px-4 py-2 text-xs font-bold text-[#1B4332] shadow-xs transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
             title="Tampilkan Profil Elevasi"
             aria-label="Tampilkan Profil Elevasi"
           >

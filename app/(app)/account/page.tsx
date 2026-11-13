@@ -10,8 +10,6 @@ import {
   Compass,
   Route as RouteIcon,
   ShieldCheck,
-  HardDriveUpload,
-  FolderHeart,
   ChevronRight,
 } from "lucide-react"
 
@@ -91,52 +89,6 @@ export default async function AccountPage() {
 
           {/* Right Column: Quota Tiles & Feature Rows */}
           <div className="space-y-8">
-            {/* Quota Section */}
-            <section aria-labelledby="quota-heading">
-              <h2
-                id="quota-heading"
-                className="heading-2"
-              >
-                Kuota & Penyimpanan
-              </h2>
-              <p className="mt-1 text-subhead">
-                Kapasitas aktif pada paket {user.plan === "pro" ? "Pro" : "Free"} kamu saat ini.
-              </p>
-
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
-                    <HardDriveUpload className="h-5 w-5" />
-                  </div>
-                  <div className="mt-4 text-2xl font-bold text-[#2D3436]">
-                    {maxUploadMb} MB
-                  </div>
-                  <div className="mt-0.5 text-sm font-semibold text-[#2D3436]">
-                    Batas Ukuran Upload GPX
-                  </div>
-                  <p className="mt-1 text-xs text-[#4B5563]">
-                    Dua kali lipat dari batas ukuran file pengunjung anonim (5 MB).
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
-                    <FolderHeart className="h-5 w-5" />
-                  </div>
-                  <div className="mt-4 text-2xl font-bold text-[#2D3436]">
-                    {userLimits.maxSavedRoutes ?? "Tanpa Batas"}{" "}
-                    {userLimits.maxSavedRoutes !== null ? "Rute" : ""}
-                  </div>
-                  <div className="mt-0.5 text-sm font-semibold text-[#2D3436]">
-                    Kapasitas Penyimpanan Cloud
-                  </div>
-                  <p className="mt-1 text-xs text-[#4B5563]">
-                    Sinkronisasi otomatis agar rute dapat dibuka dari perangkat mana saja.
-                  </p>
-                </div>
-              </div>
-            </section>
-
             {/* Active Features List (Airbnb Settings Row Style) */}
             <section
               aria-labelledby="active-features-heading"

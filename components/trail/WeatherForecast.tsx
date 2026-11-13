@@ -1,13 +1,22 @@
 "use client"
 
 import { memo, useState, useCallback, useEffect, useRef } from "react"
-import Link from "next/link"
-import { CloudSun, MapPin, Search, X, Lock, ArrowRight } from "lucide-react"
+import {
+  CloudSun,
+  Sun,
+  CloudFog,
+  CloudDrizzle,
+  CloudRain,
+  CloudSnow,
+  CloudLightning,
+  MapPin,
+  Search,
+  X,
+} from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEntitlements } from "@/lib/entitlements"
 import { fetchWeatherAction } from "@/app/actions/weather"
 import type { WeatherData } from "@/lib/weather"
-import { trackEvent } from "@/lib/analytics/events"
 import { ComingSoonLock } from "./ComingSoonLock"
 
 
@@ -50,16 +59,16 @@ const WMO_CODES: Record<number, string> = {
   99: "Badai petir lebat",
 }
 
-function getWeatherEmoji(code: number): string {
-  if (code === 0) return "☀️"
-  if (code <= 3) return "⛅"
-  if (code <= 48) return "🌫️"
-  if (code <= 55) return "🌦️"
-  if (code <= 65) return "🌧️"
-  if (code <= 77) return "🌨️"
-  if (code <= 82) return "🌦️"
-  if (code <= 86) return "🌨️"
-  return "⛈️"
+function WeatherIcon({ code, className = "h-5 w-5" }: { code: number; className?: string }) {
+  if (code === 0) return <Sun className={className} aria-hidden="true" />
+  if (code <= 3) return <CloudSun className={className} aria-hidden="true" />
+  if (code <= 48) return <CloudFog className={className} aria-hidden="true" />
+  if (code <= 55) return <CloudDrizzle className={className} aria-hidden="true" />
+  if (code <= 65) return <CloudRain className={className} aria-hidden="true" />
+  if (code <= 77) return <CloudSnow className={className} aria-hidden="true" />
+  if (code <= 82) return <CloudDrizzle className={className} aria-hidden="true" />
+  if (code <= 86) return <CloudSnow className={className} aria-hidden="true" />
+  return <CloudLightning className={className} aria-hidden="true" />
 }
 
 function translatePeriodName(name: string): string {
@@ -238,119 +247,74 @@ export const WeatherForecast = memo(function WeatherForecast({
     }
   }, [hasWeatherAccess, date, activeLat, activeLon, fetchWeather])
 
-  // If user is Anonymous: show Gated State
+  // If user is Anonymous: show Gated State (Card without CTA button; CTA moved to container bottom)
   if (!authLoading && !hasWeatherAccess) {
     return (
-      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CloudSun className="h-4 w-4 text-[#457B9D]" />
-            <h3 className="heading-3">
-              Prakiraan Cuaca Rute
-            </h3>
+      <section
+        aria-label="Prakiraan Cuaca Rute"
+        className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-xs"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF6F1] text-[#1B4332]">
+            <CloudSun className="h-4 w-4" />
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-            <Lock className="h-2.5 w-2.5" />
-            Khusus Akun Terdaftar
-          </span>
+          <h3 className="text-lg font-bold tracking-tight text-[#111827]">
+            Buka Prakiraan Cuaca Lengkap
+          </h3>
         </div>
-
-        <div className="relative p-6 text-center">
-          {/* Blurred background mockup */}
-          <div className="pointer-events-none select-none blur-sm opacity-35 filter">
-            <div className="grid grid-cols-4 gap-2">
-              {["Pagi", "Siang", "Sore", "Malam"].map((p, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center rounded-lg border border-gray-100 bg-gray-50 p-2"
-                >
-                  <span className="text-[10px] text-gray-400">{p}</span>
-                  <span className="my-1 text-2xl">⛅</span>
-                  <span className="text-sm font-bold text-gray-600">24°</span>
-                  <span className="text-[10px] text-gray-400">Cerah</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Overlay Call to Action */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 p-4 backdrop-blur-2xs">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1B4332]/10 text-[#1B4332]">
-              <Lock className="h-5 w-5" />
-            </div>
-            <h4 className="heading-4 text-gray-900 mt-2">
-              Buka Prakiraan Cuaca Lengkap
-            </h4>
-            <p className="body-sm text-gray-600 mt-1 max-w-sm">
-              Daftar dalam 30 detik untuk melihat prakiraan cuaca per sesi
-              (Pagi, Siang, Sore, Malam) di lokasi rute.
-            </p>
-            <div className="mt-4 flex items-center gap-2">
-              <Link
-                href="/register"
-                onClick={() =>
-                  trackEvent("register_clicked", {
-                    source: "weather_card",
-                    feature: "weather_session",
-                  })
-                }
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1B4332] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326]"
-              >
-                <span>Daftar Akun</span>
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-
-              <Link
-                href="/login"
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Masuk
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+        <p className="mt-2 text-sm leading-relaxed text-[#4B5563]">
+          Pantau prakiraan suhu dan kondisi cuaca 4 sesi waktu harian (Pagi,
+          Siang, Sore, dan Malam) di titik koordinat rute pada tanggal lari
+          yang kamu rencanakan.
+        </p>
+      </section>
     )
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-      <div className="border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <CloudSun className="h-4 w-4 text-[#457B9D]" />
-          <h3 className="heading-3">
-            Prakiraan Cuaca Rute
-          </h3>
-        </div>
-        <p className="mt-0.5 body-sm">
+    <section
+      aria-label="Prakiraan Cuaca Rute"
+      className="border-t border-[#D1D5DB] pt-8"
+    >
+      <div>
+        <h3 className="text-xl font-bold tracking-tight text-[#111827]">
+          Prakiraan Cuaca Rute
+        </h3>
+        <p className="mt-0.5 text-xs text-[#6B7280]">
           Prakiraan cuaca per sesi race day di titik rute
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-2">
-        <div className="px-4 pt-3 pb-2">
-          <p className="mb-1.5 text-overline">
-            Lokasi
-          </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor="weather-location-input"
+            className="mb-1.5 block text-xs font-semibold text-[#4B5563]"
+          >
+            Lokasi Rute
+          </label>
           <div className="relative">
-            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-all focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332]">
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+            <div className="flex min-h-11 items-center gap-2 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 transition focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332]">
+              <MapPin className="h-4 w-4 shrink-0 text-[#4B5563]" />
               <input
+                id="weather-location-input"
                 type="text"
                 value={locationQuery}
                 onChange={(e) => handleLocationInput(e.target.value)}
                 placeholder={`${center[0].toFixed(3)}, ${center[1].toFixed(3)} (pusat rute)`}
-                className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-gray-400"
+                className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-[#6B7280]"
               />
               {geoLoading && (
-                <Search className="h-3.5 w-3.5 shrink-0 animate-pulse text-gray-400" />
+                <Search className="h-4 w-4 shrink-0 animate-pulse text-[#4B5563]" />
               )}
               {selectedLocation && !geoLoading && (
                 <button
+                  type="button"
                   onClick={clearLocation}
-                  className="shrink-0 text-gray-400 transition-colors hover:text-gray-600"
+                  aria-label="Hapus lokasi pencarian"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#4B5563] transition hover:bg-[#FAF6F1] hover:text-[#2D3436] focus-visible:outline-2 focus-visible:outline-[#1B4332]"
                 >
-                  <X className="h-3.5 w-3.5 cursor-pointer" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -361,15 +325,16 @@ export const WeatherForecast = memo(function WeatherForecast({
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                  className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-lg"
                 >
                   {geoResults.map((r, i) => (
                     <li key={i}>
                       <button
+                        type="button"
                         onClick={() => handleSelectResult(r)}
-                        className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50"
+                        className="flex min-h-11 w-full items-start gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#1B4332]"
                       >
-                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#E76F51]" />
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#E76F51]" />
                         <span className="line-clamp-2 leading-tight text-[#2D3436]">
                           {r.display_name}
                         </span>
@@ -381,44 +346,60 @@ export const WeatherForecast = memo(function WeatherForecast({
             </AnimatePresence>
 
             {geoError && !geoLoading && locationQuery && (
-              <p className="mt-1 text-xs text-red-400">{geoError}</p>
+              <p role="alert" className="mt-1.5 text-xs font-medium text-[#B91C1C]">
+                {geoError}
+              </p>
             )}
           </div>
 
-          <div className="mt-2 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#1B4332]/8 px-2 py-0.5">
-              <MapPin className="h-2.5 w-2.5 text-[#1B4332]" />
-              <span className="text-[10px] font-medium text-[#1B4332]">
-                {activeLocationName}
-              </span>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#F1EDE8] px-2.5 py-0.5 text-xs font-semibold text-[#1B4332]">
+              <MapPin className="h-3 w-3 text-[#1B4332]" />
+              <span>{activeLocationName}</span>
             </span>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-xs text-[#4B5563] tabular-nums">
               {activeLat.toFixed(4)}, {activeLon.toFixed(4)}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-2">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-[#2D3436] outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
-          />
-          <button
-            onClick={fetchWeather}
-            disabled={loading || !date}
-            className="group flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332]/5 px-4 py-2 text-sm font-bold text-[#1B4332] transition-all hover:bg-[#1B4332] hover:text-white disabled:opacity-50"
+        <div>
+          <label
+            htmlFor="weather-date-input"
+            className="mb-1.5 block text-xs font-semibold text-[#4B5563]"
           >
-            {loading ? "Memuat..." : "Cek Cuaca"}
-          </button>
+            Tanggal Race / Lari
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="weather-date-input"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="min-h-11 flex-1 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 text-sm text-[#2D3436] focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332]"
+            />
+            <button
+              type="button"
+              onClick={fetchWeather}
+              disabled={loading || !date}
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50"
+            >
+              {loading ? "Memuat..." : "Cek Cuaca"}
+            </button>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="px-4 pb-3">
-          <p className="rounded-lg bg-red-50 p-2 text-xs text-red-600">{error}</p>
+        <div role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-[#B91C1C]">
+          {error}
         </div>
+      )}
+
+      {loading && !weather && !error && (
+        <p className="mt-4 text-sm text-[#4B5563]">
+          Memuat prakiraan cuaca untuk {activeLocationName}...
+        </p>
       )}
 
       <AnimatePresence>
@@ -427,38 +408,39 @@ export const WeatherForecast = memo(function WeatherForecast({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
+            className="mt-4 overflow-hidden"
           >
-            {/* Daily Periods */}
+            {/* Single-row session weather list matching MetricsPanel style */}
             {weather.periods && weather.periods.length > 0 && (
-              <div className="mx-4 mb-3 grid grid-cols-4 gap-2">
+              <ul className="divide-y divide-[#E5E7EB]">
                 {weather.periods.map((p, idx) => (
-                  <div
+                  <li
                     key={idx}
-                    className="flex flex-col items-center rounded-lg border border-gray-100 bg-gray-50 p-2 text-center"
+                    className="flex items-center justify-between gap-4 py-3"
                   >
-                    <span className="text-[10px] font-semibold text-gray-500">
-                      {translatePeriodName(p.name)}
-                    </span>
-                    <span
-                      className="my-1 text-2xl"
-                      title={WMO_CODES[p.weatherCode]}
-                    >
-                      {getWeatherEmoji(p.weatherCode)}
-                    </span>
-                    <span className="text-sm font-bold text-[#2D3436]">
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <WeatherIcon
+                        code={p.weatherCode}
+                        className="h-5 w-5 shrink-0 text-[#2D3436]"
+                      />
+                      <span className="text-[15px] font-medium text-[#2D3436]">
+                        {translatePeriodName(p.name)}
+                      </span>
+                      <span className="truncate text-sm text-[#4B5563]">
+                        {WMO_CODES[p.weatherCode] || "Cerah"}
+                      </span>
+                    </div>
+
+                    <span className="shrink-0 text-base font-bold text-[#2D3436] tabular-nums">
                       {Math.round(p.temperature)}°C
                     </span>
-                    <span className="mt-1 text-[10px] leading-tight text-gray-500">
-                      {WMO_CODES[p.weatherCode] || "Cerah"}
-                    </span>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
 
             {/* Pro Hourly Teaser (PRD 6.1) */}
-            <div className="mx-4 mb-4">
+            <div className="mt-4">
               <ComingSoonLock
                 feature="weather_hourly"
                 title="Prakiraan Cuaca Per Jam (Hourly)"
@@ -469,6 +451,6 @@ export const WeatherForecast = memo(function WeatherForecast({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </section>
   )
 })

@@ -1,11 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import Link from "next/link"
-import { Timer, Lock, ArrowRight } from "lucide-react"
+import { Timer } from "lucide-react"
 
 import { useEntitlements } from "@/lib/entitlements"
-import { trackEvent } from "@/lib/analytics/events"
 import type { RouteStats, Waypoint } from "@/lib/types"
 import { ComingSoonLock } from "./ComingSoonLock"
 
@@ -54,152 +52,139 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
     )
   }, [distanceKm, elevationGainM, paceMin, paceSec, useKmEffort])
 
-  // Gated State for Anonymous
+  // Gated State for Anonymous (Clean AllTrails-style card)
   if (!authLoading && !hasPaceAccess) {
     return (
-      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Timer className="h-4 w-4 text-[#2A9D8F]" />
-            <h3 className="heading-3">
-              Estimasi Waktu Finish Rute
-            </h3>
+      <section
+        aria-label="Estimasi Waktu Finish Rute"
+        className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-xs"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF6F1] text-[#1B4332]">
+            <Timer className="h-4 w-4" />
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-            <Lock className="h-2.5 w-2.5" />
-            Khusus Akun Terdaftar
-          </span>
+          <h3 className="text-lg font-bold tracking-tight text-[#111827]">
+            Hitung Estimasi Finish Race
+          </h3>
         </div>
-
-        <div className="relative p-6 text-center">
-          {/* Blurred Background Mockup */}
-          <div className="pointer-events-none select-none blur-xs opacity-40 filter">
-            <div className="flex justify-center gap-4">
-              <div className="h-10 w-24 rounded-lg bg-gray-100" />
-              <div className="h-10 w-32 rounded-lg bg-gray-100" />
-            </div>
-            <div className="mt-4 text-2xl font-bold text-gray-700">
-              4 jam 25 menit
-            </div>
-          </div>
-
-          {/* Overlay CTA */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 p-4 backdrop-blur-2xs">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1B4332]/10 text-[#1B4332]">
-              <Lock className="h-4 w-4" />
-            </div>
-            <h4 className="heading-4 text-gray-900 mt-2">
-              Hitung Estimasi Finish Race
-            </h4>
-            <p className="body-sm text-gray-600 mt-1 max-w-sm">
-              Daftar untuk menghitung estimasi waktu finish rute
-              berdasarkan target pace dan km effort elevasi.
-            </p>
-            <div className="mt-3 flex items-center gap-2">
-              <Link
-                href="/register"
-                onClick={() =>
-                  trackEvent("register_clicked", {
-                    source: "pace_estimator",
-                    feature: "pace_basic",
-                  })
-                }
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326]"
-              >
-                <span>Daftar</span>
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+        <p className="mt-2 text-sm leading-relaxed text-[#4B5563]">
+          Kalkulasi perkiraan waktu tempuh rute ini berdasarkan target pace
+          rata-rata dan tambahan jarak efektif dari elevasi menanjak (KM-Effort).
+        </p>
+      </section>
     )
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-      <div className="border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Timer className="h-4 w-4 text-[#2A9D8F]" />
-          <h3 className="heading-3">
-            Estimasi Waktu Finish
-          </h3>
-        </div>
-        <p className="mt-0.5 body-sm">
+    <section aria-label="Estimasi Waktu Finish" className="py-1">
+      <div>
+        <h3 className="text-xl font-bold tracking-tight text-[#111827]">
+          Estimasi Waktu Finish
+        </h3>
+        <p className="mt-0.5 text-xs text-[#6B7280]">
           Kalkulasi estimasi total waktu tempuh berdasarkan target pace rata-rata
         </p>
       </div>
 
-      <div className="p-4">
-        {/* Pace Input Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <label className="text-overline block">
-              Target Pace Rata-Rata
-            </label>
-            <div className="mt-1.5 flex items-center gap-1.5">
-              <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1">
+      <div className="mt-3 space-y-4">
+        {/* Flat single-row style telemetry controls */}
+        <div className="divide-y divide-[#E5E7EB]">
+          {/* Row 1: Target Pace */}
+          <div className="flex flex-wrap items-center justify-between gap-3 py-3.5">
+            <div className="flex items-center gap-3">
+              <Timer className="h-5 w-5 shrink-0 text-[#2D3436]" />
+              <div>
+                <label
+                  htmlFor="pace-min-input"
+                  className="text-sm font-medium text-[#2D3436]"
+                >
+                  Target Pace Rata-Rata
+                </label>
+                <p className="text-xs text-[#4B5563]">Menit dan detik per kilometer</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <div className="flex min-h-11 items-center rounded-xl border border-[#D1D5DB] bg-white px-2.5">
                 <input
+                  id="pace-min-input"
                   type="number"
                   min={3}
                   max={25}
+                  aria-label="Menit per kilometer"
                   value={paceMin}
-                  onChange={(e) => setPaceMin(Math.max(1, parseInt(e.target.value) || 0))}
-                  className="w-10 bg-transparent text-center text-sm font-bold text-[#2D3436] outline-none"
+                  onChange={(e) =>
+                    setPaceMin(Math.max(1, parseInt(e.target.value) || 0))
+                  }
+                  className="w-11 bg-transparent text-center text-sm font-bold text-[#2D3436] tabular-nums focus-visible:outline-2 focus-visible:outline-[#1B4332]"
                 />
-                <span className="text-xs font-semibold text-gray-400">:</span>
+                <span className="text-xs font-bold text-[#4B5563]">:</span>
                 <input
+                  id="pace-sec-input"
                   type="number"
                   min={0}
                   max={59}
                   step={5}
+                  aria-label="Detik per kilometer"
                   value={paceSec.toString().padStart(2, "0")}
                   onChange={(e) =>
-                    setPaceSec(Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))
+                    setPaceSec(
+                      Math.min(59, Math.max(0, parseInt(e.target.value) || 0))
+                    )
                   }
-                  className="w-10 bg-transparent text-center text-sm font-bold text-[#2D3436] outline-none"
+                  className="w-11 bg-transparent text-center text-sm font-bold text-[#2D3436] tabular-nums focus-visible:outline-2 focus-visible:outline-[#1B4332]"
                 />
               </div>
-              <span className="text-xs font-medium text-gray-500">/km</span>
+              <span className="text-xs font-semibold text-[#4B5563]">/km</span>
             </div>
           </div>
 
-          {/* Toggle Km Effort */}
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-700">
+          {/* Row 2: KM Effort Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-3 py-3.5">
+            <div>
+              <p className="text-sm font-medium text-[#2D3436]">
+                Perhitungkan KM-Effort (+1 km tiap 100 m D+)
+              </p>
+              <p className="text-xs text-[#4B5563] tabular-nums">
+                Jarak efektif:{" "}
+                {useKmEffort
+                  ? `${(distanceKm + elevationGainM * 0.01).toFixed(1)} km effort`
+                  : `${distanceKm.toFixed(1)} km datar`}
+              </p>
+            </div>
+
+            <label className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 px-1 text-xs font-semibold text-[#2D3436]">
               <input
                 type="checkbox"
                 checked={useKmEffort}
                 onChange={(e) => setUseKmEffort(e.target.checked)}
-                className="h-4 w-4 rounded-sm border-gray-300 text-[#1B4332] focus:ring-[#1B4332]"
+                className="h-5 w-5 rounded border-[#D1D5DB] text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               />
-              <span>Perhitungkan Km Effort (+1 km tiap 100m elevasi)</span>
+              <span>Aktif</span>
             </label>
-            <p className="mt-0.5 text-[11px] text-gray-400">
-              Jarak efektif:{" "}
-              {useKmEffort
-                ? `${(distanceKm + elevationGainM * 0.01).toFixed(1)} km effort`
-                : `${distanceKm.toFixed(1)} km flat`}
+          </div>
+
+          {/* Row 3: Finish Time Output */}
+          <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div>
+              <p className="text-sm font-semibold text-[#2D3436]">
+                Estimasi Total Waktu Finish
+              </p>
+              <p className="text-xs text-[#4B5563] tabular-nums">
+                Pace {paceMin}:{paceSec.toString().padStart(2, "0")} /km · Rute{" "}
+                {distanceKm.toFixed(1)} km (+{elevationGainM} m D+)
+              </p>
+            </div>
+
+            <p className="text-xl font-extrabold tracking-tight text-[#1B4332] tabular-nums sm:text-2xl">
+              {finishTime.hours > 0 && `${finishTime.hours} jam `}
+              {finishTime.minutes} menit
             </p>
           </div>
         </div>
 
-        {/* Result Banner */}
-        <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4 text-center">
-          <span className="text-xs font-medium text-emerald-800">
-            Estimasi Total Waktu Finish
-          </span>
-          <div className="mt-1 text-2xl sm:text-3xl font-extrabold text-[#1B4332]">
-            {finishTime.hours > 0 && `${finishTime.hours} jam `}
-            {finishTime.minutes} menit
-          </div>
-          <p className="mt-1 text-[11px] text-emerald-700">
-            Pada pace {paceMin}:{paceSec.toString().padStart(2, "0")} /km untuk rute {distanceKm.toFixed(1)} km (+{elevationGainM}m EG)
-          </p>
-        </div>
-
         {/* Pro Checkpoint Cutoff Table Teaser (PRD 6.1) */}
-        <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
+        <div className="border-t border-[#E5E7EB] pt-4">
           <ComingSoonLock
             feature="cutoff_estimator"
             title="Cutoff Estimator per Checkpoint"
@@ -208,31 +193,37 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
             className="border-0 bg-transparent p-0"
           />
 
-          <div className="mt-3 overflow-hidden rounded-lg border border-gray-200/60 bg-white">
+          <div className="mt-3 overflow-x-auto border-t border-[#E5E7EB]">
             <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50/80 text-[10px] font-bold text-gray-400 uppercase">
+              <thead className="border-b border-[#E5E7EB] text-[11px] font-bold text-[#4B5563]">
                 <tr>
-                  <th className="px-3 py-2">Pos / Checkpoint</th>
-                  <th className="px-3 py-2">Jarak</th>
-                  <th className="px-3 py-2">Estimasi Tiba</th>
-                  <th className="px-3 py-2">Batas Cutoff</th>
+                  <th className="py-2.5 pr-3">Pos / Checkpoint</th>
+                  <th className="px-3 py-2.5">Jarak</th>
+                  <th className="px-3 py-2.5">Estimasi Tiba</th>
+                  <th className="py-2.5 pl-3">Batas Cutoff</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-gray-500">
+              <tbody className="divide-y divide-[#E5E7EB] text-[#4B5563] tabular-nums">
                 {waypoints.slice(0, 3).map((wp, i) => (
-                  <tr key={i} className="hover:bg-gray-50/50">
-                    <td className="px-3 py-2 font-medium text-gray-800">{wp.name}</td>
-                    <td className="px-3 py-2">{(wp.distance / 1000).toFixed(1)} km</td>
-                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
-                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
+                  <tr key={i}>
+                    <td className="py-2.5 pr-3 font-medium text-[#2D3436]">
+                      {wp.name}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {(wp.distance / 1000).toFixed(1)} km
+                    </td>
+                    <td className="px-3 py-2.5">[Segera Hadir]</td>
+                    <td className="py-2.5 pl-3">[Segera Hadir]</td>
                   </tr>
                 ))}
                 {waypoints.length === 0 && (
                   <tr>
-                    <td className="px-3 py-2 text-gray-800 font-medium">[Contoh Pos]</td>
-                    <td className="px-3 py-2">12.5 km</td>
-                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
-                    <td className="px-3 py-2 text-gray-500">[Segera Hadir]</td>
+                    <td className="py-2.5 pr-3 font-medium text-[#2D3436]">
+                      [Contoh Pos]
+                    </td>
+                    <td className="px-3 py-2.5">12.5 km</td>
+                    <td className="px-3 py-2.5">[Segera Hadir]</td>
+                    <td className="py-2.5 pl-3">[Segera Hadir]</td>
                   </tr>
                 )}
               </tbody>
@@ -240,6 +231,6 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   )
 }

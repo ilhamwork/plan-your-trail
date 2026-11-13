@@ -17,25 +17,14 @@ test.describe("Sprint 6 Critical Flows: Anonymous Analysis, Gating & Security", 
     // Load sample GPX
     await page.getByRole("button", { name: "Try GPX Example" }).click()
 
-    // Verify inline gated prompt appears after analysis completes (PRD 6.3)
-    const gatedPrompt = page.getByText(
-      "Dapatkan analisis lebih lengkap dengan akun"
-    )
-    await expect(gatedPrompt).toBeVisible({ timeout: 15000 })
-
     // Verify locked states for Free-tier and Pro-tier features
     await expect(
       page.getByText("Buka Prakiraan Cuaca Lengkap")
-    ).toBeVisible()
+    ).toBeVisible({ timeout: 15000 })
     await expect(
       page.getByText("Hitung Estimasi Finish Race")
     ).toBeVisible()
     await expect(page.getByText("Manajemen Waypoint")).toBeVisible()
-    await expect(page.getByText("Segera Hadir di Pro").first()).toBeVisible()
-
-    // Dismiss inline gated prompt and ensure it does not reappear in session
-    await page.getByRole("button", { name: "Tutup pesan" }).click()
-    await expect(gatedPrompt).not.toBeVisible()
 
     // Click "Simpan" as anonymous -> stores pending route in sessionStorage and redirects to /register (E4-T5)
     const saveBtn = page.getByRole("button", { name: "Simpan" })

@@ -7,7 +7,7 @@ import { analyzeSegments, buildWaypointSegments } from "@/lib/segment-analysis"
 import type { GPXData, RouteStats, TrackPoint, Waypoint } from "@/lib/types"
 
 interface RouteDetailPageProps {
-  params: Promise<{ id: string }> | { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: RouteDetailPageProps) {
@@ -80,7 +80,7 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
     <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-0">
       <Header />
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
+      <main>
         <RouteDetailView
           routeId={savedRoute.id}
           routeName={savedRoute.name}

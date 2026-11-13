@@ -52,88 +52,86 @@ export const GradientDistribution = memo(function GradientDistribution({ points 
   const categories = [
     {
       key: "uphill",
-      label: "Uphill",
+      label: "Tanjakan (> +3%)",
       distance: uphillDist,
       percentage: pct(uphillDist),
-      textColor: "text-[#EF4444]",
-      barColor: "bg-[#EF4444]",
-      borderColor: "border-[#EF4444]/20",
-      icon: <TrendingUp className="h-4 w-4 text-[#EF4444]" />,
+      textColor: "text-[#B91C1C]",
+      barColor: "bg-[#E76F51]",
+      icon: TrendingUp,
     },
     {
       key: "flat",
-      label: "Flat",
+      label: "Datar (-3% s/d +3%)",
       distance: flatDist,
       percentage: pct(flatDist),
-      textColor: "text-[#EAB308]",
-      barColor: "bg-[#FACC15]",
-      borderColor: "border-[#FACC15]/20",
-      icon: <Minus className="h-4 w-4 text-[#EAB308]" />,
+      textColor: "text-[#1B4332]",
+      barColor: "bg-[#1B4332]",
+      icon: Minus,
     },
     {
       key: "downhill",
-      label: "Downhill",
+      label: "Turunan (< -3%)",
       distance: downhillDist,
       percentage: pct(downhillDist),
-      textColor: "text-[#3B82F6]",
-      barColor: "bg-[#3B82F6]",
-      borderColor: "border-[#3B82F6]/20",
-      icon: <TrendingDown className="h-4 w-4 text-[#3B82F6]" />,
+      textColor: "text-[#1E3A8A]",
+      barColor: "bg-[#457B9D]",
+      icon: TrendingDown,
     },
   ] as const
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-      {/* Header */}
-      <div className="border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-[#F4A261]" />
-          <h3 className="heading-3">
-            Gradient Distribution
-          </h3>
-        </div>
-        <p className="mt-0.5 body-sm">
-          Terrain breakdown calculated from GPX track points
+    <section aria-label="Sebaran Kemiringan Rute" className="py-1">
+      <div>
+        <h3 className="text-xl font-bold tracking-tight text-[#111827]">
+          Sebaran Kemiringan Rute
+        </h3>
+        <p className="mt-0.5 text-xs text-[#6B7280]">
+          Proporsi medan tanjakan, datar, dan turunan dari titik GPX
         </p>
       </div>
 
-      <div className="px-4 py-4">
-        {/* Stacked progress bar */}
-        <div className="mb-4 flex h-3 gap-0.5 overflow-hidden rounded-full">
-          {categories.map((cat) =>
-            cat.percentage > 0 ? (
-              <div
-                key={cat.key}
-                title={`${cat.label}: ${cat.percentage}%`}
-                className={`${cat.barColor} transition-all duration-700 ease-out first:rounded-l-full last:rounded-r-full`}
-                style={{ width: `${cat.percentage}%` }}
-              />
-            ) : null
-          )}
-        </div>
-
-        {/* Category cards */}
-        <div className="grid grid-cols-3 gap-2">
-          {categories.map((cat) => (
+      {/* Stacked terrain proportion bar (AllTrails-style) */}
+      <div className="mt-4 flex h-4 gap-1 overflow-hidden rounded-full bg-[#E5E7EB] p-0.5">
+        {categories.map((cat) =>
+          cat.percentage > 0 ? (
             <div
               key={cat.key}
-              className={`rounded-xl border ${cat.borderColor} flex flex-col gap-1.5 bg-gray-50 p-3`}
-            >
-              <div className="flex items-center gap-1.5">
-                {cat.icon}
-                <span className="body-sm-medium text-[#4B5563]">
-                  {cat.label}
-                </span>
-              </div>
-              <p className={`heading-1 leading-none ${cat.textColor}`}>
-                {cat.percentage}
-                <span className="text-sm font-medium">%</span>
-              </p>
-              <p className="body-sm text-[#4B5563]">{fmtKm(cat.distance)}</p>
-            </div>
-          ))}
-        </div>
+              title={`${cat.label}: ${cat.percentage}%`}
+              className={`${cat.barColor} transition-all duration-500 ease-out first:rounded-l-full last:rounded-r-full`}
+              style={{ width: `${cat.percentage}%` }}
+            />
+          ) : null
+        )}
       </div>
-    </div>
+
+      {/* Breakdown list matching AllTrails surface type layout */}
+      <ul className="mt-4 divide-y divide-[#E5E7EB]">
+        {categories.map((cat) => (
+          <li
+            key={cat.key}
+            className="flex items-center justify-between gap-4 py-3"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <cat.icon
+                className={`h-4 w-4 shrink-0 ${cat.textColor}`}
+                aria-hidden="true"
+              />
+              <span className="truncate text-sm font-medium text-[#374151]">
+                {cat.label}
+              </span>
+            </div>
+
+            <div className="flex shrink-0 items-baseline gap-2.5 tabular-nums">
+              <span className="text-xs text-[#6B7280]">
+                {fmtKm(cat.distance)}
+              </span>
+              <span className={`w-12 text-right text-sm font-bold ${cat.textColor}`}>
+                {cat.percentage}%
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 })

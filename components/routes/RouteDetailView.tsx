@@ -10,21 +10,19 @@ import {
   Download,
   Trash2,
   CloudCheck,
-  Cloud,
   Pencil,
   Check,
-  Share2,
 } from "lucide-react"
 
 import type { GPXData, TrackPoint, Segment, WaypointSegment } from "@/lib/types"
 import { useHighlightRange } from "@/lib/use-highlight-range"
 import { useWaypoints } from "@/components/trail/hooks/useWaypoints"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
-import { MetricsPanel } from "@/components/trail/MetricsPanel"
 import { SegmentList } from "@/components/trail/SegmentList"
 import { WaypointPanel } from "@/components/trail/WaypointPanel"
 import { deleteRouteAction, updateRouteAction } from "@/app/actions/routes"
 import { DeleteRouteModal } from "./DeleteRouteModal"
+import { useEntitlements } from "@/lib/entitlements"
 
 // ─── Dynamic Trail Analysis Components ──────────────────────────────
 const MapView = dynamic(
@@ -103,6 +101,7 @@ export function RouteDetailView({
   createdAt,
 }: RouteDetailViewProps) {
   const router = useRouter()
+  const { user, isLoading: authLoading } = useEntitlements()
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -129,6 +128,7 @@ export function RouteDetailView({
     highlightRange,
     clearHighlight,
     toggleHighlight,
+    selectHighlight,
   } = useHighlightRange()
 
   // Saving state
@@ -173,6 +173,63 @@ export function RouteDetailView({
     },
     [toggleHighlight]
   )
+
+  // Determine current active segments list (waypoint segments if present, otherwise gradient segments)
+  const activeSegmentsList = useMemo(() => {
+    if (mergedWaypointSegments.length > 0) {
+      return mergedWaypointSegments
+    }
+    return gpxData.segments || []
+  }, [mergedWaypointSegments, gpxData.segments])
+
+  const activeSegmentIndex = useMemo(() => {
+    if (!highlightRange || activeSegmentsList.length === 0) return -1
+    return activeSegmentsList.findIndex(
+      (s) =>
+        s.startIndex === highlightRange.startIndex &&
+        s.endIndex === highlightRange.endIndex
+    )
+  }, [highlightRange, activeSegmentsList])
+
+  const hasPrevSegment =
+    activeSegmentIndex === -1
+      ? activeSegmentsList.length > 0
+      : activeSegmentIndex > 0
+
+  const hasNextSegment =
+    activeSegmentIndex === -1
+      ? activeSegmentsList.length > 0
+      : activeSegmentIndex < activeSegmentsList.length - 1
+
+  const handlePrevSegment = useCallback(() => {
+    if (activeSegmentIndex > 0) {
+      selectHighlight(activeSegmentsList[activeSegmentIndex - 1])
+    } else if (activeSegmentsList.length > 0) {
+      selectHighlight(
+        activeSegmentIndex === -1
+          ? activeSegmentsList[activeSegmentsList.length - 1]
+          : activeSegmentsList[0]
+      )
+    }
+  }, [activeSegmentIndex, activeSegmentsList, selectHighlight])
+
+  const handleNextSegment = useCallback(() => {
+    if (
+      activeSegmentIndex >= 0 &&
+      activeSegmentIndex < activeSegmentsList.length - 1
+    ) {
+      selectHighlight(activeSegmentsList[activeSegmentIndex + 1])
+    } else if (activeSegmentsList.length > 0) {
+      selectHighlight(activeSegmentsList[0])
+    }
+  }, [activeSegmentIndex, activeSegmentsList, selectHighlight])
+
+  const currentSegmentLabel =
+    activeSegmentIndex >= 0
+      ? "name" in activeSegmentsList[activeSegmentIndex]
+        ? (activeSegmentsList[activeSegmentIndex] as WaypointSegment).name
+        : (activeSegmentsList[activeSegmentIndex] as Segment).label
+      : undefined
 
   const handleDelete = async () => {
     const res = await deleteRouteAction({ routeId })
@@ -233,266 +290,184 @@ export function RouteDetailView({
     : ""
 
   return (
-    <div className="space-y-4">
-      {/* Top Breadcrumb Navigation */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/routes"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-semibold text-[#1B4332] transition hover:bg-white/60 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Kembali ke Rute Saya</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#4B5563] shadow-2xs">
-            <Cloud className="h-3.5 w-3.5 text-[#1B4332]" />
-            ID: {routeId.slice(0, 8)}
-          </span>
-        </div>
-      </div>
-
-      {/* Main Analysis Grid - Identical to app/page.tsx layout */}
-      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_420px] lg:items-start lg:gap-6">
-        {/* Left Column (Main Analysis Content on Desktop) */}
-        <div className="contents lg:flex lg:flex-col lg:gap-5">
-          {saveMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="order-0 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm font-medium text-emerald-900 shadow-xs"
+    <div>
+      {/* 1. Hero Stage: Route Map + Elevation Chart (No margin, no padding, no card) */}
+      {mapProps && (
+        <MapView
+          {...mapProps}
+          hoveredPoint={hoveredPoint}
+          highlightRange={highlightRange}
+          onHover={setHoveredPoint}
+          onClearHighlight={clearHighlight}
+          onPrevSegment={handlePrevSegment}
+          onNextSegment={handleNextSegment}
+          hasPrevSegment={hasPrevSegment}
+          hasNextSegment={hasNextSegment}
+          currentSegmentLabel={currentSegmentLabel}
+          onShare={() => setShowShareModal(true)}
+          onSave={hasUnsavedChanges ? handleSaveChanges : undefined}
+          isSaving={isSavingChanges}
+          isSaved={!hasUnsavedChanges}
+          topLeftSlot={
+            <Link
+              href="/routes"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#D1D5DB] bg-white/95 text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              title="Kembali ke Rute Saya"
+              aria-label="Kembali ke Rute Saya"
             >
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-emerald-600" />
-                <span>{saveMessage}</span>
-              </div>
-              <Link
-                href="/routes"
-                className="rounded-xl bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46]"
-              >
-                Ke Rute Saya
-              </Link>
-            </motion.div>
-          )}
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          }
+        />
+      )}
 
-          {saveError && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="order-0 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-red-800 shadow-xs"
-            >
-              {saveError}
-            </motion.div>
-          )}
-
-          {/* Map & Elevation Chart Section */}
-          {mapProps && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="order-3 lg:order-0"
-            >
-              <MapView
-                {...mapProps}
-                hoveredPoint={hoveredPoint}
-                highlightRange={highlightRange}
-                onHover={setHoveredPoint}
-                onClearHighlight={clearHighlight}
-              />
-            </motion.div>
-          )}
-
-          {/* Segments */}
+      {/* 2. Flat Editorial Sections (No Card Wrapper, separated by dividers) */}
+      <div className="mx-auto flex max-w-4xl flex-col px-4 py-6">
+        {saveMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="order-7 lg:order-0"
+            className="mb-6 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm font-medium text-emerald-900 shadow-xs"
           >
-            <SegmentList
-              key={routeId}
-              segments={gpxData.segments}
-              waypointSegments={mergedWaypointSegments}
-              onSegmentClick={handleSegmentClick}
-              onWaypointSegmentClick={handleWaypointSegmentClick}
-              onTabChange={clearHighlight}
-            />
-          </motion.div>
-
-          {/* Gradient Distribution */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="order-8 lg:order-0"
-          >
-            <GradientDistribution points={gpxData.trackPoints} />
-          </motion.div>
-
-          {/* Weather */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="order-9 lg:order-0"
-          >
-            <WeatherForecast
-              center={gpxData.center}
-              initialDate={routeDetails.raceDate || undefined}
-            />
-          </motion.div>
-        </div>
-
-        {/* Right Column (Sidebar - Sticky on Desktop) */}
-        <div className="contents lg:sticky lg:top-15 lg:flex lg:flex-col lg:gap-5">
-          {/* Saved Route Actions Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="order-1 lg:order-0"
-          >
-            <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3 py-1 text-xs font-semibold text-[#1B4332]">
-                    <CloudCheck className="h-3.5 w-3.5 text-[#1B4332]" />
-                    Rute Tersimpan di Cloud
-                  </span>
-                  {formattedDate && (
-                    <p className="body-sm text-[#4B5563]">
-                      Tersimpan sejak {formattedDate}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingDetails(true)}
-                    className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#2D3436] transition hover:border-[#1B4332] hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
-                    title="Ubah Nama & Tanggal Race"
-                    aria-label="Ubah Nama & Tanggal Race"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteModal(true)}
-                    className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-red-200 bg-red-50/70 text-[#B91C1C] transition hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C] active:scale-95"
-                    title="Hapus Rute"
-                    aria-label="Hapus Rute"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2.5 border-t border-[#E5E7EB] pt-4">
-                <a
-                  href={`/api/routes/${routeId}/gpx`}
-                  download
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-4 text-xs font-semibold text-[#2D3436] transition hover:bg-[#1B4332] hover:border-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.99]"
-                  title="Download file GPX asli dari cloud"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Download GPX Asli</span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => setShowShareModal(true)}
-                  className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-4 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.99]"
-                  title="Bagikan rute"
-                >
-                  <Share2 className="h-4 w-4" />
-                  <span>Bagikan</span>
-                </button>
-              </div>
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-emerald-600" />
+              <span>{saveMessage}</span>
             </div>
+            <Link
+              href="/routes"
+              className="inline-flex min-h-10 items-center rounded-xl bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46]"
+            >
+              Ke Rute Saya
+            </Link>
           </motion.div>
+        )}
 
-          {/* Route Header Info */}
+        {saveError && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="order-2 lg:order-0"
+            role="alert"
+            className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-[#B91C1C] shadow-xs"
           >
-            <HeaderInfo
-              raceName={routeDetails.raceName}
-              userName={runnerName || "Anonymous"}
-              raceDate={routeDetails.raceDate}
-              onShare={() => setShowShareModal(true)}
-              onSave={hasUnsavedChanges ? handleSaveChanges : undefined}
-              isSaving={isSavingChanges}
-              isSaved={!hasUnsavedChanges}
-            />
+            {saveError}
           </motion.div>
+        )}
 
-          {/* Metrics */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="order-4 lg:order-0"
-          >
-            <MetricsPanel stats={gpxData.stats} />
-          </motion.div>
+        <div className="pb-10">
+        <HeaderInfo
+          raceName={routeDetails.raceName}
+          userName={runnerName || "Pelari Tamu"}
+          raceDate={routeDetails.raceDate}
+          stats={gpxData.stats}
+          waypointCount={sortedWaypoints.length}
+          actionSlot={
+            <div className="flex flex-wrap items-center gap-2">
+              {formattedDate && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3 py-1.5 text-xs font-semibold text-[#1B4332]">
+                  <CloudCheck className="h-3.5 w-3.5 text-[#1B4332]" />
+                  <span>Tersimpan {formattedDate}</span>
+                </span>
+              )}
 
-          {/* Pace Estimator */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.42 }}
-            className="order-5 lg:order-0"
-          >
-            <PaceEstimator
-              stats={gpxData.stats}
-              waypoints={sortedWaypoints}
-            />
-          </motion.div>
+              <a
+                href={`/api/routes/${routeId}/gpx`}
+                download
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#D1D5DB] bg-white px-3.5 text-xs font-semibold text-[#2D3436] transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                title="Download file GPX asli dari cloud"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download GPX</span>
+              </a>
 
-          {/* Manual Waypoints */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-            className="order-6 lg:order-0"
-          >
-            <WaypointPanel
-              totalDistanceKm={gpxData.stats.totalDistance / 1000}
-              waypoints={waypoints}
-              trackPoints={gpxData.trackPoints}
-              fileName={routeDetails.raceName}
-              onAdd={handleAddWaypoint}
-              onEdit={handleEditWaypoint}
-              onRemove={handleRemoveWaypoint}
-            />
-          </motion.div>
+              <button
+                type="button"
+                onClick={() => setIsEditingDetails(true)}
+                className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white text-[#2D3436] transition hover:border-[#1B4332] hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
+                title="Ubah Nama & Tanggal Race"
+                aria-label="Ubah Nama & Tanggal Race"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
 
-          {/* Donation Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="order-10 lg:order-0"
-          >
-            <DonationSection />
-          </motion.div>
-
-          {/* Footer */}
-          <motion.div
-            key="footer"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="order-11 lg:order-0"
-          >
-            <Footer runnerName={runnerName} />
-          </motion.div>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-red-200 bg-red-50/70 text-[#B91C1C] transition hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C] active:scale-95"
+                title="Hapus Rute"
+                aria-label="Hapus Rute"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          }
+        />
         </div>
+
+        {/* 3. Segment Breakdown */}
+        <div className="border-t border-[#D1D5DB] py-10">
+          <SegmentList
+            key={routeId}
+            segments={gpxData.segments}
+            waypointSegments={mergedWaypointSegments}
+            highlightRange={highlightRange}
+            onSegmentClick={handleSegmentClick}
+            onWaypointSegmentClick={handleWaypointSegmentClick}
+            onTabChange={clearHighlight}
+          />
+        </div>
+
+        {/* 5. Gradient Distribution */}
+        <div className="border-t border-[#D1D5DB] py-10">
+          <GradientDistribution points={gpxData.trackPoints} />
+        </div>
+
+        {/* 6. Account Features Group (Pace, Waypoints, Weather) */}
+        <div className="flex flex-col gap-6 border-t border-[#D1D5DB] py-10">
+          {!authLoading && !user && (
+            <div className="mb-2">
+              <p className="text-sm font-semibold text-[#111827]">
+                Masuk untuk menggunakan fitur analisis lanjutan ini
+              </p>
+              <p className="mt-0.5 text-xs text-[#6B7280]">
+                Kalkulasi estimasi pace, pos checkpoint kustom, dan prakiraan cuaca sesi race.
+              </p>
+            </div>
+          )}
+
+          <PaceEstimator
+            stats={gpxData.stats}
+            waypoints={sortedWaypoints}
+          />
+          <WaypointPanel
+            totalDistanceKm={gpxData.stats.totalDistance / 1000}
+            waypoints={waypoints}
+            trackPoints={gpxData.trackPoints}
+            fileName={routeDetails.raceName}
+            onAdd={handleAddWaypoint}
+            onEdit={handleEditWaypoint}
+            onRemove={handleRemoveWaypoint}
+          />
+          <WeatherForecast
+            center={gpxData.center}
+            initialDate={routeDetails.raceDate || undefined}
+          />
+
+          {!authLoading && !user && (
+            <div className="pt-2">
+              <Link
+                href="/login"
+                className="flex min-h-11 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-2.5 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              >
+                Masuk ke Akun
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-[#D1D5DB] pt-10">
+          <DonationSection />
+        </div>
+        <Footer runnerName={runnerName} />
       </div>
 
       {/* ── Modals ────────────────────────────────────────── */}

@@ -19,7 +19,7 @@ import type {
   RouteStats,
   HighlightRange,
 } from "@/lib/types"
-import { BarChart3, Lock, MapPin, RotateCcw } from "lucide-react"
+import { Lock, MapPin, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEntitlements } from "@/lib/entitlements"
 
 interface ElevationChartProps {
@@ -31,6 +31,11 @@ interface ElevationChartProps {
   hoveredPoint?: TrackPoint | null
   highlightRange?: HighlightRange | null
   onClearHighlight?: () => void
+  onPrevSegment?: () => void
+  onNextSegment?: () => void
+  hasPrevSegment?: boolean
+  hasNextSegment?: boolean
+  currentSegmentLabel?: string
   embedded?: boolean
   className?: string
   showSubHeader?: boolean
@@ -41,11 +46,13 @@ export const ElevationChart = memo(function ElevationChart({
   waypoints = [],
   onHover,
   stats,
-  routeName,
   hoveredPoint,
   highlightRange,
   onClearHighlight,
-  embedded = false,
+  onPrevSegment,
+  onNextSegment,
+  hasPrevSegment = false,
+  hasNextSegment = false,
   className = "",
   showSubHeader = true,
 }: ElevationChartProps) {
@@ -173,43 +180,54 @@ export const ElevationChart = memo(function ElevationChart({
     : null
 
   return (
-    <div
-      className={
-        embedded
-          ? className
-          : `overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-sm ${className}`
-      }
-    >
+    <div className={className}>
       {showSubHeader && (
-        <div className="px-4 pt-3 pb-1 sm:px-6">
-          {/* Sheet Header Row */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                {!embedded && <BarChart3 className="h-4 w-4 text-[#E76F51]" />}
-                <h3 className="heading-3 text-[#2D3436]">
-                  {highlightedSegmentMetrics
-                    ? `Segmen KM ${highlightedSegmentMetrics.startKm.toFixed(1)} - ${highlightedSegmentMetrics.endKm.toFixed(1)}`
-                    : routeName || "Profil Elevasi Rute"}
-                </h3>
-              </div>
-              <p className="mt-0.5 body-sm text-[#4B5563]">
-                Geser pada grafik untuk melacak titik lokasi dan kemiringan di peta
-              </p>
-            </div>
+        <div>
+          {/* Header Row */}
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:justify-between">
+            {/* Center Segment Navigation Bar */}
+            <div className="mx-auto flex items-center justify-center sm:mx-0 sm:order-1 sm:flex-1">
+              <div className="inline-flex items-center gap-1 rounded-full border border-[#D1D5DB] bg-white p-0.5 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={onPrevSegment}
+                  disabled={!hasPrevSegment}
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[#2D3436] transition hover:bg-[#FAF6F1] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-[#1B4332]"
+                  title="Segmen Sebelumnya"
+                  aria-label="Segmen Sebelumnya"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
 
-            <div className="flex items-center gap-2">
-              {highlightedSegmentMetrics && onClearHighlight && (
                 <button
                   type="button"
                   onClick={onClearHighlight}
-                  className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[#D1D5DB] bg-[#FAF6F1] px-3 py-1 text-xs font-semibold text-[#2D3436] transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1]"
+                  disabled={!highlightedSegmentMetrics}
+                  className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-[#1B4332] ${
+                    highlightedSegmentMetrics
+                      ? "text-[#2D3436] hover:bg-[#FAF6F1]"
+                      : "cursor-default bg-[#FAF6F1] text-[#6B7280]"
+                  }`}
+                  title={highlightedSegmentMetrics ? "Kembali ke semua rute" : "Sedang menampilkan semua rute"}
                 >
                   <RotateCcw className="h-3 w-3" />
                   <span>Semua Rute</span>
                 </button>
-              )}
 
+                <button
+                  type="button"
+                  onClick={onNextSegment}
+                  disabled={!hasNextSegment}
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[#2D3436] transition hover:bg-[#FAF6F1] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-[#1B4332]"
+                  title="Segmen Berikutnya"
+                  aria-label="Segmen Berikutnya"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:order-2">
               {waypoints.length > 0 && !canShowGpxWaypoints && (
                 <Link
                   href="/login"
@@ -229,8 +247,8 @@ export const ElevationChart = memo(function ElevationChart({
             </div>
           </div>
 
-          {/* Primary Dual Telemetry Readout (Reference-inspired Length & Elevation Gain) */}
-          <div className="mt-3 grid grid-cols-2 gap-4 border-t border-[#F1EDE8] pt-3">
+          {/* Primary Dual Telemetry Readout */}
+          <div className="mt-3 grid grid-cols-2 gap-4 border-t border-[#E5E7EB] pt-3">
             <div>
               <p className="body-sm-medium text-[#4B5563]">{distanceLabel}</p>
               <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-[#2D3436] tabular-nums sm:text-3xl">
@@ -255,7 +273,7 @@ export const ElevationChart = memo(function ElevationChart({
         </div>
       )}
 
-      <div className="touch-none px-2 pt-1 pb-3 sm:px-4">
+      <div className="touch-none">
         <ResponsiveContainer width="100%" height={140}>
           <AreaChart
             data={chartData}
