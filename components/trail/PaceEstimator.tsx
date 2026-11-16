@@ -4,12 +4,10 @@ import { useState, useMemo } from "react"
 import { Timer } from "lucide-react"
 
 import { useEntitlements } from "@/lib/entitlements"
-import type { RouteStats, Waypoint } from "@/lib/types"
-import { ComingSoonLock } from "./ComingSoonLock"
+import type { RouteStats } from "@/lib/types"
 
 interface PaceEstimatorProps {
   stats: RouteStats
-  waypoints?: Waypoint[]
 }
 
 export function calculateFinishTime(
@@ -17,7 +15,7 @@ export function calculateFinishTime(
   elevationGainM: number,
   paceMin: number,
   paceSec: number,
-  useKmEffort: boolean
+  useKmEffort = true
 ): { hours: number; minutes: number; totalMinutes: number } {
   const paceDecimal = paceMin + paceSec / 60
   const effectiveDistance = useKmEffort
@@ -31,13 +29,12 @@ export function calculateFinishTime(
   return { hours, minutes, totalMinutes }
 }
 
-export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
+export function PaceEstimator({ stats }: PaceEstimatorProps) {
   const { can, isLoading: authLoading } = useEntitlements()
   const hasPaceAccess = can("pace_basic")
 
   const [paceMin, setPaceMin] = useState<number>(7)
   const [paceSec, setPaceSec] = useState<number>(30)
-  const [useKmEffort, setUseKmEffort] = useState<boolean>(true)
 
   const distanceKm = stats.totalDistance / 1000
   const elevationGainM = stats.elevationGain
@@ -48,9 +45,9 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
       elevationGainM,
       paceMin,
       paceSec,
-      useKmEffort
+      true
     )
-  }, [distanceKm, elevationGainM, paceMin, paceSec, useKmEffort])
+  }, [distanceKm, elevationGainM, paceMin, paceSec])
 
   // Gated State for Anonymous (Clean AllTrails-style card)
   if (!authLoading && !hasPaceAccess) {
@@ -92,7 +89,6 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
           {/* Row 1: Target Pace */}
           <div className="flex flex-wrap items-center justify-between gap-3 py-3.5">
             <div className="flex items-center gap-3">
-              <Timer className="h-5 w-5 shrink-0 text-[#2D3436]" />
               <div>
                 <label
                   htmlFor="pace-min-input"
@@ -139,29 +135,20 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
             </div>
           </div>
 
-          {/* Row 2: KM Effort Toggle */}
+          {/* Row 2: KM Effort Info (always active) */}
           <div className="flex flex-wrap items-center justify-between gap-3 py-3.5">
             <div>
               <p className="text-sm font-medium text-[#2D3436]">
-                Perhitungkan KM-Effort (+1 km tiap 100 m D+)
+                Jarak Efektif (KM-Effort)
               </p>
-              <p className="text-xs text-[#4B5563] tabular-nums">
-                Jarak efektif:{" "}
-                {useKmEffort
-                  ? `${(distanceKm + elevationGainM * 0.01).toFixed(1)} km effort`
-                  : `${distanceKm.toFixed(1)} km datar`}
+              <p className="text-xs text-[#4B5563]">
+                Otomatis memperhitungkan +1 km tiap 100 m D+
               </p>
             </div>
 
-            <label className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 px-1 text-xs font-semibold text-[#2D3436]">
-              <input
-                type="checkbox"
-                checked={useKmEffort}
-                onChange={(e) => setUseKmEffort(e.target.checked)}
-                className="h-5 w-5 rounded border-[#D1D5DB] text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-              />
-              <span>Aktif</span>
-            </label>
+            <p className="text-sm font-bold text-[#2D3436] tabular-nums">
+              {(distanceKm + elevationGainM * 0.01).toFixed(1)} km effort
+            </p>
           </div>
 
           {/* Row 3: Finish Time Output */}
@@ -180,54 +167,6 @@ export function PaceEstimator({ stats, waypoints = [] }: PaceEstimatorProps) {
               {finishTime.hours > 0 && `${finishTime.hours} jam `}
               {finishTime.minutes} menit
             </p>
-          </div>
-        </div>
-
-        {/* Pro Checkpoint Cutoff Table Teaser (PRD 6.1) */}
-        <div className="border-t border-[#E5E7EB] pt-4">
-          <ComingSoonLock
-            feature="cutoff_estimator"
-            title="Cutoff Estimator per Checkpoint"
-            source="pace_estimator"
-            variant="inline"
-            className="border-0 bg-transparent p-0"
-          />
-
-          <div className="mt-3 overflow-x-auto border-t border-[#E5E7EB]">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-[#E5E7EB] text-[11px] font-bold text-[#4B5563]">
-                <tr>
-                  <th className="py-2.5 pr-3">Pos / Checkpoint</th>
-                  <th className="px-3 py-2.5">Jarak</th>
-                  <th className="px-3 py-2.5">Estimasi Tiba</th>
-                  <th className="py-2.5 pl-3">Batas Cutoff</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E5E7EB] text-[#4B5563] tabular-nums">
-                {waypoints.slice(0, 3).map((wp, i) => (
-                  <tr key={i}>
-                    <td className="py-2.5 pr-3 font-medium text-[#2D3436]">
-                      {wp.name}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      {(wp.distance / 1000).toFixed(1)} km
-                    </td>
-                    <td className="px-3 py-2.5">[Segera Hadir]</td>
-                    <td className="py-2.5 pl-3">[Segera Hadir]</td>
-                  </tr>
-                ))}
-                {waypoints.length === 0 && (
-                  <tr>
-                    <td className="py-2.5 pr-3 font-medium text-[#2D3436]">
-                      [Contoh Pos]
-                    </td>
-                    <td className="px-3 py-2.5">12.5 km</td>
-                    <td className="px-3 py-2.5">[Segera Hadir]</td>
-                    <td className="py-2.5 pl-3">[Segera Hadir]</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>

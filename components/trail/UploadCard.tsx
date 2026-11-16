@@ -12,6 +12,7 @@ interface UploadCardProps {
   fileName?: string
   error?: string
   isLoading?: boolean
+  disabled?: boolean
 }
 
 export const UploadCard = memo(function UploadCard({
@@ -20,6 +21,7 @@ export const UploadCard = memo(function UploadCard({
   fileName,
   error,
   isLoading,
+  disabled = false,
 }: UploadCardProps) {
   const { user, limits } = useEntitlements()
   const { t } = useI18n()
@@ -64,10 +66,14 @@ export const UploadCard = memo(function UploadCard({
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragging(false)
+      if (disabled) {
+        onError?.(t("home.upload.authOrGuestRequired"))
+        return
+      }
       const file = e.dataTransfer.files[0]
       if (file) handleFile(file)
     },
-    [handleFile]
+    [disabled, handleFile, onError, t]
   )
 
   const handleChange = useCallback(
@@ -81,6 +87,10 @@ export const UploadCard = memo(function UploadCard({
   const handleLoadExample = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation()
+      if (disabled) {
+        onError?.(t("home.upload.authOrGuestRequired"))
+        return
+      }
       setIsLoadingExample(true)
       try {
         const response = await fetch("/Rinjani-36K-2026.gpx")
@@ -92,11 +102,12 @@ export const UploadCard = memo(function UploadCard({
         setIsLoadingExample(false)
       }
     },
-    [onFileLoaded]
+    [disabled, onError, onFileLoaded, t]
   )
 
   const hasFile = !!fileName
   const isBusy = isLoading || isLoadingExample
+  const isBlocked = isBusy || disabled
 
   return (
     <motion.div
@@ -109,15 +120,21 @@ export const UploadCard = memo(function UploadCard({
           className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
             hasFile ? "p-3" : "p-8 text-center sm:p-10"
           } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""} ${
-            isBusy ? "pointer-events-none opacity-90" : ""
+            isBlocked ? "pointer-events-none opacity-90" : ""
           }`}
           onDragOver={(e) => {
             e.preventDefault()
-            setIsDragging(true)
+            if (!disabled) setIsDragging(true)
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          onClick={() => !isBusy && inputRef.current?.click()}
+          onClick={() => {
+            if (disabled) {
+              onError?.(t("home.upload.authOrGuestRequired"))
+              return
+            }
+            if (!isBusy) inputRef.current?.click()
+          }}
         >
           <input
             ref={inputRef}
@@ -125,7 +142,7 @@ export const UploadCard = memo(function UploadCard({
             accept=".gpx"
             onChange={handleChange}
             className="hidden"
-            disabled={isBusy}
+            disabled={isBlocked}
           />
 
           <AnimatePresence mode="wait">
@@ -214,7 +231,7 @@ export const UploadCard = memo(function UploadCard({
             <button
               type="button"
               onClick={handleLoadExample}
-              disabled={isBusy}
+              disabled={isBlocked}
               className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#1B4332] bg-white px-4 py-2 text-sm font-semibold text-[#1B4332] shadow-2xs transition-all hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.98] disabled:opacity-50"
             >
               {isLoadingExample ? (

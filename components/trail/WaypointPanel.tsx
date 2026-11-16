@@ -55,9 +55,9 @@ export const WaypointPanel = memo(function WaypointPanel({
   const isPro = user?.plan === "pro"
   const maxCustom = limits.maxCustomWaypoints
 
-  // Count only custom waypoints added by the user
+  // Count only custom waypoints added by the user (explicitly isFromGpx === false)
   const customWaypointsCount = useMemo(
-    () => waypoints.filter((wp) => !wp.isFromGpx).length,
+    () => waypoints.filter((wp) => wp.isFromGpx === false).length,
     [waypoints]
   )
 
@@ -134,7 +134,8 @@ export const WaypointPanel = memo(function WaypointPanel({
 
     setError("")
     const trimmedName = name.trim()
-    const km = parseFloat(distanceStr)
+    const cleanDist = distanceStr.trim().replace(",", ".")
+    const km = parseFloat(cleanDist)
 
     if (!trimmedName) {
       setError("Silakan masukkan nama waypoint.")
@@ -288,7 +289,8 @@ export const WaypointPanel = memo(function WaypointPanel({
               />
               <div className="relative w-28 shrink-0">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={distanceStr}
                   onChange={(e) => {
                     setDistanceStr(e.target.value)
@@ -298,9 +300,6 @@ export const WaypointPanel = memo(function WaypointPanel({
                   disabled={isLimitReached && !editingId}
                   aria-label="Jarak waypoint dalam kilometer"
                   placeholder="0.0"
-                  min={0}
-                  max={totalDistanceKm}
-                  step={0.01}
                   className="min-h-11 w-full rounded-xl border border-[#D1D5DB] bg-white px-3 py-2 pr-8 text-sm font-medium text-[#2D3436] tabular-nums placeholder-[#6B7280] transition focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-[#6B7280]"
                 />
                 <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs font-semibold text-[#4B5563]">

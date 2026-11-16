@@ -41,11 +41,9 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
 
     const handleWindowKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // Modal is mandatory until user logs in or submits a guest name
         e.preventDefault()
-        trackEvent("register_clicked", {
-          source: "welcome_modal_guest",
-        })
-        onSubmit(name.trim() || "Pelari")
+        e.stopPropagation()
       }
     }
     window.addEventListener("keydown", handleWindowKeyDown)
@@ -54,7 +52,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
       document.documentElement.style.overflow = prevHtmlOverflow
       window.removeEventListener("keydown", handleWindowKeyDown)
     }
-  }, [isOpen, name, onSubmit])
+  }, [isOpen])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {

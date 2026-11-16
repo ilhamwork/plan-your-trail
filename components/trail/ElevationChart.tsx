@@ -237,13 +237,6 @@ export const ElevationChart = memo(function ElevationChart({
                   <span>Masuk untuk melihat {waypoints.length} waypoint</span>
                 </Link>
               )}
-
-              {waypoints.length > 0 && canShowGpxWaypoints && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#F1EDE8] px-2.5 py-1 text-xs font-semibold text-[#1B4332]">
-                  <MapPin className="h-3 w-3 text-[#E76F51]" />
-                  <span>{waypoints.length} Pos</span>
-                </span>
-              )}
             </div>
           </div>
 

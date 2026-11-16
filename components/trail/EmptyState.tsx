@@ -43,6 +43,7 @@ interface EmptyStateProps {
   fileName: string
   error: string
   isLoading: boolean
+  uploadDisabled?: boolean
 }
 
 export function EmptyState({
@@ -52,6 +53,7 @@ export function EmptyState({
   fileName,
   error,
   isLoading,
+  uploadDisabled = false,
 }: EmptyStateProps) {
   return (
     <motion.div
@@ -84,6 +86,7 @@ export function EmptyState({
           fileName={fileName}
           error={error}
           isLoading={isLoading}
+          disabled={uploadDisabled}
         />
       </motion.div>
 

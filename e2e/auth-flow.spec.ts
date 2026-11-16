@@ -60,6 +60,14 @@ test.describe("E2 Auth UI & Anonymous Navigation", () => {
     const guestButton = page.getByRole("button", { name: "Mulai sebagai Tamu" })
     await expect(guestButton).toBeVisible()
     await expect(guestButton).toBeDisabled()
+
+    // Pressing Escape or clicking backdrop must NOT close the modal
+    await page.keyboard.press("Escape")
+    await page.mouse.click(10, 10)
+    await expect(
+      page.getByRole("dialog")
+    ).toBeVisible()
+    await expect(guestButton).toBeVisible()
   })
 
   test("anonymous user chooses guest mode and sees Pro locked state on waypoint management", async ({

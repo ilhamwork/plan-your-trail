@@ -24,10 +24,10 @@ export default async function RoutesPage() {
           {/* Header section (Airbnb listing page unboxed style) */}
           <div className="text-left sm:text-center">
             <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
-              Simpan & Kelola Koleksi Rute Kamu
+              Simpan & Kelola Koleksi Rute
             </h1>
             <p className="mt-3 text-subhead sm:mx-auto sm:max-w-2xl">
-              Masuk atau daftar akun gratis untuk menyimpan rute trail running favorit, akses prakiraan cuaca race day, dan kelola rute dari perangkat mana saja.
+              Masuk atau daftar akun untuk menyimpan rute trail running favorit, akses prakiraan cuaca race day, dan kelola rute dari perangkat mana saja.
             </p>
 
             {/* Primary actions */}
@@ -58,19 +58,10 @@ export default async function RoutesPage() {
   const userLimits = limits(user)
 
   return (
-    <div className="min-h-screen bg-[#FAF6F1] pb-24 sm:pb-14">
+    <div className="min-h-screen bg-[#FAF6F1] text-[#2D3436] pb-24 sm:pb-14">
       <Header />
 
-      <main className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
-        <div className="mb-8">
-          <h1 className="heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
-            Rute Saya
-          </h1>
-          <p className="mt-1 text-subhead text-sm sm:text-base text-[#4B5563]">
-            Koleksi rute trail running yang tersimpan di akun kamu dan siap dianalisis kapan saja.
-          </p>
-        </div>
-
+      <main className="mx-auto max-w-xl px-4 pt-6 pb-12 sm:px-6">
         <RoutesListClient
           initialRoutes={routes}
           maxRoutes={userLimits.maxSavedRoutes}

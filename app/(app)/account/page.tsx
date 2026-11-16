@@ -87,60 +87,49 @@ export default async function AccountPage() {
             </div>
           </div>
 
-          {/* Right Column: Quota Tiles & Feature Rows */}
+          {/* Right Column: Flat Editorial Feature & Roadmap Sections (Airbnb Style) */}
           <div className="space-y-8">
-            {/* Active Features List (Airbnb Settings Row Style) */}
-            <section
-              aria-labelledby="active-features-heading"
-              className="rounded-2xl border border-[#E5E7EB] bg-white px-6 py-2"
-            >
-              <div className="border-b border-[#E5E7EB] py-4">
-                <h2
-                  id="active-features-heading"
-                  className="heading-2"
-                >
-                  Fitur Aktif di Akun Kamu
-                </h2>
-              </div>
+            {/* Active Features List */}
+            <section aria-labelledby="active-features-heading">
+              <h2
+                id="active-features-heading"
+                className="heading-2 pb-4 border-b border-[#E5E7EB]"
+              >
+                Fitur Aktif di Akun Kamu
+              </h2>
 
               <ul className="divide-y divide-[#E5E7EB]">
-                <li className="flex items-start gap-4 py-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/10 text-[#2A9D8F]">
-                    <CloudSun className="h-5 w-5" />
-                  </div>
+                <li className="flex items-start gap-4 py-5">
+                  <CloudSun className="mt-0.5 h-5 w-5 shrink-0 text-[#2A9D8F]" />
                   <div>
                     <p className="text-sm font-semibold text-[#2D3436]">
                       Prakiraan Cuaca per Sesi
                     </p>
-                    <p className="mt-0.5 text-xs text-[#4B5563]">
+                    <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
                       Data suhu, peluang hujan, dan kecepatan angin untuk sesi Pagi, Siang, Sore, serta Malam di koordinat rute.
                     </p>
                   </div>
                 </li>
 
-                <li className="flex items-start gap-4 py-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E76F51]/10 text-[#E76F51]">
-                    <MapPin className="h-5 w-5" />
-                  </div>
+                <li className="flex items-start gap-4 py-5">
+                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#E76F51]" />
                   <div>
                     <p className="text-sm font-semibold text-[#2D3436]">
                       Waypoint GPX pada Grafik Elevasi
                     </p>
-                    <p className="mt-0.5 text-xs text-[#4B5563]">
+                    <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
                       Penanda pos pemeriksaan dan jarak kilometer tampil langsung di atas profil elevasi.
                     </p>
                   </div>
                 </li>
 
-                <li className="flex items-start gap-4 py-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1B4332]/10 text-[#1B4332]">
-                    <Clock className="h-5 w-5" />
-                  </div>
+                <li className="flex items-start gap-4 py-5">
+                  <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#1B4332]" />
                   <div>
                     <p className="text-sm font-semibold text-[#2D3436]">
                       Kalkulator Estimasi Waktu Finish
                     </p>
-                    <p className="mt-0.5 text-xs text-[#4B5563]">
+                    <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
                       Perhitungan total waktu tempuh berdasarkan target pace (menit/km) dan total tanjakan rute.
                     </p>
                   </div>
@@ -148,15 +137,13 @@ export default async function AccountPage() {
               </ul>
             </section>
 
-            {/* Pro Roadmap Banner */}
+            {/* Pro Roadmap Section */}
             <section
               aria-labelledby="pro-roadmap-heading"
-              className="rounded-2xl border border-[#E5E7EB] bg-white p-6"
+              className="border-t border-[#D1D5DB] pt-8"
             >
               <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F1EDE8] text-[#1B4332]">
-                  <Compass className="h-5 w-5" />
-                </div>
+                <Compass className="mt-0.5 h-5 w-5 shrink-0 text-[#1B4332]" />
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3
@@ -169,7 +156,7 @@ export default async function AccountPage() {
                       Segera Hadir 2027
                     </span>
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#4B5563]">
                     Manajemen waypoint kustom dan catatan nutrisi, prakiraan cuaca per jam, kalkulator cutoff time tiap pos, ekspor PDF race brief, serta kapasitas penyimpanan rute tanpa batas.
                   </p>
                 </div>

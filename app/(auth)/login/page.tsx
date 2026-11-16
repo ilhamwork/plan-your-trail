@@ -112,9 +112,6 @@ function LoginForm() {
           <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
             Masuk ke Akun Kamu
           </h1>
-          <p className="mt-1 text-subhead text-sm sm:text-base text-[#4B5563]">
-            Akses rute tersimpan dan prakiraan cuaca jalur lari kamu.
-          </p>
         </div>
 
         {isOffline && (

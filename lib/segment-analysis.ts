@@ -245,6 +245,8 @@ export function buildWaypointSegments(
     segments.push({
       id: i,
       name: `${prevName} - ${b.name}`,
+      startKm: startPt.distance / 1000,
+      endKm: endPt.distance / 1000,
       distance,
       startElevation: Math.round(startPt.ele),
       endElevation: Math.round(endPt.ele),

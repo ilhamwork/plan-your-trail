@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useEntitlements } from "@/lib/entitlements"
 import { fetchWeatherAction } from "@/app/actions/weather"
 import type { WeatherData } from "@/lib/weather"
-import { ComingSoonLock } from "./ComingSoonLock"
 
 
 interface WeatherForecastProps {
@@ -438,16 +437,6 @@ export const WeatherForecast = memo(function WeatherForecast({
                 ))}
               </ul>
             )}
-
-            {/* Pro Hourly Teaser (PRD 6.1) */}
-            <div className="mt-4">
-              <ComingSoonLock
-                feature="weather_hourly"
-                title="Prakiraan Cuaca Per Jam (Hourly)"
-                source="weather_card"
-                variant="inline"
-              />
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

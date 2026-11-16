@@ -51,7 +51,11 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
   }
 
   const trackPoints = (savedRoute.trackSimplified as TrackPoint[]) || []
-  const waypoints = (metrics.waypoints || []) as Waypoint[]
+  const waypoints = ((metrics.waypoints || []) as Waypoint[]).map((wp, idx) => ({
+    ...wp,
+    id: wp.id || `wpt-${idx}`,
+    isFromGpx: wp.isFromGpx ?? true,
+  }))
   const segments = analyzeSegments(trackPoints)
   const waypointSegments = buildWaypointSegments(trackPoints, waypoints)
 

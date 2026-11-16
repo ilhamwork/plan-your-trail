@@ -53,6 +53,8 @@ export interface Segment {
 export interface WaypointSegment {
   id: number;
   name: string;
+  startKm: number;
+  endKm: number;
   distance: number; // meters
   startElevation: number;
   endElevation: number;

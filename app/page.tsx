@@ -12,7 +12,7 @@ import { useHighlightRange } from "@/lib/use-highlight-range"
 import { Header } from "@/components/trail/Header"
 import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
-import { SegmentList } from "@/components/trail/SegmentList"
+import { SegmentList, type SegmentTabType } from "@/components/trail/SegmentList"
 import { EmptyState } from "@/components/trail/EmptyState"
 
 import { useWaypoints } from "@/components/trail/hooks/useWaypoints"
@@ -55,6 +55,14 @@ const GradientDistribution = dynamic(
 const PaceEstimator = dynamic(
   () =>
     import("@/components/trail/PaceEstimator").then((mod) => mod.PaceEstimator),
+  { ssr: false }
+)
+
+const ProFeaturesTeaser = dynamic(
+  () =>
+    import("@/components/trail/ProFeaturesTeaser").then(
+      (mod) => mod.ProFeaturesTeaser
+    ),
   { ssr: false }
 )
 
@@ -101,6 +109,7 @@ export default function Home() {
   const {
     sessionRunnerName,
     showSessionModal,
+    canUpload,
     handleSessionNameSubmit,
   } = useRunnerSession()
 
@@ -148,6 +157,7 @@ export default function Home() {
   } = useRouteUpload({
     parseGPX,
     sessionRunnerName,
+    canUpload,
     onWaypointsLoaded: (wps) => setWaypoints(wps),
     onResetInteractions: handleResetInteractions,
   })
@@ -185,9 +195,15 @@ export default function Home() {
     setShowShareModal(true)
   }, [])
 
-  const handleSegmentTabChange = useCallback(() => {
-    clearHighlight()
-  }, [clearHighlight])
+  const [segmentTab, setSegmentTab] = useState<SegmentTabType | null>(null)
+
+  const handleSegmentTabChange = useCallback(
+    (nextTab: SegmentTabType) => {
+      setSegmentTab(nextTab)
+      clearHighlight()
+    },
+    [clearHighlight]
+  )
 
   const handleSegmentClick = useCallback(
     (segment: Segment) => {
@@ -203,13 +219,19 @@ export default function Home() {
     [toggleHighlight]
   )
 
-  // Determine current active segments list (waypoint segments if present, otherwise gradient segments)
+  const hasWaypointSegments = mergedWaypointSegments.length > 0
+  const effectiveSegmentTab: SegmentTabType =
+    segmentTab === "waypoints" && !hasWaypointSegments
+      ? "gradient"
+      : (segmentTab ?? (hasWaypointSegments ? "waypoints" : "gradient"))
+
+  // Determine current active segments list based on the selected SegmentList tab
   const activeSegmentsList = useMemo(() => {
-    if (mergedWaypointSegments.length > 0) {
+    if (effectiveSegmentTab === "waypoints" && hasWaypointSegments) {
       return mergedWaypointSegments
     }
     return gpxData?.segments || []
-  }, [mergedWaypointSegments, gpxData?.segments])
+  }, [effectiveSegmentTab, hasWaypointSegments, mergedWaypointSegments, gpxData?.segments])
 
   const activeSegmentIndex = useMemo(() => {
     if (!highlightRange || activeSegmentsList.length === 0) return -1
@@ -290,6 +312,7 @@ export default function Home() {
                 fileName={fileName}
                 error={error}
                 isLoading={isParsingGPX || isSubmittingDetails}
+                uploadDisabled={!canUpload}
               />
             </div>
           ) : (
@@ -369,8 +392,24 @@ export default function Home() {
                     fileName={fileName}
                     error={error}
                     isLoading={isParsingGPX || isSubmittingDetails}
+                    disabled={!canUpload}
                   />
                 </div>
+
+                {/* Waypoint Management when logged in - placed right before Segment Breakdown */}
+                {user && (
+                  <div className="border-t border-[#D1D5DB] py-10">
+                    <WaypointPanel
+                      totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                      waypoints={waypoints}
+                      trackPoints={gpxData.trackPoints}
+                      fileName={fileName}
+                      onAdd={handleAddWaypoint}
+                      onEdit={handleEditWaypoint}
+                      onRemove={handleRemoveWaypoint}
+                    />
+                  </div>
+                )}
 
                 {/* 3. Segment Breakdown */}
                 <div className="border-t border-[#D1D5DB] py-10">
@@ -379,6 +418,7 @@ export default function Home() {
                     segments={gpxData.segments}
                     waypointSegments={mergedWaypointSegments}
                     highlightRange={highlightRange}
+                    activeTab={effectiveSegmentTab}
                     onSegmentClick={handleSegmentClick}
                     onWaypointSegmentClick={handleWaypointSegmentClick}
                     onTabChange={handleSegmentTabChange}
@@ -390,7 +430,7 @@ export default function Home() {
                   <GradientDistribution points={gpxData.trackPoints} />
                 </div>
 
-                {/* 6. Account Features Group (Pace, Waypoints, Weather) — 1 unified section with 1 CTA when locked */}
+                {/* 6. Account Features Group (Pace, Waypoints when locked, Weather) — 1 unified section with 1 CTA when locked */}
                 <div className="flex flex-col gap-6 border-t border-[#D1D5DB] py-10">
                   {!authLoading && !user && (
                     <div className="mb-2">
@@ -403,19 +443,21 @@ export default function Home() {
                     </div>
                   )}
 
-                  <PaceEstimator
-                    stats={gpxData.stats}
-                    waypoints={sortedWaypoints}
-                  />
-                  <WaypointPanel
-                    totalDistanceKm={gpxData.stats.totalDistance / 1000}
-                    waypoints={waypoints}
-                    trackPoints={gpxData.trackPoints}
-                    fileName={fileName}
-                    onAdd={handleAddWaypoint}
-                    onEdit={handleEditWaypoint}
-                    onRemove={handleRemoveWaypoint}
-                  />
+                  <PaceEstimator stats={gpxData.stats} />
+
+                  {/* Waypoint Management when anonymous (stays in locked group with login CTA) */}
+                  {!user && (
+                    <WaypointPanel
+                      totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                      waypoints={waypoints}
+                      trackPoints={gpxData.trackPoints}
+                      fileName={fileName}
+                      onAdd={handleAddWaypoint}
+                      onEdit={handleEditWaypoint}
+                      onRemove={handleRemoveWaypoint}
+                    />
+                  )}
+
                   <WeatherForecast
                     center={gpxData.center}
                     initialDate={routeDetails.raceDate}
@@ -432,6 +474,13 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+
+                {/* Pro Features Teaser (Cutoff Estimator + Hourly Weather) — only when logged in, right before Donate */}
+                {user && (
+                  <div className="border-t border-[#D1D5DB] py-10">
+                    <ProFeaturesTeaser waypoints={sortedWaypoints} />
+                  </div>
+                )}
 
                 {/* Community Support & Footer */}
                 <div className="border-t border-[#D1D5DB] pt-10">

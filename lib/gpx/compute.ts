@@ -195,11 +195,13 @@ export function computeGPXData(extracted: ExtractedGPX): GPXData {
     // Add a waypoint for each valid pass
     for (const idx of filteredPassIndices) {
       waypoints.push({
+        id: `gpx-wpt-${idx}`,
         name: wpt.name,
         lat: wpt.lat,
         lon: wpt.lon,
         ele: wpt.ele,
         distance: trackPoints[idx].distance,
+        isFromGpx: true,
       });
     }
   }

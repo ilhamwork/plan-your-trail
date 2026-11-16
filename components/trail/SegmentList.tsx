@@ -7,32 +7,35 @@ import { motion, AnimatePresence } from "framer-motion"
 import { formatKmLabel } from "@/lib/format"
 import { useI18n } from "@/lib/i18n/context"
 
+export type SegmentTabType = "waypoints" | "gradient"
+
 interface SegmentListProps {
   segments: Segment[]
   waypointSegments: WaypointSegment[]
   highlightRange?: HighlightRange | null
+  activeTab?: SegmentTabType
   onSegmentClick?: (segment: Segment) => void
   onWaypointSegmentClick?: (segment: WaypointSegment) => void
-  onTabChange?: () => void
+  onTabChange?: (tab: SegmentTabType) => void
 }
-
-type TabType = "waypoints" | "gradient"
 
 export const SegmentList = memo(function SegmentList({
   segments,
   waypointSegments,
   highlightRange,
+  activeTab,
   onSegmentClick,
   onWaypointSegmentClick,
   onTabChange,
 }: SegmentListProps) {
   const { t } = useI18n()
   const hasWaypoints = waypointSegments.length > 0
-  const [selectedTab, setTab] = useState<TabType | null>(null)
-  const tab: TabType =
-    selectedTab === "waypoints" && !hasWaypoints
+  const [selectedTab, setTab] = useState<SegmentTabType | null>(null)
+  const rawTab = activeTab ?? selectedTab
+  const tab: SegmentTabType =
+    rawTab === "waypoints" && !hasWaypoints
       ? "gradient"
-      : (selectedTab ?? (hasWaypoints ? "waypoints" : "gradient"))
+      : (rawTab ?? (hasWaypoints ? "waypoints" : "gradient"))
 
   const [localExpandedId, setLocalExpandedId] = useState<number | null>(null)
 
@@ -52,11 +55,11 @@ export const SegmentList = memo(function SegmentList({
       )
     : null
 
-  // If highlightRange points to a segment in the other tab, adjust tab during render
+  // If highlightRange points to a segment in the other tab, adjust tab during render (uncontrolled mode)
   const [prevHighlightRange, setPrevHighlightRange] = useState(highlightRange)
   if (highlightRange !== prevHighlightRange) {
     setPrevHighlightRange(highlightRange)
-    if (highlightRange) {
+    if (highlightRange && activeTab === undefined) {
       if (
         tab === "waypoints" &&
         !matchedWaypointSegment &&
@@ -111,9 +114,9 @@ export const SegmentList = memo(function SegmentList({
               aria-selected={tab === "waypoints"}
               onClick={() => {
                 if (tab !== "waypoints") {
-                  setTab("waypoints")
+                  if (activeTab === undefined) setTab("waypoints")
                   setLocalExpandedId(null)
-                  onTabChange?.()
+                  onTabChange?.("waypoints")
                 }
               }}
               className={`min-h-8 cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
@@ -130,9 +133,9 @@ export const SegmentList = memo(function SegmentList({
               aria-selected={tab === "gradient"}
               onClick={() => {
                 if (tab !== "gradient") {
-                  setTab("gradient")
+                  if (activeTab === undefined) setTab("gradient")
                   setLocalExpandedId(null)
-                  onTabChange?.()
+                  onTabChange?.("gradient")
                 }
               }}
               className={`min-h-8 cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
@@ -217,7 +220,7 @@ function WaypointSegmentRow({
               expanded ? "text-[#FAF6F1]/85" : "text-[#4B5563]"
             }`}
           >
-            +{segment.elevationGain}m / -{segment.elevationLoss}m
+            KM {segment.startKm.toFixed(1)} s/d {segment.endKm.toFixed(1)}
           </span>
           <span
             className={`text-sm font-bold ${

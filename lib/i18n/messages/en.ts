@@ -52,6 +52,8 @@ const enMessages: TranslationSchema = {
       limitPro: "This file exceeds the 20 MB maximum limit.",
       invalidType: "Unsupported file type. Please upload a .gpx file.",
       parseError: "Could not parse GPX file. Please check that the file is valid.",
+      authOrGuestRequired:
+        "Please log in or enter a guest name first to upload a GPX file.",
     },
     empty: {
       title: "No Route Loaded Yet",

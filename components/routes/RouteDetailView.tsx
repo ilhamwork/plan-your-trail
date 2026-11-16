@@ -6,23 +6,24 @@ import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
-  ArrowLeft,
   Download,
   Trash2,
   CloudCheck,
   Pencil,
   Check,
+  Save,
+  AlertCircle,
+  Loader2,
 } from "lucide-react"
 
 import type { GPXData, TrackPoint, Segment, WaypointSegment } from "@/lib/types"
 import { useHighlightRange } from "@/lib/use-highlight-range"
 import { useWaypoints } from "@/components/trail/hooks/useWaypoints"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
-import { SegmentList } from "@/components/trail/SegmentList"
+import { SegmentList, type SegmentTabType } from "@/components/trail/SegmentList"
 import { WaypointPanel } from "@/components/trail/WaypointPanel"
 import { deleteRouteAction, updateRouteAction } from "@/app/actions/routes"
 import { DeleteRouteModal } from "./DeleteRouteModal"
-import { useEntitlements } from "@/lib/entitlements"
 
 // ─── Dynamic Trail Analysis Components ──────────────────────────────
 const MapView = dynamic(
@@ -56,6 +57,14 @@ const WeatherForecast = dynamic(
 const PaceEstimator = dynamic(
   () =>
     import("@/components/trail/PaceEstimator").then((mod) => mod.PaceEstimator),
+  { ssr: false }
+)
+
+const ProFeaturesTeaser = dynamic(
+  () =>
+    import("@/components/trail/ProFeaturesTeaser").then(
+      (mod) => mod.ProFeaturesTeaser
+    ),
   { ssr: false }
 )
 
@@ -101,7 +110,6 @@ export function RouteDetailView({
   createdAt,
 }: RouteDetailViewProps) {
   const router = useRouter()
-  const { user, isLoading: authLoading } = useEntitlements()
   const [hoveredPoint, setHoveredPoint] = useState<TrackPoint | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -137,28 +145,42 @@ export function RouteDetailView({
   const [saveError, setSaveError] = useState<string | null>(null)
 
   // Track if changes have been made
-  const initialWaypointsJson = useMemo(
-    () => JSON.stringify(gpxData.waypoints || []),
-    [gpxData.waypoints]
+  const [savedWaypointsJson, setSavedWaypointsJson] = useState(() =>
+    JSON.stringify(gpxData.waypoints || [])
   )
+  const [savedDetails, setSavedDetails] = useState({
+    raceName: routeName,
+    raceDate: raceDate || "",
+  })
+
   const currentWaypointsJson = useMemo(
     () => JSON.stringify(waypoints),
     [waypoints]
   )
 
   const hasUnsavedChanges = useMemo(() => {
-    const nameChanged = routeDetails.raceName !== routeName
-    const dateChanged = (routeDetails.raceDate || "") !== (raceDate || "")
-    const waypointsChanged = currentWaypointsJson !== initialWaypointsJson
+    const nameChanged = routeDetails.raceName !== savedDetails.raceName
+    const dateChanged = (routeDetails.raceDate || "") !== (savedDetails.raceDate || "")
+    const waypointsChanged = currentWaypointsJson !== savedWaypointsJson
     return nameChanged || dateChanged || waypointsChanged
   }, [
     routeDetails.raceName,
-    routeName,
+    savedDetails.raceName,
     routeDetails.raceDate,
-    raceDate,
+    savedDetails.raceDate,
     currentWaypointsJson,
-    initialWaypointsJson,
+    savedWaypointsJson,
   ])
+
+  const [segmentTab, setSegmentTab] = useState<SegmentTabType | null>(null)
+
+  const handleSegmentTabChange = useCallback(
+    (nextTab: SegmentTabType) => {
+      setSegmentTab(nextTab)
+      clearHighlight()
+    },
+    [clearHighlight]
+  )
 
   const handleSegmentClick = useCallback(
     (segment: Segment) => {
@@ -174,13 +196,19 @@ export function RouteDetailView({
     [toggleHighlight]
   )
 
-  // Determine current active segments list (waypoint segments if present, otherwise gradient segments)
+  const hasWaypointSegments = mergedWaypointSegments.length > 0
+  const effectiveSegmentTab: SegmentTabType =
+    segmentTab === "waypoints" && !hasWaypointSegments
+      ? "gradient"
+      : (segmentTab ?? (hasWaypointSegments ? "waypoints" : "gradient"))
+
+  // Determine current active segments list based on the selected SegmentList tab
   const activeSegmentsList = useMemo(() => {
-    if (mergedWaypointSegments.length > 0) {
+    if (effectiveSegmentTab === "waypoints" && hasWaypointSegments) {
       return mergedWaypointSegments
     }
     return gpxData.segments || []
-  }, [mergedWaypointSegments, gpxData.segments])
+  }, [effectiveSegmentTab, hasWaypointSegments, mergedWaypointSegments, gpxData.segments])
 
   const activeSegmentIndex = useMemo(() => {
     if (!highlightRange || activeSegmentsList.length === 0) return -1
@@ -257,6 +285,11 @@ export function RouteDetailView({
         return
       }
 
+      setSavedWaypointsJson(JSON.stringify(waypoints))
+      setSavedDetails({
+        raceName: routeDetails.raceName,
+        raceDate: routeDetails.raceDate || "",
+      })
       setSaveMessage("Perubahan rute berhasil disimpan ke database!")
       setTimeout(() => setSaveMessage(null), 4000)
     } catch {
@@ -308,16 +341,6 @@ export function RouteDetailView({
           onSave={hasUnsavedChanges ? handleSaveChanges : undefined}
           isSaving={isSavingChanges}
           isSaved={!hasUnsavedChanges}
-          topLeftSlot={
-            <Link
-              href="/routes"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#D1D5DB] bg-white/95 text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-              title="Kembali ke Rute Saya"
-              aria-label="Kembali ke Rute Saya"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          }
         />
       )}
 
@@ -403,41 +426,8 @@ export function RouteDetailView({
         />
         </div>
 
-        {/* 3. Segment Breakdown */}
+        {/* 3. Waypoint Management (placed right before Segment Breakdown) */}
         <div className="border-t border-[#D1D5DB] py-10">
-          <SegmentList
-            key={routeId}
-            segments={gpxData.segments}
-            waypointSegments={mergedWaypointSegments}
-            highlightRange={highlightRange}
-            onSegmentClick={handleSegmentClick}
-            onWaypointSegmentClick={handleWaypointSegmentClick}
-            onTabChange={clearHighlight}
-          />
-        </div>
-
-        {/* 5. Gradient Distribution */}
-        <div className="border-t border-[#D1D5DB] py-10">
-          <GradientDistribution points={gpxData.trackPoints} />
-        </div>
-
-        {/* 6. Account Features Group (Pace, Waypoints, Weather) */}
-        <div className="flex flex-col gap-6 border-t border-[#D1D5DB] py-10">
-          {!authLoading && !user && (
-            <div className="mb-2">
-              <p className="text-sm font-semibold text-[#111827]">
-                Masuk untuk menggunakan fitur analisis lanjutan ini
-              </p>
-              <p className="mt-0.5 text-xs text-[#6B7280]">
-                Kalkulasi estimasi pace, pos checkpoint kustom, dan prakiraan cuaca sesi race.
-              </p>
-            </div>
-          )}
-
-          <PaceEstimator
-            stats={gpxData.stats}
-            waypoints={sortedWaypoints}
-          />
           <WaypointPanel
             totalDistanceKm={gpxData.stats.totalDistance / 1000}
             waypoints={waypoints}
@@ -447,21 +437,39 @@ export function RouteDetailView({
             onEdit={handleEditWaypoint}
             onRemove={handleRemoveWaypoint}
           />
+        </div>
+
+        {/* 4. Segment Breakdown */}
+        <div className="border-t border-[#D1D5DB] py-10">
+          <SegmentList
+            key={routeId}
+            segments={gpxData.segments}
+            waypointSegments={mergedWaypointSegments}
+            highlightRange={highlightRange}
+            activeTab={effectiveSegmentTab}
+            onSegmentClick={handleSegmentClick}
+            onWaypointSegmentClick={handleWaypointSegmentClick}
+            onTabChange={handleSegmentTabChange}
+          />
+        </div>
+
+        {/* 5. Gradient Distribution */}
+        <div className="border-t border-[#D1D5DB] py-10">
+          <GradientDistribution points={gpxData.trackPoints} />
+        </div>
+
+        {/* 6. Account Features Group (Pace & Weather) */}
+        <div className="flex flex-col gap-6 border-t border-[#D1D5DB] py-10">
+          <PaceEstimator stats={gpxData.stats} />
           <WeatherForecast
             center={gpxData.center}
             initialDate={routeDetails.raceDate || undefined}
           />
+        </div>
 
-          {!authLoading && !user && (
-            <div className="pt-2">
-              <Link
-                href="/login"
-                className="flex min-h-11 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-2.5 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-              >
-                Masuk ke Akun
-              </Link>
-            </div>
-          )}
+        {/* Pro Features Teaser (Cutoff Estimator + Hourly Weather) — right before Donate */}
+        <div className="border-t border-[#D1D5DB] py-10">
+          <ProFeaturesTeaser waypoints={sortedWaypoints} />
         </div>
 
         <div className="border-t border-[#D1D5DB] pt-10">
@@ -469,6 +477,38 @@ export function RouteDetailView({
         </div>
         <Footer runnerName={runnerName} />
       </div>
+
+      {/* Sticky Save Bar when changes are unsaved (e.g. adding waypoints) */}
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-md animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-2 min-w-0">
+              <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+              <span className="truncate text-xs font-semibold text-amber-900">
+                Ada perubahan rute belum disimpan
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveChanges}
+              disabled={isSavingChanges}
+              className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46] disabled:opacity-50"
+            >
+              {isSavingChanges ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Simpan</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Modals ────────────────────────────────────────── */}
       <DeleteRouteModal

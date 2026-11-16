@@ -50,6 +50,8 @@ const idMessages = {
       limitPro: "File ini melebihi batas maksimal 20 MB.",
       invalidType: "Format file belum pas. Yuk, upload file dengan format .gpx",
       parseError: "File GPX gagal dibaca. Pastikan filenya nggak rusak, ya.",
+      authOrGuestRequired:
+        "Silakan masuk ke akun atau isi nama tamu terlebih dahulu untuk upload GPX.",
     },
     empty: {
       title: "Belum Ada Rute Nih",

@@ -161,7 +161,9 @@ export async function saveRouteAction(
     parsed.data.waypoints &&
     userLimits.maxCustomWaypoints !== null
   ) {
-    const customWaypoints = parsed.data.waypoints.filter((wp) => !wp.isFromGpx)
+    const customWaypoints = parsed.data.waypoints.filter(
+      (wp) => wp.isFromGpx === false
+    )
     if (customWaypoints.length > userLimits.maxCustomWaypoints) {
       return {
         ok: false,
@@ -411,7 +413,9 @@ export async function updateRouteAction(
   // Check waypoint limits
   const userLimits = limits(user)
   if (parsed.data.waypoints && userLimits.maxCustomWaypoints !== null) {
-    const customWaypoints = parsed.data.waypoints.filter((wp) => !wp.isFromGpx)
+    const customWaypoints = parsed.data.waypoints.filter(
+      (wp) => wp.isFromGpx === false
+    )
     if (customWaypoints.length > userLimits.maxCustomWaypoints) {
       return {
         ok: false,
