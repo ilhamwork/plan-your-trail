@@ -15,7 +15,9 @@ test.describe("Sprint 6 Critical Flows: Anonymous Analysis, Gating & Security", 
     await guestButton.click()
 
     // Load sample GPX
-    await page.getByRole("button", { name: "Try GPX Example" }).click()
+    await page
+      .getByRole("button", { name: /Try with a sample route|Coba dengan rute contoh/i })
+      .click()
 
     // Verify locked states for Free-tier and Pro-tier features
     await expect(
