@@ -11,6 +11,7 @@ interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
   onError?: (message: string) => void
   fileName?: string
+  fileSizeBytes?: number
   error?: string
   isLoading?: boolean
   disabled?: boolean
@@ -20,6 +21,7 @@ export const UploadCard = memo(function UploadCard({
   onFileLoaded,
   onError,
   fileName,
+  fileSizeBytes,
   error,
   isLoading,
   disabled = false,
@@ -130,6 +132,19 @@ export const UploadCard = memo(function UploadCard({
   const isBusy = isLoading || isLoadingExample
   const isBlocked = isBusy || disabled
 
+  const formattedFileSize = (() => {
+    if (!fileSizeBytes || fileSizeBytes <= 0) return ""
+    if (fileSizeBytes >= 1024 * 1024) {
+      const mb = new Intl.NumberFormat(locale === "id" ? "id-ID" : "en-US", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(fileSizeBytes / (1024 * 1024))
+      return `${mb} MB`
+    }
+    const kb = Math.max(1, Math.round(fileSizeBytes / 1024))
+    return `${kb} KB`
+  })()
+
   const formattedDistance = new Intl.NumberFormat(
     locale === "id" ? "id-ID" : "en-US",
     { maximumFractionDigits: 1 }
@@ -200,19 +215,26 @@ export const UploadCard = memo(function UploadCard({
                 animate={{ opacity: 1, x: 0 }}
                 exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 8 }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
-                className="flex items-center gap-3"
+                className="flex items-center justify-between gap-3"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/25 text-[#74C69D]">
-                  <FileCheck className="h-5 w-5" />
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/25 text-[#74C69D]">
+                    <FileCheck className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-white">
+                      {fileName}
+                    </p>
+                    <p className="text-xs font-medium text-[#FAF6F1]/90">
+                      {formattedFileSize
+                        ? t("home.upload.loadedSubtitle", { size: formattedFileSize })
+                        : "GPX"}
+                    </p>
+                  </div>
                 </div>
-                <div className="max-w-9/12 min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-white">
-                    {fileName}
-                  </p>
-                  <p className="text-xs font-medium text-[#FAF6F1]/90">
-                    {t("home.upload.loadedSubtitle", { maxMb })}
-                  </p>
-                </div>
+                <span className="shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-[#FAF6F1] transition group-hover:bg-white/25">
+                  {t("home.upload.changeFileAction")}
+                </span>
               </motion.div>
             ) : (
               <motion.div
@@ -255,7 +277,9 @@ export const UploadCard = memo(function UploadCard({
                 </span>
 
                 <p className="text-xs font-medium text-[#FAF6F1]/90">
-                  {t("home.upload.helperFormat", { maxMb })}
+                  {!user
+                    ? t("home.upload.helperFormatAnon", { maxMb })
+                    : t("home.upload.helperFormat", { maxMb })}
                 </p>
               </motion.div>
             )}

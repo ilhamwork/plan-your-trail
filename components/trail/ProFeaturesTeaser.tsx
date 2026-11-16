@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Check, Clock, CloudSun, Loader2, Flag } from "lucide-react"
 import type { Waypoint } from "@/lib/types"
 import { useEntitlements } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 import { trackEvent } from "@/lib/analytics/events"
 import { joinWaitlistAction } from "@/app/actions/waitlist"
 
@@ -14,10 +15,11 @@ interface ProFeaturesTeaserProps {
 /**
  * Unified Pro features teaser for logged-in Free users.
  * Combines Cutoff Estimator per Checkpoint and Hourly Weather Forecast
- * into a single section with one "Daftar Early Access" CTA.
+ * into a single section with one Early Access CTA.
  */
 export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
   const { user, can } = useEntitlements()
+  const { t } = useI18n()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isJoined, setIsJoined] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -56,26 +58,25 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
         setErrorMsg(res.error.message)
       }
     } catch {
-      setErrorMsg("Gagal mendaftar waitlist. Silakan coba lagi.")
+      setErrorMsg(t("proTeaser.joinError"))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <section aria-label="Fitur Pro Segera Hadir" className="py-1">
+    <section aria-label={t("proTeaser.title")} className="py-1">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-xl font-bold tracking-tight text-[#111827]">
-          Segera Hadir di Pro
+          {t("proTeaser.title")}
         </h3>
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-900">
-          <Flag className="h-3 w-3" />
-          Early Access
+          <Flag className="h-3 w-3" aria-hidden="true" />
+          {t("proTeaser.badge")}
         </span>
       </div>
-      <p className="mt-0.5 text-xs text-[#6B7280]">
-        Persiapan race day lebih presisi dengan estimasi cutoff per checkpoint
-        dan prakiraan cuaca per jam.
+      <p className="mt-0.5 text-xs font-medium text-[#4B5563]">
+        {t("proTeaser.subtitle")}
       </p>
 
       <div className="mt-5 space-y-6">
@@ -83,24 +84,23 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
         {!hasCutoffAccess && (
           <div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 shrink-0 text-[#1B4332]" />
+              <Clock className="h-4 w-4 shrink-0 text-[#1B4332]" aria-hidden="true" />
               <h4 className="text-sm font-bold text-[#111827]">
-                Cutoff Estimator per Checkpoint
+                {t("proTeaser.cutoffTitle")}
               </h4>
             </div>
             <p className="mt-1 text-xs text-[#4B5563]">
-              Simulasikan perkiraan waktu tiba di tiap pos dan bandingkan dengan
-              batas cutoff race.
+              {t("proTeaser.cutoffDesc")}
             </p>
 
             <div className="mt-3 overflow-x-auto border-t border-[#E5E7EB]">
               <table className="w-full text-left text-xs">
                 <thead className="border-b border-[#E5E7EB] text-[11px] font-bold text-[#4B5563]">
                   <tr>
-                    <th className="py-2.5 pr-3">Pos / Checkpoint</th>
-                    <th className="px-3 py-2.5">Jarak</th>
-                    <th className="px-3 py-2.5">Estimasi Tiba</th>
-                    <th className="py-2.5 pl-3">Batas Cutoff</th>
+                    <th className="py-2.5 pr-3">{t("proTeaser.colCheckpoint")}</th>
+                    <th className="px-3 py-2.5">{t("proTeaser.colDistance")}</th>
+                    <th className="px-3 py-2.5">{t("proTeaser.colEta")}</th>
+                    <th className="py-2.5 pl-3">{t("proTeaser.colCutoff")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5E7EB] text-[#4B5563] tabular-nums">
@@ -112,18 +112,18 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
                       <td className="px-3 py-2.5">
                         {(wp.distance / 1000).toFixed(1)} km
                       </td>
-                      <td className="px-3 py-2.5">[Segera Hadir]</td>
-                      <td className="py-2.5 pl-3">[Segera Hadir]</td>
+                      <td className="px-3 py-2.5">{t("proTeaser.comingSoonCell")}</td>
+                      <td className="py-2.5 pl-3">{t("proTeaser.comingSoonCell")}</td>
                     </tr>
                   ))}
                   {waypoints.length === 0 && (
                     <tr>
                       <td className="py-2.5 pr-3 font-medium text-[#2D3436]">
-                        [Contoh Pos]
+                        {t("proTeaser.sampleCheckpointCell")}
                       </td>
                       <td className="px-3 py-2.5">12.5 km</td>
-                      <td className="px-3 py-2.5">[Segera Hadir]</td>
-                      <td className="py-2.5 pl-3">[Segera Hadir]</td>
+                      <td className="px-3 py-2.5">{t("proTeaser.comingSoonCell")}</td>
+                      <td className="py-2.5 pl-3">{t("proTeaser.comingSoonCell")}</td>
                     </tr>
                   )}
                 </tbody>
@@ -132,18 +132,17 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
           </div>
         )}
 
-        {/* 2. Prakiraan Cuaca Per Jam (Hourly) */}
+        {/* 2. Hourly Weather Forecast */}
         {!hasHourlyAccess && (
           <div className={!hasCutoffAccess ? "border-t border-[#E5E7EB] pt-5" : ""}>
             <div className="flex items-center gap-2">
-              <CloudSun className="h-4 w-4 shrink-0 text-[#1B4332]" />
+              <CloudSun className="h-4 w-4 shrink-0 text-[#1B4332]" aria-hidden="true" />
               <h4 className="text-sm font-bold text-[#111827]">
-                Prakiraan Cuaca Per Jam (Hourly)
+                {t("proTeaser.hourlyTitle")}
               </h4>
             </div>
             <p className="mt-1 text-xs text-[#4B5563]">
-              Pantau perubahan suhu, peluang hujan, dan kecepatan angin per jam
-              di sepanjang rute saat race day.
+              {t("proTeaser.hourlyDesc")}
             </p>
           </div>
         )}
@@ -159,8 +158,8 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
       <div className="mt-6">
         {isJoined ? (
           <div className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-50 px-6 py-2.5 text-sm font-semibold text-emerald-900">
-            <Check className="h-4 w-4" />
-            <span>Terdaftar Early Access</span>
+            <Check className="h-4 w-4" aria-hidden="true" />
+            <span>{t("proTeaser.ctaJoined")}</span>
           </div>
         ) : (
           <button
@@ -171,7 +170,7 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             <span>
-              {isSubmitting ? "Mendaftar..." : "Daftar Early Access"}
+              {isSubmitting ? t("proTeaser.ctaJoining") : t("proTeaser.ctaJoin")}
             </span>
           </button>
         )}
@@ -179,4 +178,3 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
     </section>
   )
 }
-

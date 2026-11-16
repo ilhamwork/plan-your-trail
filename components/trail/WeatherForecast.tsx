@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEntitlements } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 import { fetchWeatherAction } from "@/app/actions/weather"
 import type { WeatherData } from "@/lib/weather"
 
@@ -30,32 +31,32 @@ interface GeoResult {
   lon: string
 }
 
-// WMO Weather codes → Indonesian descriptions
-const WMO_CODES: Record<number, string> = {
-  0: "Cerah",
-  1: "Cerah berawan",
-  2: "Sebagian berawan",
-  3: "Berawan tebal",
-  45: "Berkabut",
-  48: "Kabut tebal",
-  51: "Gerimis ringan",
-  53: "Gerimis sedang",
-  55: "Gerimis lebat",
-  61: "Hujan ringan",
-  63: "Hujan sedang",
-  65: "Hujan lebat",
-  71: "Salju ringan",
-  73: "Salju sedang",
-  75: "Salju lebat",
-  77: "Hujan butiran es",
-  80: "Hujan lokal ringan",
-  81: "Hujan lokal sedang",
-  82: "Hujan lokal lebat",
-  85: "Hujan salju ringan",
-  86: "Hujan salju lebat",
-  95: "Badai petir",
-  96: "Badai petir es",
-  99: "Badai petir lebat",
+// WMO Weather codes → i18n keys
+const WMO_KEY_MAP: Record<number, string> = {
+  0: "weatherPanel.wmo.c0",
+  1: "weatherPanel.wmo.c1",
+  2: "weatherPanel.wmo.c2",
+  3: "weatherPanel.wmo.c3",
+  45: "weatherPanel.wmo.c45",
+  48: "weatherPanel.wmo.c48",
+  51: "weatherPanel.wmo.c51",
+  53: "weatherPanel.wmo.c53",
+  55: "weatherPanel.wmo.c55",
+  61: "weatherPanel.wmo.c61",
+  63: "weatherPanel.wmo.c63",
+  65: "weatherPanel.wmo.c65",
+  71: "weatherPanel.wmo.c71",
+  73: "weatherPanel.wmo.c73",
+  75: "weatherPanel.wmo.c75",
+  77: "weatherPanel.wmo.c77",
+  80: "weatherPanel.wmo.c80",
+  81: "weatherPanel.wmo.c81",
+  82: "weatherPanel.wmo.c82",
+  85: "weatherPanel.wmo.c85",
+  86: "weatherPanel.wmo.c86",
+  95: "weatherPanel.wmo.c95",
+  96: "weatherPanel.wmo.c96",
+  99: "weatherPanel.wmo.c99",
 }
 
 function WeatherIcon({ code, className = "h-5 w-5" }: { code: number; className?: string }) {
@@ -70,16 +71,16 @@ function WeatherIcon({ code, className = "h-5 w-5" }: { code: number; className?
   return <CloudLightning className={className} aria-hidden="true" />
 }
 
-function translatePeriodName(name: string): string {
+function getPeriodLabel(name: string, t: (key: string) => string): string {
   switch (name.toLowerCase()) {
     case "morning":
-      return "Pagi"
+      return t("weather.morning")
     case "afternoon":
-      return "Siang"
+      return t("weather.afternoon")
     case "evening":
-      return "Sore"
+      return t("weather.evening")
     case "night":
-      return "Malam"
+      return t("weather.night")
     default:
       return name
   }
@@ -106,6 +107,7 @@ export const WeatherForecast = memo(function WeatherForecast({
 }: WeatherForecastProps) {
   const [centerLat, centerLon] = center
   const { can, isLoading: authLoading } = useEntitlements()
+  const { t } = useI18n()
   const hasWeatherAccess = can("weather_session")
 
   const [date, setDate] = useState(
@@ -246,41 +248,75 @@ export const WeatherForecast = memo(function WeatherForecast({
     }
   }, [hasWeatherAccess, date, activeLat, activeLon, fetchWeather])
 
-  // If user is Anonymous: show Gated State (Card without CTA button; CTA moved to container bottom)
+  // If user is Anonymous: show Gated State (Flattened teaser card with 4-session preview)
   if (!authLoading && !hasWeatherAccess) {
+    const sampleSessions = [
+      { label: t("weather.morning"), temp: "14°", icon: Sun },
+      { label: t("weather.afternoon"), temp: "21°", icon: CloudSun },
+      { label: t("weather.evening"), temp: "16°", icon: CloudRain },
+      { label: t("weather.night"), temp: "11°", icon: CloudFog },
+    ]
     return (
       <section
-        aria-label="Prakiraan Cuaca Rute"
-        className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-xs"
+        aria-label={t("weather.lockedTitle")}
+        className="rounded-2xl border border-[#E5E7EB] bg-white p-5"
       >
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF6F1] text-[#1B4332]">
-            <CloudSun className="h-4 w-4" />
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
+            <CloudSun className="h-4 w-4" aria-hidden="true" />
           </div>
-          <h3 className="text-lg font-bold tracking-tight text-[#111827]">
-            Buka Prakiraan Cuaca Lengkap
-          </h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold leading-snug tracking-tight text-[#111827]">
+              {t("weather.lockedTitle")}
+            </h3>
+            <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[#4B5563]">
+              {t("authWall.weatherDesc")}
+            </p>
+          </div>
         </div>
-        <p className="mt-2 text-sm leading-relaxed text-[#4B5563]">
-          Pantau prakiraan suhu dan kondisi cuaca 4 sesi waktu harian (Pagi,
-          Siang, Sore, dan Malam) di titik koordinat rute pada tanggal lari
-          yang kamu rencanakan.
-        </p>
+
+        {/* Illustrative 4-session weather preview (<= 80px) */}
+        <div
+          aria-hidden="true"
+          className="mt-3.5 flex max-h-20 items-center justify-between gap-2 rounded-xl border border-[#E5E7EB]/80 bg-[#FAF6F1]/70 px-3 py-2"
+        >
+          <div className="grid flex-1 grid-cols-4 gap-1.5">
+            {sampleSessions.map((s) => (
+              <div
+                key={s.label}
+                className="flex flex-col items-center rounded-lg bg-white px-1.5 py-1 ring-1 ring-[#E5E7EB]"
+              >
+                <span className="text-[10px] font-medium text-[#4B5563]">
+                  {s.label}
+                </span>
+                <div className="mt-0.5 flex items-center gap-1">
+                  <s.icon className="h-3 w-3 text-[#1B4332]" />
+                  <span className="text-[11px] font-bold text-[#111827] tabular-nums">
+                    {s.temp}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <span className="shrink-0 rounded-full bg-[#1B4332]/10 px-2 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+            {t("authWall.exampleBadge")}
+          </span>
+        </div>
       </section>
     )
   }
 
   return (
     <section
-      aria-label="Prakiraan Cuaca Rute"
+      aria-label={t("weatherPanel.title")}
       className="border-t border-[#D1D5DB] pt-8"
     >
       <div>
         <h3 className="text-xl font-bold tracking-tight text-[#111827]">
-          Prakiraan Cuaca Rute
+          {t("weatherPanel.title")}
         </h3>
-        <p className="mt-0.5 text-xs text-[#6B7280]">
-          Prakiraan cuaca per sesi race day di titik rute
+        <p className="mt-0.5 text-xs font-medium text-[#4B5563]">
+          {t("weatherPanel.subtitle")}
         </p>
       </div>
 
@@ -290,7 +326,7 @@ export const WeatherForecast = memo(function WeatherForecast({
             htmlFor="weather-location-input"
             className="mb-1.5 block text-xs font-semibold text-[#4B5563]"
           >
-            Lokasi Rute
+            {t("weatherPanel.locationLabel")}
           </label>
           <div className="relative">
             <div className="flex min-h-11 items-center gap-2 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 transition focus-within:border-[#1B4332] focus-within:ring-1 focus-within:ring-[#1B4332]">
@@ -300,8 +336,11 @@ export const WeatherForecast = memo(function WeatherForecast({
                 type="text"
                 value={locationQuery}
                 onChange={(e) => handleLocationInput(e.target.value)}
-                placeholder={`${center[0].toFixed(3)}, ${center[1].toFixed(3)} (pusat rute)`}
-                className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-[#6B7280]"
+                placeholder={t("weatherPanel.centerPlaceholder", {
+                  lat: center[0].toFixed(3),
+                  lon: center[1].toFixed(3),
+                })}
+                className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-[#525B66]"
               />
               {geoLoading && (
                 <Search className="h-4 w-4 shrink-0 animate-pulse text-[#4B5563]" />
@@ -310,7 +349,7 @@ export const WeatherForecast = memo(function WeatherForecast({
                 <button
                   type="button"
                   onClick={clearLocation}
-                  aria-label="Hapus lokasi pencarian"
+                  aria-label={t("weatherPanel.clearLocationAria")}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#4B5563] transition hover:bg-[#FAF6F1] hover:text-[#2D3436] focus-visible:outline-2 focus-visible:outline-[#1B4332]"
                 >
                   <X className="h-4 w-4" />
@@ -367,7 +406,7 @@ export const WeatherForecast = memo(function WeatherForecast({
             htmlFor="weather-date-input"
             className="mb-1.5 block text-xs font-semibold text-[#4B5563]"
           >
-            Tanggal Race / Lari
+            {t("weatherPanel.dateLabel")}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -383,7 +422,7 @@ export const WeatherForecast = memo(function WeatherForecast({
               disabled={loading || !date}
               className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50"
             >
-              {loading ? "Memuat..." : "Cek Cuaca"}
+              {loading ? t("weatherPanel.loadingBtn") : t("weatherPanel.checkBtn")}
             </button>
           </div>
         </div>
@@ -397,7 +436,7 @@ export const WeatherForecast = memo(function WeatherForecast({
 
       {loading && !weather && !error && (
         <p className="mt-4 text-sm text-[#4B5563]">
-          Memuat prakiraan cuaca untuk {activeLocationName}...
+          {t("weatherPanel.loadingFor", { location: activeLocationName })}
         </p>
       )}
 
@@ -423,10 +462,12 @@ export const WeatherForecast = memo(function WeatherForecast({
                         className="h-5 w-5 shrink-0 text-[#2D3436]"
                       />
                       <span className="text-[15px] font-medium text-[#2D3436]">
-                        {translatePeriodName(p.name)}
+                        {getPeriodLabel(p.name, t)}
                       </span>
                       <span className="truncate text-sm text-[#4B5563]">
-                        {WMO_CODES[p.weatherCode] || "Cerah"}
+                        {WMO_KEY_MAP[p.weatherCode]
+                          ? t(WMO_KEY_MAP[p.weatherCode])
+                          : t("weatherPanel.clearDefault")}
                       </span>
                     </div>
 

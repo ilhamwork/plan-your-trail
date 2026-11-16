@@ -16,6 +16,7 @@ interface ComingSoonLockProps {
   icon?: LucideIcon
   variant?: "banner" | "card" | "inline"
   hideCta?: boolean
+  previewSlot?: React.ReactNode
   className?: string
   onSuccess?: () => void
 }
@@ -28,6 +29,7 @@ export function ComingSoonLock({
   badgeText = "Segera Hadir di Pro",
   icon: Icon,
   hideCta = false,
+  previewSlot,
   className = "",
   onSuccess,
 }: ComingSoonLockProps) {
@@ -67,31 +69,31 @@ export function ComingSoonLock({
   }
 
   return (
-    <div className={`rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-xs ${className}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            {Icon && (
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF6F1] text-[#1B4332]">
-                <Icon className="h-4 w-4" />
-              </div>
-            )}
-            <h3 className="text-lg font-bold tracking-tight text-[#111827]">
-              {title}
-            </h3>
+    <div className={`rounded-2xl border border-[#E5E7EB] bg-white p-5 ${className}`}>
+      <div className="flex items-start gap-3">
+        {Icon && (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
+            <Icon className="h-4 w-4" aria-hidden="true" />
           </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-bold leading-snug tracking-tight text-[#111827]">
+            {title}
+          </h3>
           {description && (
-            <p className="mt-2 text-sm leading-relaxed text-[#4B5563]">
+            <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[#4B5563]">
               {description}
             </p>
           )}
           {badgeText && (
-            <p className="mt-1 text-xs font-medium text-[#6B7280]">
+            <p className="mt-1 text-xs font-medium text-[#525B66]">
               {badgeText}
             </p>
           )}
         </div>
       </div>
+
+      {previewSlot}
 
       {errorMsg && (
         <p role="alert" className="mt-3 text-xs font-medium text-[#B91C1C]">

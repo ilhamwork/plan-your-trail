@@ -372,8 +372,8 @@ export default function Home() {
                   </motion.div>
                 )}
 
-                {/* Route Title, Telemetry Summary & Runner/Date Row */}
-                <div className="pb-6">
+                {/* Route Title, Metadata & Telemetry Summary */}
+                <div className="pb-5">
                   <HeaderInfo
                     raceName={routeDetails.raceName}
                     userName={sessionRunnerName}
@@ -385,11 +385,14 @@ export default function Home() {
                 </div>
 
                 {/* Compact GPX Switcher Bar */}
-                <div className="pb-10">
+                <div className="pb-7 sm:pb-8">
                   <UploadCard
                     onFileLoaded={handleFileLoaded}
                     onError={setError}
                     fileName={fileName}
+                    fileSizeBytes={
+                      rawGpxContent ? new Blob([rawGpxContent]).size : undefined
+                    }
                     error={error}
                     isLoading={isParsingGPX || isSubmittingDetails}
                     disabled={!canUpload}
@@ -398,7 +401,7 @@ export default function Home() {
 
                 {/* Waypoint Management when logged in - placed right before Segment Breakdown */}
                 {user && (
-                  <div className="border-t border-[#D1D5DB] py-10">
+                  <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
                     <WaypointPanel
                       totalDistanceKm={gpxData.stats.totalDistance / 1000}
                       waypoints={waypoints}
@@ -412,7 +415,7 @@ export default function Home() {
                 )}
 
                 {/* 3. Segment Breakdown */}
-                <div className="border-t border-[#D1D5DB] py-10">
+                <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
                   <SegmentList
                     key={fileName}
                     segments={gpxData.segments}
@@ -426,19 +429,19 @@ export default function Home() {
                 </div>
 
                 {/* 5. Gradient Distribution */}
-                <div className="border-t border-[#D1D5DB] py-10">
+                <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
                   <GradientDistribution points={gpxData.trackPoints} />
                 </div>
 
                 {/* 6. Account Features Group (Pace, Waypoints when locked, Weather) — 1 unified section with 1 CTA when locked */}
-                <div className="flex flex-col gap-6 border-t border-[#D1D5DB] py-10">
+                <div className="flex flex-col gap-5 border-t border-[#D1D5DB] py-6 sm:py-8">
                   {!authLoading && !user && (
-                    <div className="mb-2">
-                      <p className="text-sm font-semibold text-[#111827]">
-                        Masuk untuk menggunakan fitur analisis lanjutan ini
-                      </p>
-                      <p className="mt-0.5 text-xs text-[#6B7280]">
-                        Kalkulasi estimasi pace, pos checkpoint kustom, dan prakiraan cuaca sesi race.
+                    <div className="mb-1">
+                      <h2 className="text-lg font-bold tracking-tight text-[#111827]">
+                        {t("authWall.heading")}
+                      </h2>
+                      <p className="mt-1 text-sm text-[#4B5563]">
+                        {t("authWall.subheading")}
                       </p>
                     </div>
                   )}
@@ -464,26 +467,35 @@ export default function Home() {
                   />
 
                   {!authLoading && !user && (
-                    <div className="pt-2">
+                    <div className="pt-2 text-center">
                       <Link
                         href="/login"
-                        className="flex min-h-11 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-2.5 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                        className="flex min-h-12 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-3 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
                       >
-                        Masuk ke Akun
+                        {t("authWall.ctaPrimary")}
                       </Link>
+                      <p className="mt-3 text-xs font-medium text-[#4B5563]">
+                        {t("authWall.ctaSecondaryPrompt")}{" "}
+                        <Link
+                          href="/register"
+                          className="font-semibold text-[#1B4332] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                        >
+                          {t("authWall.ctaSecondaryLink")}
+                        </Link>
+                      </p>
                     </div>
                   )}
                 </div>
 
                 {/* Pro Features Teaser (Cutoff Estimator + Hourly Weather) — only when logged in, right before Donate */}
                 {user && (
-                  <div className="border-t border-[#D1D5DB] py-10">
+                  <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
                     <ProFeaturesTeaser waypoints={sortedWaypoints} />
                   </div>
                 )}
 
                 {/* Community Support & Footer */}
-                <div className="border-t border-[#D1D5DB] pt-10">
+                <div className="border-t border-[#D1D5DB] pt-14">
                   <DonationSection />
                 </div>
                 <Footer runnerName={sessionRunnerName} />

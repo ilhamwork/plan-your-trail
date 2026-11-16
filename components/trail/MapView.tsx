@@ -22,6 +22,7 @@ import {
 import "maplibre-gl/dist/maplibre-gl.css"
 import { ElevationChart } from "./ElevationChart"
 import { useMaplibreMap } from "./map/useMaplibreMap"
+import { useI18n } from "@/lib/i18n/context"
 
 interface MapViewProps {
   trackPoints: TrackPoint[]
@@ -44,6 +45,7 @@ interface MapViewProps {
   onShare?: () => void
   isSharing?: boolean
   topLeftSlot?: React.ReactNode
+  betweenMapAndChartSlot?: React.ReactNode
 }
 
 export function MapView({
@@ -67,13 +69,16 @@ export function MapView({
   onShare,
   isSharing = false,
   topLeftSlot,
+  betweenMapAndChartSlot,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
+  const { t } = useI18n()
 
   const [is3D, setIs3D] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showChart, setShowChart] = useState(true)
+  const isChartVisible = !isFullscreen || showChart
 
   // Hover synchronization between chart and map
   const [localHoveredPoint, setLocalHoveredPoint] = useState<TrackPoint | null>(
@@ -139,7 +144,7 @@ export function MapView({
     }, 350)
 
     return () => clearTimeout(timer)
-  }, [isFullscreen, is3D, mapReady, showChart, resize])
+  }, [isFullscreen, is3D, mapReady, isChartVisible, resize])
 
   return (
     <section
@@ -155,7 +160,7 @@ export function MapView({
         className={`relative w-full ${
           isFullscreen
             ? "min-h-0 flex-1"
-            : showChart
+            : isChartVisible
               ? "h-[360px] sm:h-[420px] lg:h-[440px]"
               : "h-[460px] sm:h-[520px]"
         }`}
@@ -244,8 +249,8 @@ export function MapView({
                 onClick={onShare}
                 disabled={isSharing}
                 className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white/95 text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:opacity-50"
-                title="Bagikan rute"
-                aria-label="Bagikan rute"
+                title={t("routeChart.shareRoute")}
+                aria-label={t("routeChart.shareRoute")}
               >
                 <Share className="h-4 w-4" />
               </button>
@@ -261,8 +266,8 @@ export function MapView({
                     ? "border-[#E76F51]/40 bg-white text-[#E76F51]"
                     : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#E76F51] hover:text-[#E76F51]"
                 }`}
-                title={isSaved ? "Rute tersimpan" : "Simpan rute"}
-                aria-label={isSaved ? "Tersimpan" : "Simpan rute"}
+                title={isSaved ? t("routeChart.routeSaved") : t("routeChart.saveRoute")}
+                aria-label={isSaved ? t("routeChart.saved") : t("routeChart.saveRoute")}
                 aria-pressed={isSaved}
               >
                 {isSaving ? (
@@ -280,25 +285,29 @@ export function MapView({
         </div>
       </div>
 
+      {betweenMapAndChartSlot}
+
       {/* Elevation Profile Section (Flat, no card, no margin/padding) */}
-      {showChart ? (
+      {isChartVisible ? (
         <div
           className={`relative z-20 border-b p-4 border-[#E5E7EB] ${
             isFullscreen ? "mx-auto w-full max-w-5xl bg-[#FAF6F1]" : ""
           }`}
         >
-          {/* Center Circular Toggle Button on the Seam */}
-          <div className="absolute -top-5 left-1/2 z-30 -translate-x-1/2">
-            <button
-              type="button"
-              onClick={() => setShowChart(false)}
-              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
-              title="Sembunyikan Profil Elevasi"
-              aria-label="Sembunyikan Profil Elevasi"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          {/* Center Circular Toggle Button on the Seam (only in fullscreen) */}
+          {isFullscreen && (
+            <div className="absolute -top-5 left-1/2 z-30 -translate-x-1/2">
+              <button
+                type="button"
+                onClick={() => setShowChart(false)}
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
+                title={t("routeChart.hideChart")}
+                aria-label={t("routeChart.hideChart")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
 
           <ElevationChart
             trackPoints={trackPoints}
@@ -323,11 +332,11 @@ export function MapView({
             type="button"
             onClick={() => setShowChart(true)}
             className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[#D1D5DB] bg-white px-4 py-2 text-xs font-bold text-[#1B4332] shadow-xs transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-            title="Tampilkan Profil Elevasi"
-            aria-label="Tampilkan Profil Elevasi"
+            title={t("routeChart.showChart")}
+            aria-label={t("routeChart.showChart")}
           >
             <BarChart3 className="h-4 w-4 text-[#E76F51]" />
-            <span>Tampilkan Profil Elevasi</span>
+            <span>{t("routeChart.showChart")}</span>
             <ChevronUp className="h-4 w-4" />
           </button>
         </div>

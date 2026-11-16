@@ -19,8 +19,9 @@ import type {
   RouteStats,
   HighlightRange,
 } from "@/lib/types"
-import { Lock, MapPin, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
+import { Lock, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEntitlements } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 
 interface ElevationChartProps {
   trackPoints: TrackPoint[]
@@ -58,7 +59,9 @@ export const ElevationChart = memo(function ElevationChart({
 }: ElevationChartProps) {
   const lastHoveredIdxRef = useRef<number | string | null>(null)
   const { can } = useEntitlements()
+  const { t, locale } = useI18n()
   const canShowGpxWaypoints = can("waypoint_gpx_chart")
+  const numLocale = locale === "id" ? "id-ID" : "en-US"
 
   // Downsample points for chart performance and stabilize reference
   const chartData = useMemo(() => {
@@ -152,10 +155,10 @@ export const ElevationChart = memo(function ElevationChart({
 
   // Determine values displayed in the two primary telemetry columns
   const distanceLabel = hoveredPoint
-    ? "Jarak di Titik Ini"
+    ? t("routeChart.distAtPoint")
     : highlightedSegmentMetrics
-      ? "Panjang Segmen"
-      : "Panjang Rute"
+      ? t("routeChart.segmentLength")
+      : t("routeChart.routeLength")
 
   const distanceValue = hoveredPoint
     ? `${(hoveredPoint.distance / 1000).toFixed(2)} km`
@@ -164,16 +167,16 @@ export const ElevationChart = memo(function ElevationChart({
       : `${computedSummary.totalDistanceKm.toFixed(1)} km`
 
   const elevationLabel = hoveredPoint
-    ? "Elevasi & Kemiringan"
+    ? t("routeChart.elevAndGrade")
     : highlightedSegmentMetrics
-      ? "Elevasi Naik Segmen"
-      : "Elevasi Naik (D+)"
+      ? t("routeChart.segmentGain")
+      : t("routeChart.elevGain")
 
   const elevationValue = hoveredPoint
     ? `${Math.round(hoveredPoint.ele)} m`
     : highlightedSegmentMetrics
-      ? `+${highlightedSegmentMetrics.elevationGainM.toLocaleString("id-ID")} m`
-      : `+${computedSummary.elevationGainM.toLocaleString("id-ID")} m`
+      ? `+${highlightedSegmentMetrics.elevationGainM.toLocaleString(numLocale)} m`
+      : `+${computedSummary.elevationGainM.toLocaleString(numLocale)} m`
 
   const hoveredGradientText = hoveredPoint
     ? `${hoveredPoint.gradient > 0 ? "+" : ""}${hoveredPoint.gradient.toFixed(1)}%`
@@ -183,71 +186,74 @@ export const ElevationChart = memo(function ElevationChart({
     <div className={className}>
       {showSubHeader && (
         <div>
-          {/* Header Row */}
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:justify-between">
-            {/* Center Segment Navigation Bar */}
-            <div className="mx-auto flex items-center justify-center sm:mx-0 sm:order-1 sm:flex-1">
-              <div className="inline-flex items-center gap-1 rounded-full border border-[#D1D5DB] bg-white p-0.5 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={onPrevSegment}
-                  disabled={!hasPrevSegment}
-                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[#2D3436] transition hover:bg-[#FAF6F1] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-[#1B4332]"
-                  title="Segmen Sebelumnya"
-                  aria-label="Segmen Sebelumnya"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onClearHighlight}
-                  disabled={!highlightedSegmentMetrics}
-                  className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-[#1B4332] ${
-                    highlightedSegmentMetrics
-                      ? "text-[#2D3436] hover:bg-[#FAF6F1]"
-                      : "cursor-default bg-[#FAF6F1] text-[#6B7280]"
-                  }`}
-                  title={highlightedSegmentMetrics ? "Kembali ke semua rute" : "Sedang menampilkan semua rute"}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  <span>Semua Rute</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onNextSegment}
-                  disabled={!hasNextSegment}
-                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[#2D3436] transition hover:bg-[#FAF6F1] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-[#1B4332]"
-                  title="Segmen Berikutnya"
-                  aria-label="Segmen Berikutnya"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
+          {waypoints.length > 0 && !canShowGpxWaypoints && (
+            <div className="mb-3 flex justify-end border-b border-[#E5E7EB] pb-3">
+              <Link
+                href="/login"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 transition hover:bg-amber-200"
+              >
+                <Lock className="h-3 w-3" />
+                <span>
+                  {t("routeChart.loginForWaypoints", { count: waypoints.length })}
+                </span>
+              </Link>
             </div>
-
-            <div className="flex items-center gap-2 sm:order-2">
-              {waypoints.length > 0 && !canShowGpxWaypoints && (
-                <Link
-                  href="/login"
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 transition hover:bg-amber-200"
-                >
-                  <Lock className="h-3 w-3" />
-                  <span>Masuk untuk melihat {waypoints.length} waypoint</span>
-                </Link>
-              )}
-            </div>
-          </div>
+          )}
 
           {/* Primary Dual Telemetry Readout */}
-          <div className="mt-3 grid grid-cols-2 gap-4 border-t border-[#E5E7EB] pt-3">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="body-sm-medium text-[#4B5563]">{distanceLabel}</p>
               <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-[#2D3436] tabular-nums sm:text-3xl">
                 {distanceValue}
               </p>
             </div>
+            
+            {showSubHeader && (
+              <div className="mt-3 flex items-center justify-center">
+                <div className="inline-flex items-center gap-1 rounded-full border border-[#D1D5DB] bg-white p-0.5 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={onPrevSegment}
+                    disabled={!hasPrevSegment}
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[#2D3436] transition hover:bg-[#FAF6F1] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-[#1B4332]"
+                    title={t("routeChart.prevSegment")}
+                    aria-label={t("routeChart.prevSegment")}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onClearHighlight}
+                    disabled={!highlightedSegmentMetrics}
+                    className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-[#1B4332] ${
+                      highlightedSegmentMetrics
+                        ? "text-[#2D3436] hover:bg-[#FAF6F1]"
+                        : "cursor-default bg-[#FAF6F1] text-[#525B66]"
+                    }`}
+                    title={
+                      highlightedSegmentMetrics
+                        ? t("routeChart.backToAllRoute")
+                        : t("routeChart.showingAllRoute")
+                    }
+                  >
+                    <span>{t("routeChart.allRoute")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onNextSegment}
+                    disabled={!hasNextSegment}
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[#2D3436] transition hover:bg-[#FAF6F1] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-[#1B4332]"
+                    title={t("routeChart.nextSegment")}
+                    aria-label={t("routeChart.nextSegment")}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="text-right">
               <p className="body-sm-medium text-[#4B5563]">{elevationLabel}</p>

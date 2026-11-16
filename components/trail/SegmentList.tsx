@@ -1,11 +1,12 @@
 "use client"
 
 import { memo, useState } from "react"
-import type { Segment, WaypointSegment, HighlightRange } from "@/lib/types"
-import { ChevronRight, ChevronDown } from "lucide-react"
+import type { Segment, SegmentType, WaypointSegment, HighlightRange } from "@/lib/types"
+import { ChevronRight, ChevronDown, Info } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { formatKmLabel } from "@/lib/format"
 import { useI18n } from "@/lib/i18n/context"
+import { SEGMENT_PILL_CLASSES } from "@/lib/terrain-colors"
 
 export type SegmentTabType = "waypoints" | "gradient"
 
@@ -38,6 +39,7 @@ export const SegmentList = memo(function SegmentList({
       : (rawTab ?? (hasWaypoints ? "waypoints" : "gradient"))
 
   const [localExpandedId, setLocalExpandedId] = useState<number | null>(null)
+  const [showGradeGuide, setShowGradeGuide] = useState(false)
 
   const matchedWaypointSegment = highlightRange
     ? waypointSegments.find(
@@ -94,18 +96,36 @@ export const SegmentList = memo(function SegmentList({
           <h3 className="text-xl font-bold tracking-tight text-[#111827]">
             {t("segments.title")}
           </h3>
-          <p className="mt-0.5 text-xs text-[#6B7280]">
-            {tab === "waypoints"
-              ? `${waypointSegments.length} segmen · Berdasarkan pos checkpoint`
-              : `${segments.length} segmen · Berdasarkan perubahan kemiringan`}
-          </p>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <p className="text-xs font-medium text-[#4B5563]">
+              {tab === "waypoints"
+                ? t("segments.subtitleWaypoints", { count: waypointSegments.length })
+                : t("segments.subtitleGradient", { count: segments.length })}
+            </p>
+            {tab === "gradient" && (
+              <button
+                type="button"
+                aria-label={t("segments.gradeGuideToggleAria")}
+                aria-expanded={showGradeGuide}
+                onClick={() => setShowGradeGuide((prev) => !prev)}
+                className="-my-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-[#4B5563] transition hover:bg-[#F1EDE8] hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              >
+                <Info className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          {tab === "gradient" && showGradeGuide && (
+            <p className="mt-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs leading-relaxed text-[#4B5563]">
+              {t("segments.gradeGuideText")}
+            </p>
+          )}
         </div>
 
         {/* Mode Switcher (AllTrails-style rounded pills) */}
         {hasWaypoints && (
           <div
             role="tablist"
-            aria-label="Mode segmen rute"
+            aria-label={t("segments.modeAria")}
             className="inline-flex rounded-full border border-[#E5E7EB] bg-[#F3F4F6] p-1"
           >
             <button
@@ -125,7 +145,7 @@ export const SegmentList = memo(function SegmentList({
                   : "text-[#4B5563] hover:text-[#111827]"
               }`}
             >
-              Checkpoint
+              {t("segments.tabWaypoints")}
             </button>
             <button
               type="button"
@@ -144,7 +164,7 @@ export const SegmentList = memo(function SegmentList({
                   : "text-[#4B5563] hover:text-[#111827]"
               }`}
             >
-              Kemiringan
+              {t("segments.tabGradient")}
             </button>
           </div>
         )}
@@ -180,6 +200,24 @@ export const SegmentList = memo(function SegmentList({
   )
 })
 
+function getLocalizedSegmentLabel(
+  type: SegmentType,
+  t: (path: string) => string
+): string {
+  switch (type) {
+    case "climb":
+      return t("segments.typeClimb")
+    case "uphill":
+      return t("segments.typeUphill")
+    case "flat":
+      return t("segments.typeFlat")
+    case "downhill":
+      return t("segments.typeDownhill")
+    case "descent":
+      return t("segments.typeDescent")
+  }
+}
+
 function WaypointSegmentRow({
   segment,
   expanded,
@@ -191,6 +229,8 @@ function WaypointSegmentRow({
   onToggle: () => void
   onClick: () => void
 }) {
+  const { t } = useI18n()
+
   return (
     <div>
       <button
@@ -220,7 +260,10 @@ function WaypointSegmentRow({
               expanded ? "text-[#FAF6F1]/85" : "text-[#4B5563]"
             }`}
           >
-            KM {segment.startKm.toFixed(1)} s/d {segment.endKm.toFixed(1)}
+            {t("segments.kmRange", {
+              start: segment.startKm.toFixed(1),
+              end: segment.endKm.toFixed(1),
+            })}
           </span>
           <span
             className={`text-sm font-bold ${
@@ -248,20 +291,20 @@ function WaypointSegmentRow({
           >
             <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4 sm:grid-cols-4">
               <StatCell
-                label="Elevasi Awal"
+                label={t("segments.startElev")}
                 value={`${segment.startElevation} m`}
               />
               <StatCell
-                label="Elevasi Akhir"
+                label={t("segments.endElev")}
                 value={`${segment.endElevation} m`}
               />
               <StatCell
-                label="Naik (D+)"
+                label={t("segments.gainLabel")}
                 value={`+${segment.elevationGain} m`}
                 color="text-emerald-300"
               />
               <StatCell
-                label="Turun (D-)"
+                label={t("segments.lossLabel")}
                 value={`-${segment.elevationLoss} m`}
                 color="text-amber-200"
               />
@@ -284,14 +327,7 @@ function GradientSegmentRow({
   onToggle: () => void
   onClick: () => void
 }) {
-  // WCAG AA compliant badge colors (minimum 4.5:1 contrast)
-  const typeColors: Record<string, string> = {
-    climb: "bg-[#991B1B]/12 text-[#991B1B]",
-    uphill: "bg-[#B91C1C]/12 text-[#B91C1C]",
-    flat: "bg-[#854D0E]/12 text-[#854D0E]",
-    downhill: "bg-[#1D4ED8]/12 text-[#1D4ED8]",
-    descent: "bg-[#1E3A8A]/12 text-[#1E3A8A]",
-  }
+  const { t } = useI18n()
 
   return (
     <div>
@@ -309,17 +345,22 @@ function GradientSegmentRow({
         <div className="flex min-w-0 items-center gap-2.5 tabular-nums">
           <span
             className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
-              expanded ? "bg-white/20 text-[#FAF6F1]" : typeColors[segment.type]
+              expanded
+                ? "bg-white/20 text-[#FAF6F1]"
+                : SEGMENT_PILL_CLASSES[segment.type]
             }`}
           >
-            {segment.label}
+            {getLocalizedSegmentLabel(segment.type, t)}
           </span>
           <span
             className={`text-xs font-medium ${
               expanded ? "text-[#FAF6F1]/85" : "text-[#4B5563]"
             }`}
           >
-            KM {segment.startKm.toFixed(1)} s/d {segment.endKm.toFixed(1)}
+            {t("segments.kmRange", {
+              start: segment.startKm.toFixed(1),
+              end: segment.endKm.toFixed(1),
+            })}
           </span>
         </div>
 
@@ -350,29 +391,29 @@ function GradientSegmentRow({
           >
             <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4 sm:grid-cols-3">
               <StatCell
-                label="Elevasi Awal"
+                label={t("segments.startElev")}
                 value={`${segment.startElevation} m`}
               />
               <StatCell
-                label="Elevasi Akhir"
+                label={t("segments.endElev")}
                 value={`${segment.endElevation} m`}
               />
               <StatCell
-                label="Naik (D+)"
+                label={t("segments.gainLabel")}
                 value={`+${segment.elevationGain} m`}
                 color="text-emerald-300"
               />
               <StatCell
-                label="Turun (D-)"
+                label={t("segments.lossLabel")}
                 value={`-${segment.elevationLoss} m`}
                 color="text-amber-200"
               />
               <StatCell
-                label="Rata-rata Gradien"
+                label={t("segments.avgGradientLabel")}
                 value={`${segment.avgGradient}%`}
               />
               <StatCell
-                label="Selisih Elevasi"
+                label={t("segments.elevChangeLabel")}
                 value={`${segment.elevationChange > 0 ? "+" : ""}${segment.elevationChange} m`}
               />
             </div>

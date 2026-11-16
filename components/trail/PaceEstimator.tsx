@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { Timer } from "lucide-react"
 
 import { useEntitlements } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 import type { RouteStats } from "@/lib/types"
 
 interface PaceEstimatorProps {
@@ -31,6 +32,7 @@ export function calculateFinishTime(
 
 export function PaceEstimator({ stats }: PaceEstimatorProps) {
   const { can, isLoading: authLoading } = useEntitlements()
+  const { t } = useI18n()
   const hasPaceAccess = can("pace_basic")
 
   const [paceMin, setPaceMin] = useState<number>(7)
@@ -49,37 +51,56 @@ export function PaceEstimator({ stats }: PaceEstimatorProps) {
     )
   }, [distanceKm, elevationGainM, paceMin, paceSec])
 
-  // Gated State for Anonymous (Clean AllTrails-style card)
+  // Gated State for Anonymous (Flattened teaser card with Example preview)
   if (!authLoading && !hasPaceAccess) {
     return (
       <section
-        aria-label="Estimasi Waktu Finish Rute"
-        className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-xs"
+        aria-label={t("pace.lockedCutoffTitle")}
+        className="rounded-2xl border border-[#E5E7EB] bg-white p-5"
       >
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF6F1] text-[#1B4332]">
-            <Timer className="h-4 w-4" />
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
+            <Timer className="h-4 w-4" aria-hidden="true" />
           </div>
-          <h3 className="text-lg font-bold tracking-tight text-[#111827]">
-            Hitung Estimasi Finish Race
-          </h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold leading-snug tracking-tight text-[#111827]">
+              {t("pace.lockedCutoffTitle")}
+            </h3>
+            <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[#4B5563]">
+              {t("authWall.paceDesc")}
+            </p>
+          </div>
         </div>
-        <p className="mt-2 text-sm leading-relaxed text-[#4B5563]">
-          Kalkulasi perkiraan waktu tempuh rute ini berdasarkan target pace
-          rata-rata dan tambahan jarak efektif dari elevasi menanjak (KM-Effort).
-        </p>
+
+        {/* Illustrative example preview (<= 80px) */}
+        <div
+          aria-hidden="true"
+          className="mt-3.5 flex max-h-20 items-center justify-between gap-2 rounded-xl border border-[#E5E7EB]/80 bg-[#FAF6F1]/70 px-3.5 py-2.5"
+        >
+          <div className="flex items-center gap-2">
+            <span className="rounded-md bg-white px-2 py-1 text-xs font-bold text-[#1B4332] tabular-nums ring-1 ring-[#E5E7EB]">
+              7:30 /km
+            </span>
+            <span className="text-xs font-bold text-[#111827] tabular-nums">
+              08j 05m
+            </span>
+          </div>
+          <span className="shrink-0 rounded-full bg-[#1B4332]/10 px-2 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+            {t("authWall.exampleBadge")}
+          </span>
+        </div>
       </section>
     )
   }
 
   return (
-    <section aria-label="Estimasi Waktu Finish" className="py-1">
+    <section aria-label={t("paceCalc.title")} className="py-1">
       <div>
         <h3 className="text-xl font-bold tracking-tight text-[#111827]">
-          Estimasi Waktu Finish
+          {t("paceCalc.title")}
         </h3>
-        <p className="mt-0.5 text-xs text-[#6B7280]">
-          Kalkulasi estimasi total waktu tempuh berdasarkan target pace rata-rata
+        <p className="mt-0.5 text-xs font-medium text-[#4B5563]">
+          {t("paceCalc.subtitle")}
         </p>
       </div>
 
@@ -94,9 +115,9 @@ export function PaceEstimator({ stats }: PaceEstimatorProps) {
                   htmlFor="pace-min-input"
                   className="text-sm font-medium text-[#2D3436]"
                 >
-                  Target Pace Rata-Rata
+                  {t("paceCalc.avgPaceLabel")}
                 </label>
-                <p className="text-xs text-[#4B5563]">Menit dan detik per kilometer</p>
+                <p className="text-xs text-[#4B5563]">{t("paceCalc.avgPaceHelper")}</p>
               </div>
             </div>
 
@@ -107,7 +128,7 @@ export function PaceEstimator({ stats }: PaceEstimatorProps) {
                   type="number"
                   min={3}
                   max={25}
-                  aria-label="Menit per kilometer"
+                  aria-label={t("paceCalc.minAria")}
                   value={paceMin}
                   onChange={(e) =>
                     setPaceMin(Math.max(1, parseInt(e.target.value) || 0))
@@ -121,7 +142,7 @@ export function PaceEstimator({ stats }: PaceEstimatorProps) {
                   min={0}
                   max={59}
                   step={5}
-                  aria-label="Detik per kilometer"
+                  aria-label={t("paceCalc.secAria")}
                   value={paceSec.toString().padStart(2, "0")}
                   onChange={(e) =>
                     setPaceSec(
@@ -139,15 +160,17 @@ export function PaceEstimator({ stats }: PaceEstimatorProps) {
           <div className="flex flex-wrap items-center justify-between gap-3 py-3.5">
             <div>
               <p className="text-sm font-medium text-[#2D3436]">
-                Jarak Efektif (KM-Effort)
+                {t("paceCalc.kmEffortLabel")}
               </p>
               <p className="text-xs text-[#4B5563]">
-                Otomatis memperhitungkan +1 km tiap 100 m D+
+                {t("paceCalc.kmEffortHelper")}
               </p>
             </div>
 
             <p className="text-sm font-bold text-[#2D3436] tabular-nums">
-              {(distanceKm + elevationGainM * 0.01).toFixed(1)} km effort
+              {t("paceCalc.kmEffortUnit", {
+                val: (distanceKm + elevationGainM * 0.01).toFixed(1),
+              })}
             </p>
           </div>
 
@@ -155,17 +178,21 @@ export function PaceEstimator({ stats }: PaceEstimatorProps) {
           <div className="flex flex-wrap items-center justify-between gap-3 py-4">
             <div>
               <p className="text-sm font-semibold text-[#2D3436]">
-                Estimasi Total Waktu Finish
+                {t("paceCalc.outputLabel")}
               </p>
               <p className="text-xs text-[#4B5563] tabular-nums">
-                Pace {paceMin}:{paceSec.toString().padStart(2, "0")} /km · Rute{" "}
-                {distanceKm.toFixed(1)} km (+{elevationGainM} m D+)
+                {t("paceCalc.outputDetail", {
+                  pace: `${paceMin}:${paceSec.toString().padStart(2, "0")}`,
+                  dist: distanceKm.toFixed(1),
+                  gain: elevationGainM,
+                })}
               </p>
             </div>
 
             <p className="text-xl font-extrabold tracking-tight text-[#1B4332] tabular-nums sm:text-2xl">
-              {finishTime.hours > 0 && `${finishTime.hours} jam `}
-              {finishTime.minutes} menit
+              {finishTime.hours > 0 &&
+                `${finishTime.hours} ${t("paceCalc.hoursUnit")} `}
+              {finishTime.minutes} {t("paceCalc.minutesUnit")}
             </p>
           </div>
         </div>
