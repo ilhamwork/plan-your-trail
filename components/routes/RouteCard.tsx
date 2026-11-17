@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import Link from "next/link"
-import { Share2, ArrowDownToLine, Trash2, Check } from "lucide-react"
+import { ArrowDownToLine, Trash2 } from "lucide-react"
 import type { Route } from "@/lib/db/schema"
 import type { TrackPoint } from "@/lib/types"
 
@@ -12,8 +12,6 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, onDelete }: RouteCardProps) {
-  const [copied, setCopied] = useState(false)
-
   const metrics = route.metrics as {
     stats?: {
       totalDistance?: number
@@ -105,50 +103,8 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
     return { path, startPoint, endPoint }
   }, [route.trackSimplified])
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    const shareUrl = `${window.location.origin}/routes/${route.id}`
-    const shareTitle = `${route.name} - PlanYourTrail`
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareTitle,
-          text: `Cek rute trail running ${route.name} (${distanceKm} km, +${elevationGainM} m):`,
-          url: shareUrl,
-        })
-        return
-      } catch {
-        // user cancelled or share failed, fallback to copy
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // copy failed
-    }
-  }
-
   return (
     <article className="group relative">
-      {/* Toast Notification when link copied */}
-      {copied && (
-        <div
-          role="status"
-          className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-full bg-[#1B4332] px-3.5 py-1 text-xs font-semibold text-white shadow-lg animate-in fade-in"
-        >
-          <span className="flex items-center gap-1.5">
-            <Check className="h-3.5 w-3.5" />
-            Tautan rute disalin!
-          </span>
-        </div>
-      )}
-
       <div>
         {/* 1. AllTrails-Style 2D Topo Map Route Preview (Unboxed, directly in feed) */}
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#E8EDE6] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
@@ -247,17 +203,6 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
               </div>
             )}
           </Link>
-
-          {/* Floating Share Button in Top-Right Corner */}
-          <button
-            type="button"
-            onClick={handleShare}
-            className="absolute top-3 right-3 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-black/80 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            title="Bagikan rute ini"
-            aria-label="Bagikan rute ini"
-          >
-            <Share2 className="h-4 w-4" />
-          </button>
         </div>
 
         {/* 2. Route Name & Date */}
