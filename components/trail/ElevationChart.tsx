@@ -300,9 +300,9 @@ export const ElevationChart = memo(function ElevationChart({
                 const data = payload[0].payload
                 return (
                   <div className="pointer-events-none rounded-lg bg-[#2D3436] px-3 py-2 text-xs text-white shadow-lg tabular-nums">
-                    <p className="font-semibold">Jarak: {data.distance.toFixed(2)} km</p>
-                    <p>Elevasi: {data.elevation} m</p>
-                    <p>Gradien: {data.gradient > 0 ? "+" : ""}{data.gradient.toFixed(1)}%</p>
+                    <p className="font-semibold">{t("elevation.chartTooltipDist")}: {data.distance.toFixed(2)} km</p>
+                    <p>{t("elevation.chartTooltipElev")}: {data.elevation} m</p>
+                    <p>{t("elevation.chartTooltipGrade")}: {data.gradient > 0 ? "+" : ""}{data.gradient.toFixed(1)}%</p>
                   </div>
                 )
               }}

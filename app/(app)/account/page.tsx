@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth"
 import { limits } from "@/lib/entitlements"
 import { SignOutButton } from "@/components/auth/SignOutButton"
 import { Header } from "@/components/trail/Header"
+import { getServerTranslations } from "@/lib/i18n/server"
 import {
   CloudSun,
   MapPin,
@@ -16,7 +17,10 @@ import {
 export const dynamic = "force-dynamic"
 
 export default async function AccountPage() {
-  const user = await requireUser()
+  const [{ t }, user] = await Promise.all([
+    getServerTranslations(),
+    requireUser(),
+  ])
   const userLimits = limits(user)
   const initial = user.email.charAt(0).toUpperCase()
   const maxUploadMb = Math.round(userLimits.maxUploadBytes / (1024 * 1024))
@@ -29,10 +33,10 @@ export default async function AccountPage() {
         {/* Page Heading */}
         <div className="mb-8">
           <h1 className="heading-1">
-            Profil
+            {t("account.heading")}
           </h1>
           <p className="mt-1 text-subhead">
-            Kelola informasi akun, kuota penyimpanan rute, dan fitur analisis trail kamu.
+            {t("account.subtitle")}
           </p>
         </div>
 
@@ -49,7 +53,7 @@ export default async function AccountPage() {
               </h2>
               <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3.5 py-1 text-xs font-semibold text-[#1B4332]">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Paket {user.plan === "pro" ? "Pro" : "Free"}</span>
+                <span>{user.plan === "pro" ? t("account.planBadgePro") : t("account.planBadgeFree")}</span>
               </span>
             </div>
 
@@ -57,14 +61,14 @@ export default async function AccountPage() {
 
             <dl className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <dt className="text-[#4B5563]">Batas upload GPX</dt>
+                <dt className="text-[#4B5563]">{t("account.uploadLimitLabel")}</dt>
                 <dd className="font-semibold text-[#2D3436]">{maxUploadMb} MB</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-[#4B5563]">Kapasitas rute</dt>
+                <dt className="text-[#4B5563]">{t("account.routesCapacityLabel")}</dt>
                 <dd className="font-semibold text-[#2D3436]">
-                  {userLimits.maxSavedRoutes ?? "Tanpa batas"}{" "}
-                  {userLimits.maxSavedRoutes !== null ? "rute" : ""}
+                  {userLimits.maxSavedRoutes ?? t("account.unlimited")}{" "}
+                  {userLimits.maxSavedRoutes !== null ? t("account.routesUnit") : ""}
                 </dd>
               </div>
             </dl>
@@ -76,13 +80,13 @@ export default async function AccountPage() {
               >
                 <span className="inline-flex items-center gap-2">
                   <RouteIcon className="h-4 w-4" />
-                  <span>Lihat Rute Tersimpan</span>
+                  <span>{t("account.viewSavedRoutes")}</span>
                 </span>
                 <ChevronRight className="h-4 w-4" />
               </Link>
 
               <SignOutButton className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-4 text-sm font-semibold text-[#2D3436] transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50">
-                <span>Keluar dari Akun</span>
+                <span>{t("account.signOutBtn")}</span>
               </SignOutButton>
             </div>
           </div>
@@ -95,7 +99,7 @@ export default async function AccountPage() {
                 id="active-features-heading"
                 className="heading-2 pb-4 border-b border-[#E5E7EB]"
               >
-                Fitur Aktif di Akun Kamu
+                {t("account.activeFeaturesHeading")}
               </h2>
 
               <ul className="divide-y divide-[#E5E7EB]">
@@ -103,10 +107,10 @@ export default async function AccountPage() {
                   <CloudSun className="mt-0.5 h-5 w-5 shrink-0 text-[#2A9D8F]" />
                   <div>
                     <p className="text-sm font-semibold text-[#2D3436]">
-                      Prakiraan Cuaca per Sesi
+                      {t("account.featureWeatherTitle")}
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
-                      Data suhu, peluang hujan, dan kecepatan angin untuk sesi Pagi, Siang, Sore, serta Malam di koordinat rute.
+                      {t("account.featureWeatherDesc")}
                     </p>
                   </div>
                 </li>
@@ -115,10 +119,10 @@ export default async function AccountPage() {
                   <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#E76F51]" />
                   <div>
                     <p className="text-sm font-semibold text-[#2D3436]">
-                      Waypoint GPX pada Grafik Elevasi
+                      {t("account.featureWaypointsTitle")}
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
-                      Penanda pos pemeriksaan dan jarak kilometer tampil langsung di atas profil elevasi.
+                      {t("account.featureWaypointsDesc")}
                     </p>
                   </div>
                 </li>
@@ -127,10 +131,10 @@ export default async function AccountPage() {
                   <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#1B4332]" />
                   <div>
                     <p className="text-sm font-semibold text-[#2D3436]">
-                      Kalkulator Estimasi Waktu Finish
+                      {t("account.featurePaceTitle")}
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
-                      Perhitungan total waktu tempuh berdasarkan target pace (menit/km) dan total tanjakan rute.
+                      {t("account.featurePaceDesc")}
                     </p>
                   </div>
                 </li>
@@ -150,14 +154,14 @@ export default async function AccountPage() {
                       id="pro-roadmap-heading"
                       className="text-base font-bold text-[#2D3436]"
                     >
-                      Rencana Fitur Pro
+                      {t("account.proRoadmapTitle")}
                     </h3>
                     <span className="rounded-full bg-[#F1EDE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#1B4332]">
-                      Segera Hadir 2027
+                      {t("account.proRoadmapBadge")}
                     </span>
                   </div>
                   <p className="mt-1.5 text-xs leading-relaxed text-[#4B5563]">
-                    Manajemen waypoint kustom dan catatan nutrisi, prakiraan cuaca per jam, kalkulator cutoff time tiap pos, ekspor PDF race brief, serta kapasitas penyimpanan rute tanpa batas.
+                    {t("account.proRoadmapDesc")}
                   </p>
                 </div>
               </div>

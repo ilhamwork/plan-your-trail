@@ -140,7 +140,7 @@ export function PaceEstimator({ stats }: PaceEstimatorProps) {
               7:30 /km
             </span>
             <span className="text-xs font-bold text-[#111827] tabular-nums">
-              08j 05m
+              {t("pace.exampleDuration")}
             </span>
           </div>
           <span className="shrink-0 rounded-full bg-[#1B4332]/10 px-2 py-0.5 text-[11px] font-semibold text-[#1B4332]">

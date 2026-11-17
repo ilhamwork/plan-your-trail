@@ -4,9 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Route, CircleUserRound } from "lucide-react"
 import { useSession } from "@/lib/auth/client"
+import { useI18n } from "@/lib/i18n/context"
 
 export function MobileBottomNav() {
   const { data: sessionData } = useSession()
+  const { t } = useI18n()
   const pathname = usePathname()
   const user = sessionData?.user
 
@@ -23,7 +25,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      aria-label="Mobile bottom navigation"
+      aria-label={t("nav.mobileNavAria")}
       className="fixed inset-x-0 bottom-0 z-1001 border-t border-[#E5E7EB] bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_10px_rgba(0,0,0,0.04)] backdrop-blur-md sm:hidden"
     >
       <div className="mx-auto flex h-16 max-w-md items-center justify-evenly px-4">
@@ -40,7 +42,7 @@ export function MobileBottomNav() {
             className="h-6 w-6"
             strokeWidth={isHomeActive ? 2.25 : 1.75}
           />
-          <span className="text-[11px] leading-none">Home</span>
+          <span className="text-[11px] leading-none">{t("nav.home")}</span>
         </Link>
 
         <Link
@@ -56,7 +58,7 @@ export function MobileBottomNav() {
             className="h-6 w-6"
             strokeWidth={isRoutesActive ? 2.25 : 1.75}
           />
-          <span className="text-[11px] leading-none">Route</span>
+          <span className="text-[11px] leading-none">{t("nav.routes")}</span>
         </Link>
 
         {user ? (
@@ -73,7 +75,7 @@ export function MobileBottomNav() {
               className="h-6 w-6"
               strokeWidth={isAccountActive ? 2.25 : 1.75}
             />
-            <span className="text-[11px] leading-none">Profile</span>
+            <span className="text-[11px] leading-none">{t("nav.profile")}</span>
           </Link>
         ) : (
           <Link
@@ -89,7 +91,7 @@ export function MobileBottomNav() {
               className="h-6 w-6"
               strokeWidth={isAuthActive ? 2.25 : 1.75}
             />
-            <span className="text-[11px] leading-none">Log In</span>
+            <span className="text-[11px] leading-none">{t("nav.login")}</span>
           </Link>
         )}
       </div>

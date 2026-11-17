@@ -4,8 +4,10 @@ import { useState } from "react"
 import Link from "next/link"
 import { Loader2, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
 import { authClient, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function ForgotPasswordPage() {
+  const { t } = useI18n()
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -16,7 +18,7 @@ export default function ForgotPasswordPage() {
     setError(null)
 
     if (!email) {
-      setError("Silakan masukkan alamat email kamu.")
+      setError(t("auth.forgotMissingEmail"))
       return
     }
 
@@ -33,7 +35,7 @@ export default function ForgotPasswordPage() {
         setError(
           parseAuthError(
             res.error,
-            "Gagal mengirim tautan reset. Silakan coba lagi."
+            t("auth.forgotError")
           )
         )
         return
@@ -44,7 +46,7 @@ export default function ForgotPasswordPage() {
       setError(
         parseAuthError(
           err,
-          "Terjadi gangguan koneksi atau server. Silakan coba lagi nanti."
+          t("auth.forgotNetworkError")
         )
       )
     } finally {
@@ -58,7 +60,7 @@ export default function ForgotPasswordPage() {
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
           <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
-            Lupa Kata Sandi
+            {t("auth.forgotHeading")}
           </h1>
         </div>
 
@@ -68,18 +70,19 @@ export default function ForgotPasswordPage() {
               <CheckCircle className="h-6 w-6 text-emerald-700" />
             </div>
             <h2 className="mt-4 heading-2 text-xl sm:text-2xl font-bold tracking-tight text-[#2D3436]">
-              Periksa Email Kamu
+              {t("auth.forgotSuccessTitle")}
             </h2>
             <p className="mt-2 text-subhead text-sm sm:text-base text-[#4B5563]">
-              Jika email <span className="font-semibold text-[#2D3436]">{email}</span> terdaftar,
-              kami telah mengirimkan petunjuk untuk mengatur ulang kata sandi.
+              {t("auth.forgotSuccessBefore")}{" "}
+              <span className="font-semibold text-[#2D3436]">{email}</span>{" "}
+              {t("auth.forgotSuccessAfter")}
             </p>
             <div className="mt-5">
               <Link
                 href="/login"
                 className="flex h-12 w-full items-center justify-center rounded-xl bg-[#1B4332] px-4 text-base font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
-                Kembali ke Halaman Masuk
+                {t("auth.backToLogin")}
               </Link>
             </div>
           </div>
@@ -98,7 +101,7 @@ export default function ForgotPasswordPage() {
             <form className="mt-5 space-y-3" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="sr-only">
-                  Alamat Email
+                  {t("auth.emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -108,7 +111,7 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Alamat email"
+                  placeholder={t("auth.emailLabel")}
                   className="block h-12 w-full rounded-xl border border-[#6B7280] bg-white px-4 text-base text-[#2D3436] placeholder:text-[#6B7280] transition outline-none focus-visible:border-[#1B4332] focus-visible:ring-2 focus-visible:ring-[#1B4332]/25"
                 />
               </div>
@@ -121,7 +124,7 @@ export default function ForgotPasswordPage() {
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  "Kirim Tautan Atur Ulang"
+                  t("auth.submitForgot")
                 )}
               </button>
             </form>
@@ -132,7 +135,7 @@ export default function ForgotPasswordPage() {
                 className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-semibold text-[#1B4332] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Kembali ke Halaman Masuk</span>
+                <span>{t("auth.backToLogin")}</span>
               </Link>
             </div>
           </>

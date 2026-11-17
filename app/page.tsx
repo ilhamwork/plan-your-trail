@@ -24,16 +24,21 @@ import Link from "next/link"
 import { useI18n } from "@/lib/i18n/context"
 import { useEntitlements } from "@/lib/entitlements"
 
+function MapLoadingFallback() {
+  const { t } = useI18n()
+  return (
+    <div className="flex h-87.5 items-center justify-center rounded-xl bg-gray-100 lg:h-112.5">
+      <div className="text-sm text-gray-400">{t("home.loadingMap")}</div>
+    </div>
+  )
+}
+
 // ─── Dynamic Component Imports ─────────────────────────────────────
 const MapView = dynamic(
   () => import("@/components/trail/MapView").then((mod) => mod.MapView),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-87.5 items-center justify-center rounded-xl bg-gray-100 lg:h-112.5">
-        <div className="text-sm text-gray-400">Loading map...</div>
-      </div>
-    ),
+    loading: () => <MapLoadingFallback />,
   }
 )
 
@@ -182,7 +187,7 @@ export default function Home() {
     const res = await saveRoute({
       gpxContent: rawGpxContent,
       fileName: fileName || "route.gpx",
-      raceName: routeDetails.raceName || fileName || "Rute Saya",
+      raceName: routeDetails.raceName || fileName || t("pendingSave.defaultRouteName"),
       raceDate: routeDetails.raceDate,
       runnerName: sessionRunnerName,
       waypoints,
@@ -191,7 +196,7 @@ export default function Home() {
     if (res?.needsAuth) {
       window.location.href = "/login"
     }
-  }, [savedRouteId, unsaveRoute, rawGpxContent, fileName, routeDetails, sessionRunnerName, waypoints, saveRoute])
+  }, [savedRouteId, unsaveRoute, rawGpxContent, fileName, routeDetails, sessionRunnerName, waypoints, saveRoute, t])
 
   // Synchronize gpxData with waypoint hook
   if (tempGpxForWaypoints !== gpxData) {
@@ -262,9 +267,9 @@ export default function Home() {
       stats: gpxData.stats,
       routeName:
         routeDetails.raceName ||
-        (fileName ? fileName.replace(/\.gpx$/i, "") : "Rute Trail"),
+        (fileName ? fileName.replace(/\.gpx$/i, "") : t("home.defaultRouteName")),
     }
-  }, [gpxData, sortedWaypoints, routeDetails.raceName, fileName])
+  }, [gpxData, sortedWaypoints, routeDetails.raceName, fileName, t])
 
   return (
     <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-12">

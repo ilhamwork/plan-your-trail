@@ -110,7 +110,7 @@ export function RoutesListClient({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search activities"
+            placeholder={t("routes.searchPlaceholder")}
             className="w-full rounded-full border border-[#E5E7EB] bg-white py-2.5 pr-9 pl-10 text-sm text-[#111827] placeholder-[#9CA3AF] shadow-2xs transition focus:border-[#1B4332] focus:outline-none focus:ring-1 focus:ring-[#1B4332]"
           />
           {searchQuery && (
@@ -118,8 +118,8 @@ export function RoutesListClient({
               type="button"
               onClick={() => setSearchQuery("")}
               className="absolute top-1/2 right-3 -translate-y-1/2 text-[#9CA3AF] hover:text-[#111827]"
-              title="Hapus pencarian"
-              aria-label="Hapus pencarian"
+              title={t("routes.clearSearchAria")}
+              aria-label={t("routes.clearSearchAria")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -136,8 +136,8 @@ export function RoutesListClient({
                 ? "border-[#1B4332] bg-[#FAF6F1] text-[#1B4332]"
                 : "border-[#E5E7EB] bg-white text-[#4B5563] hover:border-[#1B4332] hover:text-[#111827]"
             }`}
-            title="Urutkan rute"
-            aria-label="Urutkan rute"
+            title={t("routes.sortAria")}
+            aria-label={t("routes.sortAria")}
           >
             <ArrowUpDown className="h-4 w-4" />
           </button>
@@ -160,7 +160,7 @@ export function RoutesListClient({
                     : "text-[#4B5563] hover:bg-[#FAF6F1] hover:text-[#111827]"
                 }`}
               >
-                <span>Terbaru</span>
+                <span>{t("routes.sortNewest")}</span>
               </button>
               <button
                 type="button"
@@ -174,7 +174,7 @@ export function RoutesListClient({
                     : "text-[#4B5563] hover:bg-[#FAF6F1] hover:text-[#111827]"
                 }`}
               >
-                <span>Jarak Terjauh</span>
+                <span>{t("routes.sortLongest")}</span>
               </button>
               <button
                 type="button"
@@ -188,7 +188,7 @@ export function RoutesListClient({
                     : "text-[#4B5563] hover:bg-[#FAF6F1] hover:text-[#111827]"
                 }`}
               >
-                <span>Elevasi Tertinggi</span>
+                <span>{t("routes.sortElevation")}</span>
               </button>
               <button
                 type="button"
@@ -202,7 +202,7 @@ export function RoutesListClient({
                     : "text-[#4B5563] hover:bg-[#FAF6F1] hover:text-[#111827]"
                 }`}
               >
-                <span>Nama (A - Z)</span>
+                <span>{t("routes.sortName")}</span>
               </button>
               <button
                 type="button"
@@ -216,7 +216,7 @@ export function RoutesListClient({
                     : "text-[#4B5563] hover:bg-[#FAF6F1] hover:text-[#111827]"
                 }`}
               >
-                <span>Terlama</span>
+                <span>{t("routes.sortOldest")}</span>
               </button>
             </div>
           )}
@@ -227,11 +227,13 @@ export function RoutesListClient({
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs text-[#4B5563]">
           <span className="font-semibold text-[#111827]">
-            {maxRoutes !== null ? `${activeCount}/${maxRoutes} Rute` : `${activeCount} Rute`}
+            {maxRoutes !== null
+              ? t("routes.quotaCount", { active: activeCount, max: maxRoutes })
+              : t("routes.quotaCountUnlimited", { active: activeCount })}
           </span>
           <span className="text-[#9CA3AF]">·</span>
           <span className="rounded-full bg-[#F1EDE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#1B4332]">
-            Paket {currentPlan === "pro" ? "Pro" : "Free"}
+            {currentPlan === "pro" ? t("routes.planBadgePro") : t("routes.planBadgeFree")}
           </span>
         </div>
 
@@ -240,7 +242,7 @@ export function RoutesListClient({
           className="inline-flex h-8.5 items-center justify-center gap-1.5 rounded-full bg-[#1B4332] px-3.5 text-xs font-semibold text-[#FAF6F1] shadow-2xs transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
         >
           <PlusCircle className="h-3.5 w-3.5" />
-          <span>Upload Rute</span>
+          <span>{t("routes.uploadBtn")}</span>
         </Link>
       </div>
 
@@ -280,14 +282,14 @@ export function RoutesListClient({
       ) : filteredRoutes.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-[28px] border border-[#E5E7EB] bg-white px-6 py-12 text-center text-[#4B5563] shadow-sm">
           <p className="text-sm text-[#4B5563]">
-            Tidak ada rute yang cocok dengan pencarian &ldquo;{searchQuery}&rdquo;.
+            {t("routes.searchEmpty", { query: searchQuery })}
           </p>
           <button
             type="button"
             onClick={() => setSearchQuery("")}
             className="mt-3 text-xs font-semibold text-[#1B4332] underline hover:text-[#2D5A46]"
           >
-            Reset Pencarian
+            {t("routes.resetSearch")}
           </button>
         </div>
       ) : (

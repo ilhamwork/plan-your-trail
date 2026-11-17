@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { Flag, Calendar } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export interface RouteDetailsData {
   raceName: string
@@ -25,6 +26,7 @@ export function ModalFormInfo({
   onCancel,
   isSubmitting = false,
 }: ModalFormInfoProps) {
+  const { t } = useI18n()
   return (
     <AnimatePresence>
       {isOpen && (
@@ -36,9 +38,9 @@ export function ModalFormInfo({
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
           >
             <div className="bg-[#1B4332] p-5 text-white">
-              <h3 className="heading-2 text-white">Race Details</h3>
+              <h3 className="heading-2 text-white">{t("raceModal.title")}</h3>
               <p className="mt-1 text-subhead text-white/85">
-                Please provide information about this race.
+                {t("raceModal.subtitle")}
               </p>
             </div>
 
@@ -46,7 +48,7 @@ export function ModalFormInfo({
               <div className="space-y-4">
                 <div>
                   <label className="text-overline mb-1.5 block text-gray-500">
-                    Race Name <span className="text-red-500">*</span>
+                    {t("raceModal.raceNameLabel")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Flag className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -60,7 +62,7 @@ export function ModalFormInfo({
                           raceName: e.target.value,
                         })
                       }
-                      placeholder="e.g. Rinjani 36K"
+                      placeholder={t("raceModal.raceNamePlaceholder")}
                       className="w-full rounded-lg border border-gray-200 py-2.5 pr-4 pl-9 text-sm transition-all outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
                     />
                   </div>
@@ -68,7 +70,7 @@ export function ModalFormInfo({
 
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold tracking-wider text-gray-500">
-                    Race Date <span className="text-red-500">*</span>
+                    {t("raceModal.raceDateLabel")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -94,7 +96,7 @@ export function ModalFormInfo({
                   onClick={onCancel}
                   className="flex-1 cursor-pointer rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-500 transition-all hover:bg-gray-50"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -116,7 +118,7 @@ export function ModalFormInfo({
                       className="h-4 w-4 rounded-full border-2 border-white/20 border-t-white"
                     />
                   )}
-                  {isSubmitting ? "Saving..." : "Continue"}
+                  {isSubmitting ? t("raceModal.savingBtn") : t("raceModal.continueBtn")}
                 </button>
               </div>
             </form>

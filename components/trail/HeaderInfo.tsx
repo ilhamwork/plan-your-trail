@@ -48,7 +48,7 @@ export const HeaderInfo = memo(function HeaderInfo({
       {showTitle && (
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#111827] sm:text-3xl">
-            {raceName || (fileName ? fileName.replace(/\.gpx$/i, "") : "Rute Trail")}
+            {raceName || (fileName ? fileName.replace(/\.gpx$/i, "") : t("home.defaultRouteName"))}
           </h1>
 
           <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3">

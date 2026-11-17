@@ -28,16 +28,21 @@ import { DeleteRouteModal } from "./DeleteRouteModal"
 import { useI18n } from "@/lib/i18n/context"
 import { downloadGPX } from "@/lib/gpx-export"
 
+function MapLoadingFallback() {
+  const { t } = useI18n()
+  return (
+    <div className="flex h-87.5 items-center justify-center rounded-xl bg-gray-100 lg:h-112.5">
+      <div className="text-sm text-gray-400">{t("home.loadingMap")}</div>
+    </div>
+  )
+}
+
 // ─── Dynamic Trail Analysis Components ──────────────────────────────
 const MapView = dynamic(
   () => import("@/components/trail/MapView").then((mod) => mod.MapView),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-87.5 items-center justify-center rounded-xl bg-gray-100 lg:h-112.5">
-        <div className="text-sm text-gray-400">Loading map...</div>
-      </div>
-    ),
+    loading: () => <MapLoadingFallback />,
   }
 )
 
@@ -387,7 +392,7 @@ export function RouteDetailView({
                   aria-label={t("routeDetail.editDetailsAria")}
                 >
                   <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Edit</span>
+                  <span>{t("routeDetail.editBtn")}</span>
                 </button>
 
                 <button
@@ -398,7 +403,7 @@ export function RouteDetailView({
                   aria-label={t("routeDetail.deleteRouteAria")}
                 >
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Delete</span>
+                  <span>{t("routeDetail.deleteBtn")}</span>
                 </button>
               </div>
             }

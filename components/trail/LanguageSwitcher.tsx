@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useI18n } from "@/lib/i18n/context"
 import type { Locale } from "@/lib/i18n/types"
 
@@ -8,11 +9,13 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ className = "" }: LanguageSwitcherProps) {
+  const router = useRouter()
   const { locale, setLocale } = useI18n()
 
   const handleSelect = (nextLocale: Locale) => {
     if (nextLocale !== locale) {
       setLocale(nextLocale)
+      router.refresh()
     }
   }
 

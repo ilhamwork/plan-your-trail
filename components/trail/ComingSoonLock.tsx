@@ -6,6 +6,7 @@ import { Check, Loader2, type LucideIcon } from "lucide-react"
 import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements } from "@/lib/entitlements"
 import { joinWaitlistAction } from "@/app/actions/waitlist"
+import { useI18n } from "@/lib/i18n/context"
 
 interface ComingSoonLockProps {
   feature: string
@@ -26,7 +27,7 @@ export function ComingSoonLock({
   title,
   description,
   source,
-  badgeText = "Segera Hadir di Pro",
+  badgeText,
   icon: Icon,
   hideCta = false,
   previewSlot,
@@ -34,6 +35,9 @@ export function ComingSoonLock({
   onSuccess,
 }: ComingSoonLockProps) {
   const { user } = useEntitlements()
+  const { t } = useI18n()
+  const resolvedBadgeText =
+    badgeText !== undefined ? badgeText : t("comingSoon.badgeDefault")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isJoined, setIsJoined] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -58,7 +62,7 @@ export function ComingSoonLock({
         setErrorMsg(res.error.message)
       }
     } catch {
-      setErrorMsg("Gagal mendaftar waitlist. Silakan coba lagi.")
+      setErrorMsg(t("comingSoon.joinError"))
     } finally {
       setIsSubmitting(false)
     }
@@ -85,9 +89,9 @@ export function ComingSoonLock({
               {description}
             </p>
           )}
-          {badgeText && (
+          {resolvedBadgeText && (
             <p className="mt-1 text-xs font-medium text-[#525B66]">
-              {badgeText}
+              {resolvedBadgeText}
             </p>
           )}
         </div>
@@ -107,7 +111,7 @@ export function ComingSoonLock({
             isJoined ? (
               <div className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-50 px-6 py-2.5 text-sm font-semibold text-emerald-900">
                 <Check className="h-4 w-4" />
-                <span>Terdaftar Early Access</span>
+                <span>{t("comingSoon.joined")}</span>
               </div>
             ) : (
               <button
@@ -118,7 +122,7 @@ export function ComingSoonLock({
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 <span>
-                  {isSubmitting ? "Mendaftar..." : "Daftar Early Access"}
+                  {isSubmitting ? t("comingSoon.joining") : t("comingSoon.joinBtn")}
                 </span>
               </button>
             )
@@ -128,7 +132,7 @@ export function ComingSoonLock({
               onClick={handleRegisterClick}
               className="flex min-h-11 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-2.5 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
             >
-              Masuk ke Akun
+              {t("comingSoon.loginBtn")}
             </Link>
           )}
         </div>

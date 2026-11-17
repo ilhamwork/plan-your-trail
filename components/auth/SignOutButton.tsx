@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { LogOut, Loader2 } from "lucide-react"
 import { signOut, withAuthTimeout } from "@/lib/auth/client"
+import { useI18n } from "@/lib/i18n/context"
 
 interface SignOutButtonProps {
   className?: string
@@ -12,6 +13,7 @@ interface SignOutButtonProps {
 
 export function SignOutButton({ className, children }: SignOutButtonProps) {
   const router = useRouter()
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
 
   const handleSignOut = async () => {
@@ -38,7 +40,7 @@ export function SignOutButton({ className, children }: SignOutButtonProps) {
       type="button"
       onClick={handleSignOut}
       disabled={loading}
-      aria-label="Keluar dari akun"
+      aria-label={t("auth.signOutAria")}
       className={
         className ||
         "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-4 py-2 text-sm font-semibold text-[#2D3436] transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50"

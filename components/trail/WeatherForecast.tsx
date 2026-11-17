@@ -107,7 +107,7 @@ export const WeatherForecast = memo(function WeatherForecast({
 }: WeatherForecastProps) {
   const [centerLat, centerLon] = center
   const { can, isLoading: authLoading } = useEntitlements()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const hasWeatherAccess = can("weather_session")
 
   const [date, setDate] = useState(
@@ -141,7 +141,7 @@ export const WeatherForecast = memo(function WeatherForecast({
     async function reverseGeocode() {
       try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${centerLat.toFixed(5)}&lon=${centerLon.toFixed(5)}&zoom=13`
-        const res = await fetch(url, { headers: { "Accept-Language": "id" } })
+        const res = await fetch(url, { headers: { "Accept-Language": locale } })
         if (!res.ok || cancelled) return
         const data = await res.json()
         if (cancelled) return
@@ -156,11 +156,11 @@ export const WeatherForecast = memo(function WeatherForecast({
     return () => {
       cancelled = true
     }
-  }, [centerLat, centerLon])
+  }, [centerLat, centerLon, locale])
 
   const activeLat = selectedLocation?.lat ?? centerLat
   const activeLon = selectedLocation?.lon ?? centerLon
-  const activeLocationName = selectedLocation?.name ?? "Titik Tengah Rute"
+  const activeLocationName = selectedLocation?.name ?? t("weatherPanel.routeCenterName")
 
 
   const searchLocation = useCallback(async (query: string) => {
@@ -173,18 +173,18 @@ export const WeatherForecast = memo(function WeatherForecast({
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
       const res = await fetch(url, {
-        headers: { "Accept-Language": "id" },
+        headers: { "Accept-Language": locale },
       })
-      if (!res.ok) throw new Error("Pencarian lokasi gagal")
+      if (!res.ok) throw new Error(t("weatherPanel.geoSearchFailed"))
       const data: GeoResult[] = await res.json()
       setGeoResults(data)
-      if (data.length === 0) setGeoError("Lokasi tidak ditemukan")
+      if (data.length === 0) setGeoError(t("weatherPanel.geoNotFound"))
     } catch {
-      setGeoError("Gagal mencari lokasi")
+      setGeoError(t("weatherPanel.geoError"))
     } finally {
       setGeoLoading(false)
     }
-  }, [])
+  }, [locale, t])
 
   const handleLocationInput = useCallback(
     (value: string) => {
@@ -236,11 +236,11 @@ export const WeatherForecast = memo(function WeatherForecast({
 
       setWeather(res.data)
     } catch {
-      setError("Gagal memuat cuaca. Silakan coba lagi.")
+      setError(t("weatherPanel.loadError"))
     } finally {
       setLoading(false)
     }
-  }, [date, activeLat, activeLon, hasWeatherAccess])
+  }, [date, activeLat, activeLon, hasWeatherAccess, t])
 
   useEffect(() => {
     if (hasWeatherAccess && date && activeLat && activeLon) {

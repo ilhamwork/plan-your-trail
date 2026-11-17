@@ -5,24 +5,26 @@ import { Header } from "@/components/trail/Header"
 import { RouteDetailView } from "@/components/routes/RouteDetailView"
 import { analyzeSegments, buildWaypointSegments } from "@/lib/segment-analysis"
 import type { GPXData, RouteStats, TrackPoint, Waypoint } from "@/lib/types"
+import { getServerTranslations } from "@/lib/i18n/server"
 
 interface RouteDetailPageProps {
   params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: RouteDetailPageProps) {
+  const { t } = await getServerTranslations()
   try {
     const user = await requireUser()
     const resolvedParams = await Promise.resolve(params)
     const savedRoute = await getRoute(user.id, resolvedParams.id)
     return {
       title: savedRoute
-        ? `${savedRoute.name} - Analisis Rute | PlanYourTrail.run`
-        : "Detail Rute | PlanYourTrail.run",
+        ? t("routes.detailMetadataTitle", { name: savedRoute.name })
+        : t("routes.detailMetadataFallback"),
     }
   } catch {
     return {
-      title: "Detail Rute | PlanYourTrail.run",
+      title: t("routes.detailMetadataFallback"),
     }
   }
 }

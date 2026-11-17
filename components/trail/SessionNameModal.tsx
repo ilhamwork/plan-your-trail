@@ -14,14 +14,14 @@ interface SessionNameModalProps {
 }
 
 export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
-  const { t, locale } = useI18n()
+  const { t } = useI18n()
   const [name, setName] = useState("")
   const [error, setError] = useState("")
 
   const handleGuestSubmit = useCallback(() => {
     const finalName = name.trim()
     if (!finalName) {
-      setError("Silakan isi nama kamu untuk lanjut sebagai tamu.")
+      setError(t("home.guestModal.nameRequiredError"))
       return
     }
     setError("")
@@ -29,7 +29,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
       source: "welcome_modal_guest",
     })
     onSubmit(finalName)
-  }, [name, onSubmit])
+  }, [name, onSubmit, t])
 
   useEffect(() => {
     if (!isOpen) return
@@ -128,7 +128,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
             <div className="my-6 flex items-center gap-4">
               <div className="h-px flex-1 bg-[#E5E7EB]" />
               <span className="text-xs font-normal text-[#6B7280]">
-                {locale === "en" ? "or" : "atau"}
+                {t("home.guestModal.or")}
               </span>
               <div className="h-px flex-1 bg-[#E5E7EB]" />
             </div>
@@ -139,9 +139,7 @@ export function SessionNameModal({ isOpen, onSubmit }: SessionNameModalProps) {
                 htmlFor="guest-runner-name"
                 className="mb-2 block text-xs font-medium text-[#6B7280]"
               >
-                {locale === "en"
-                  ? "Continue as guest (enter your name)"
-                  : "Lanjut sebagai tamu (isi nama kamu)"}
+                {t("home.guestModal.guestContinueLabel")}
               </label>
               <div className="space-y-3">
                 <input

@@ -53,7 +53,7 @@ export function DeleteRouteModal({
       await onConfirm(routeId)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menghapus rute.")
+      setError(err instanceof Error ? err.message : t("routes.deleteFailed"))
     } finally {
       setIsDeleting(false)
     }
@@ -96,7 +96,7 @@ export function DeleteRouteModal({
           </div>
 
           <p className="mt-4 body-base text-[#4B5563]">
-            Apakah Anda yakin ingin menghapus rute{" "}
+            {t("routes.deleteConfirmQuestion")}{" "}
             <span className="font-semibold text-[#2D3436]">
               &ldquo;{routeName}&rdquo;
             </span>

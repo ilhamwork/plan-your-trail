@@ -5,8 +5,10 @@ import Link from "next/link"
 import { Loader2, AlertCircle, CheckCircle, WifiOff } from "lucide-react"
 import { signUp, signIn, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
 import { trackEvent } from "@/lib/analytics/events"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function RegisterPage() {
+  const { t } = useI18n()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -36,15 +38,15 @@ export default function RegisterPage() {
     setError(null)
 
     if (!name.trim()) {
-      setError("Silakan masukkan nama lengkap kamu.")
+      setError(t("auth.registerMissingName"))
       return
     }
     if (!email || !password) {
-      setError("Silakan isi semua bidang yang diperlukan.")
+      setError(t("auth.registerMissingFields"))
       return
     }
     if (password.length < 8) {
-      setError("Kata sandi harus minimal 8 karakter.")
+      setError(t("auth.registerPasswordShort"))
       return
     }
 
@@ -60,7 +62,7 @@ export default function RegisterPage() {
 
       if (res?.error) {
         setError(
-          parseAuthError(res.error, "Gagal membuat akun. Silakan coba lagi.")
+          parseAuthError(res.error, t("auth.registerError"))
         )
         return
       }
@@ -68,7 +70,7 @@ export default function RegisterPage() {
       trackEvent("register_completed", { method: "email" })
       setSuccess(true)
     } catch (err) {
-      setError(parseAuthError(err, "Gagal membuat akun. Silakan coba lagi nanti."))
+      setError(parseAuthError(err, t("auth.registerFallbackError")))
     } finally {
       setLoading(false)
     }
@@ -88,12 +90,12 @@ export default function RegisterPage() {
 
       if (res?.error) {
         setError(
-          parseAuthError(res.error, "Gagal mendaftar dengan Google. Silakan coba lagi.")
+          parseAuthError(res.error, t("auth.googleRegisterError"))
         )
         return
       }
     } catch (err) {
-      setError(parseAuthError(err, "Gagal mendaftar dengan Google. Silakan periksa koneksi Anda."))
+      setError(parseAuthError(err, t("auth.googleRegisterNetworkError")))
     } finally {
       setGoogleLoading(false)
     }
@@ -105,7 +107,7 @@ export default function RegisterPage() {
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
           <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
-            Daftar Akun
+            {t("auth.registerTitle")}
           </h1>
         </div>
 
@@ -115,19 +117,19 @@ export default function RegisterPage() {
               <CheckCircle className="h-6 w-6 text-emerald-700" />
             </div>
             <h2 className="mt-4 heading-2 text-xl sm:text-2xl font-bold tracking-tight text-[#2D3436]">
-              Verifikasi Email Kamu
+              {t("auth.verifyTitle")}
             </h2>
             <p className="mt-2 text-subhead text-sm sm:text-base text-[#4B5563]">
-              Kami telah mengirimkan tautan verifikasi ke{" "}
-              <span className="font-semibold text-[#2D3436]">{email}</span>.
-              Silakan buka email kamu dan klik tautan untuk mengaktifkan akun.
+              {t("auth.verifyDescBefore")}{" "}
+              <span className="font-semibold text-[#2D3436]">{email}</span>.{" "}
+              {t("auth.verifyDescAfter")}
             </p>
             <div className="mt-5">
               <Link
                 href="/login"
                 className="flex h-12 w-full items-center justify-center rounded-xl bg-[#1B4332] px-4 text-base font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
-                Ke Halaman Masuk
+                {t("auth.toLoginBtn")}
               </Link>
             </div>
           </div>
@@ -139,7 +141,7 @@ export default function RegisterPage() {
                 className="mt-4 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-medium text-amber-900"
               >
                 <WifiOff className="h-4 w-4 shrink-0 text-amber-700" />
-                <span>Tidak ada koneksi internet. Silakan periksa jaringan Anda.</span>
+                <span>{t("auth.offlineBanner")}</span>
               </div>
             )}
 
@@ -156,7 +158,7 @@ export default function RegisterPage() {
             <form className="mt-5 space-y-3" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="name" className="sr-only">
-                  Nama Lengkap
+                  {t("auth.nameLabel")}
                 </label>
                 <input
                   id="name"
@@ -166,14 +168,14 @@ export default function RegisterPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Nama lengkap"
+                  placeholder={t("auth.namePlaceholder")}
                   className="block h-12 w-full rounded-xl border border-[#6B7280] bg-white px-4 text-base text-[#2D3436] placeholder:text-[#6B7280] transition outline-none focus-visible:border-[#1B4332] focus-visible:ring-2 focus-visible:ring-[#1B4332]/25"
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="sr-only">
-                  Alamat Email
+                  {t("auth.emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -183,14 +185,14 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Alamat email"
+                  placeholder={t("auth.emailLabel")}
                   className="block h-12 w-full rounded-xl border border-[#6B7280] bg-white px-4 text-base text-[#2D3436] placeholder:text-[#6B7280] transition outline-none focus-visible:border-[#1B4332] focus-visible:ring-2 focus-visible:ring-[#1B4332]/25"
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="sr-only">
-                  Kata Sandi
+                  {t("auth.passwordLabel")}
                 </label>
                 <input
                   id="password"
@@ -200,7 +202,7 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Kata sandi (minimal 8 karakter)"
+                  placeholder={t("auth.registerPasswordPlaceholder")}
                   className="block h-12 w-full rounded-xl border border-[#6B7280] bg-white px-4 text-base text-[#2D3436] placeholder:text-[#6B7280] transition outline-none focus-visible:border-[#1B4332] focus-visible:ring-2 focus-visible:ring-[#1B4332]/25"
                 />
               </div>
@@ -213,7 +215,7 @@ export default function RegisterPage() {
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  "Daftar Akun"
+                  t("auth.submitRegister")
                 )}
               </button>
             </form>
@@ -221,7 +223,7 @@ export default function RegisterPage() {
             {/* Divider */}
             <div className="my-4 flex items-center gap-4">
               <div className="h-px flex-1 bg-[#E5E7EB]" />
-              <span className="text-xs font-normal text-[#6B7280]">atau</span>
+              <span className="text-xs font-normal text-[#6B7280]">{t("auth.or")}</span>
               <div className="h-px flex-1 bg-[#E5E7EB]" />
             </div>
 
@@ -231,8 +233,8 @@ export default function RegisterPage() {
                 type="button"
                 onClick={handleGoogleSignup}
                 disabled={loading || googleLoading}
-                aria-label="Daftar dengan Google"
-                title="Daftar dengan Google"
+                aria-label={t("auth.googleRegister")}
+                title={t("auth.googleRegister")}
                 className="flex h-12 w-14 cursor-pointer items-center justify-center rounded-2xl border border-[#6B7280] bg-white transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {googleLoading ? (
@@ -261,12 +263,12 @@ export default function RegisterPage() {
             </div>
 
             <p className="mt-3 text-center text-xs text-[#6B7280]">
-              Sudah punya akun?{" "}
+              {t("auth.hasAccount")}{" "}
               <Link
                 href="/login"
                 className="inline-flex min-h-11 items-center px-1 font-semibold text-[#1B4332] underline underline-offset-4 hover:text-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
-                Masuk di sini
+                {t("auth.loginHere")}
               </Link>
             </p>
           </>

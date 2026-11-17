@@ -149,7 +149,7 @@ export function MapView({
 
   return (
     <section
-      aria-label="Peta Rute dan Profil Elevasi"
+      aria-label={t("home.map.ariaLabel")}
       className={`w-full transition-all duration-300 ${
         isFullscreen
           ? "fixed inset-0 z-1003 flex flex-col bg-[#FAF6F1]"
@@ -183,8 +183,8 @@ export function MapView({
               type="button"
               onClick={handleRecenter}
               className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white/95 text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
-              title="Pusatkan kembali peta ke seluruh rute"
-              aria-label="Pusatkan kembali peta ke seluruh rute"
+              title={t("home.map.recenter")}
+              aria-label={t("home.map.recenter")}
             >
               <LocateFixed className="h-4 w-4" />
             </button>
@@ -197,8 +197,8 @@ export function MapView({
                   ? "border-[#1B4332] bg-[#1B4332] text-[#FAF6F1]"
                   : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1]"
               }`}
-              title={is3D ? "Nonaktifkan Medan 3D" : "Aktifkan Medan 3D"}
-              aria-label={is3D ? "Nonaktifkan Medan 3D" : "Aktifkan Medan 3D"}
+              title={is3D ? t("home.map.disable3D") : t("home.map.enable3D")}
+              aria-label={is3D ? t("home.map.disable3D") : t("home.map.enable3D")}
               aria-pressed={is3D}
             >
               3D
@@ -212,9 +212,9 @@ export function MapView({
                   ? "border-[#1B4332] bg-[#1B4332] text-[#FAF6F1]"
                   : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1]"
               }`}
-              title={isSatellite ? "Gunakan Peta Topografi" : "Gunakan Citra Satelit"}
+              title={isSatellite ? t("home.map.useTopography") : t("home.map.useSatellite")}
               aria-label={
-                isSatellite ? "Gunakan Peta Topografi" : "Gunakan Citra Satelit"
+                isSatellite ? t("home.map.useTopography") : t("home.map.useSatellite")
               }
               aria-pressed={isSatellite}
             >
@@ -229,9 +229,9 @@ export function MapView({
                   ? "border-[#1B4332] bg-[#1B4332] text-[#FAF6F1]"
                   : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1]"
               }`}
-              title={isFullscreen ? "Keluar Layar Penuh (Esc)" : "Layar Penuh"}
+              title={isFullscreen ? t("home.map.exitFullscreenTitle") : t("home.map.fullscreen")}
               aria-label={
-                isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"
+                isFullscreen ? t("home.map.exitFullscreen") : t("home.map.fullscreen")
               }
             >
               {isFullscreen ? (
@@ -283,7 +283,7 @@ export function MapView({
               <button
                 type="button"
                 onClick={onDismissSaveError}
-                aria-label="Tutup"
+                aria-label={t("home.map.dismissError")}
                 className="shrink-0 rounded-lg p-1 text-[#B91C1C]/80 transition hover:bg-red-100 hover:text-[#B91C1C]"
               >
                 <X className="h-3.5 w-3.5" />

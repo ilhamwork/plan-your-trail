@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowDownToLine, Trash2 } from "lucide-react"
 import type { Route } from "@/lib/db/schema"
 import type { TrackPoint } from "@/lib/types"
+import { useI18n } from "@/lib/i18n/context"
 
 interface RouteCardProps {
   route: Route
@@ -12,6 +13,8 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, onDelete }: RouteCardProps) {
+  const { t, locale } = useI18n()
+  const dateLocale = locale === "id" ? "id-ID" : "en-US"
   const metrics = route.metrics as {
     stats?: {
       totalDistance?: number
@@ -37,7 +40,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
     try {
       const d = new Date(metrics.raceDate)
       if (!isNaN(d.getTime())) {
-        formattedDate = new Intl.DateTimeFormat("id-ID", {
+        formattedDate = new Intl.DateTimeFormat(dateLocale, {
           day: "numeric",
           month: "short",
           year: "numeric",
@@ -49,7 +52,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
       formattedDate = metrics.raceDate
     }
   } else if (route.createdAt) {
-    formattedDate = new Intl.DateTimeFormat("id-ID", {
+    formattedDate = new Intl.DateTimeFormat(dateLocale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -111,7 +114,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
           <Link
             href={`/routes/${route.id}`}
             className="block h-full w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-            aria-label={`Buka detail rute ${route.name}`}
+            aria-label={t("routes.cardOpenAria", { name: route.name })}
           >
             {mapData ? (
               <svg
@@ -199,7 +202,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
               </svg>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-[#1B4332] text-xs font-semibold text-white/80">
-                Peta Rute Trail
+                {t("routes.cardMapPlaceholder")}
               </div>
             )}
           </Link>
@@ -228,7 +231,7 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
           {/* Jarak */}
           <div>
             <span className="block text-[11px] sm:text-xs text-[#6B7280]">
-              Jarak
+              {t("routes.cardDistance")}
             </span>
             <span className="mt-0.5 block text-xs sm:text-sm font-bold text-[#111827] tabular-nums whitespace-nowrap">
               {distanceKm} km
@@ -238,17 +241,17 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
           {/* Elevasi Gain */}
           <div>
             <span className="block text-[11px] sm:text-xs text-[#6B7280]">
-              Elev. Gain
+              {t("routes.cardElevGain")}
             </span>
             <span className="mt-0.5 block text-xs sm:text-sm font-bold text-[#111827] tabular-nums whitespace-nowrap">
-              +{elevationGainM.toLocaleString("id-ID")} m
+              +{elevationGainM.toLocaleString(dateLocale)} m
             </span>
           </div>
 
           {/* KM Effort */}
           <div>
             <span className="block text-[11px] sm:text-xs text-[#6B7280]">
-              KM Effort
+              {t("routes.cardKmEffort")}
             </span>
             <span className="mt-0.5 block text-xs sm:text-sm font-bold text-[#111827] tabular-nums whitespace-nowrap">
               {kmEffort} km
@@ -262,8 +265,8 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
             href={`/api/routes/${route.id}/gpx`}
             download
             className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D1D5DB] text-[#4B5563] transition hover:border-[#1B4332] hover:bg-white hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-            title="Download file GPX"
-            aria-label="Download file GPX"
+            title={t("routes.cardDownloadAria")}
+            aria-label={t("routes.cardDownloadAria")}
           >
             <ArrowDownToLine className="h-4 w-4" />
           </a>
@@ -272,8 +275,8 @@ export function RouteCard({ route, onDelete }: RouteCardProps) {
             type="button"
             onClick={() => onDelete(route)}
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-red-200 text-[#B91C1C] transition hover:border-red-300 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C]"
-            title="Hapus rute"
-            aria-label="Hapus rute"
+            title={t("routes.cardDeleteAria")}
+            aria-label={t("routes.cardDeleteAria")}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>

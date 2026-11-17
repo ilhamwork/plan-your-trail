@@ -5,14 +5,21 @@ import { limits } from "@/lib/entitlements"
 import { Header } from "@/components/trail/Header"
 import { RoutesListClient } from "@/components/routes/RoutesListClient"
 import { LogIn, UserPlus } from "lucide-react"
+import { getServerTranslations } from "@/lib/i18n/server"
 
-export const metadata = {
-  title: "Rute Tersimpan | PlanYourTrail.run",
-  description: "Kelola rute trail running yang telah Anda simpan.",
+export async function generateMetadata() {
+  const { t } = await getServerTranslations()
+  return {
+    title: t("routes.unauthMetadataTitle"),
+    description: t("routes.unauthMetadataDesc"),
+  }
 }
 
 export default async function RoutesPage() {
-  const session = await getSession()
+  const [{ t }, session] = await Promise.all([
+    getServerTranslations(),
+    getSession(),
+  ])
   const user = session?.user
 
   if (!user) {
@@ -24,10 +31,10 @@ export default async function RoutesPage() {
           {/* Header section (Airbnb listing page unboxed style) */}
           <div className="text-left sm:text-center">
             <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
-              Simpan & Kelola Koleksi Rute
+              {t("routes.unauthTitle")}
             </h1>
             <p className="mt-3 text-subhead sm:mx-auto sm:max-w-2xl">
-              Masuk atau daftar akun untuk menyimpan rute trail running favorit, akses prakiraan cuaca race day, dan kelola rute dari perangkat mana saja.
+              {t("routes.unauthDesc")}
             </p>
 
             {/* Primary actions */}
@@ -37,14 +44,14 @@ export default async function RoutesPage() {
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-6 text-sm font-semibold text-white transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
                 <LogIn className="h-4 w-4" />
-                <span>Masuk ke Akun</span>
+                <span>{t("routes.loginCta")}</span>
               </Link>
               <Link
                 href="/register?returnTo=/routes"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-6 text-sm font-semibold text-[#2D3436] transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
                 <UserPlus className="h-4 w-4" />
-                <span>Daftar Akun Baru</span>
+                <span>{t("routes.registerCta")}</span>
               </Link>
             </div>
           </div>

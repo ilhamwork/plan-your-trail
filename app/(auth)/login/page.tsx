@@ -5,11 +5,13 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, AlertCircle, WifiOff } from "lucide-react"
 import { signIn, parseAuthError, withAuthTimeout } from "@/lib/auth/client"
+import { useI18n } from "@/lib/i18n/context"
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || "/"
+  const { t } = useI18n()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -38,7 +40,7 @@ function LoginForm() {
     setError(null)
 
     if (!email || !password) {
-      setError("Silakan masukkan email dan kata sandi kamu.")
+      setError(t("auth.loginMissingFields"))
       return
     }
 
@@ -55,7 +57,7 @@ function LoginForm() {
         setError(
           parseAuthError(
             res.error,
-            "Email atau kata sandi tidak valid. Silakan coba lagi."
+            t("auth.invalidCredentials")
           )
         )
         return
@@ -65,7 +67,7 @@ function LoginForm() {
       router.refresh()
     } catch (err) {
       setError(
-        parseAuthError(err, "Gagal masuk ke akun kamu. Silakan coba lagi nanti.")
+        parseAuthError(err, t("auth.loginFallbackError"))
       )
     } finally {
       setLoading(false)
@@ -87,7 +89,7 @@ function LoginForm() {
         setError(
           parseAuthError(
             res.error,
-            "Gagal masuk dengan Google. Silakan coba lagi."
+            t("auth.googleLoginError")
           )
         )
         return
@@ -96,7 +98,7 @@ function LoginForm() {
       setError(
         parseAuthError(
           err,
-          "Gagal masuk dengan Google. Silakan periksa koneksi Anda."
+          t("auth.googleLoginNetworkError")
         )
       )
     } finally {
@@ -110,7 +112,7 @@ function LoginForm() {
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">
           <h1 className="mt-3 heading-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2D3436]">
-            Masuk ke Akun Kamu
+            {t("auth.loginTitle")}
           </h1>
         </div>
 
@@ -120,7 +122,7 @@ function LoginForm() {
             className="mt-4 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-medium text-amber-900"
           >
             <WifiOff className="h-4 w-4 shrink-0 text-amber-700" />
-            <span>Tidak ada koneksi internet. Silakan periksa jaringan Anda.</span>
+            <span>{t("auth.offlineBanner")}</span>
           </div>
         )}
 
@@ -137,7 +139,7 @@ function LoginForm() {
         <form className="mt-5 space-y-3" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="sr-only">
-              Alamat Email
+              {t("auth.emailLabel")}
             </label>
             <input
               id="email"
@@ -147,14 +149,14 @@ function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Alamat email"
+              placeholder={t("auth.emailLabel")}
               className="block h-12 w-full rounded-xl border border-[#6B7280] bg-white px-4 text-base text-[#2D3436] placeholder:text-[#6B7280] transition outline-none focus-visible:border-[#1B4332] focus-visible:ring-2 focus-visible:ring-[#1B4332]/25"
             />
           </div>
 
           <div>
             <label htmlFor="password" className="sr-only">
-              Kata Sandi
+              {t("auth.passwordLabel")}
             </label>
             <input
               id="password"
@@ -164,7 +166,7 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Kata sandi"
+              placeholder={t("auth.passwordLabel")}
               className="block h-12 w-full rounded-xl border border-[#6B7280] bg-white px-4 text-base text-[#2D3436] placeholder:text-[#6B7280] transition outline-none focus-visible:border-[#1B4332] focus-visible:ring-2 focus-visible:ring-[#1B4332]/25"
             />
             <div className="flex justify-end">
@@ -172,7 +174,7 @@ function LoginForm() {
                 href="/forgot-password"
                 className="inline-flex min-h-11 items-center text-xs font-semibold text-[#1B4332] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
-                Lupa kata sandi?
+                {t("auth.forgotPasswordLink")}
               </Link>
             </div>
           </div>
@@ -185,7 +187,7 @@ function LoginForm() {
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              "Masuk"
+              t("auth.submitLogin")
             )}
           </button>
         </form>
@@ -193,7 +195,7 @@ function LoginForm() {
         {/* Divider */}
         <div className="my-4 flex items-center gap-4">
           <div className="h-px flex-1 bg-[#E5E7EB]" />
-          <span className="text-xs font-normal text-[#6B7280]">atau</span>
+          <span className="text-xs font-normal text-[#6B7280]">{t("auth.or")}</span>
           <div className="h-px flex-1 bg-[#E5E7EB]" />
         </div>
 
@@ -203,8 +205,8 @@ function LoginForm() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading || googleLoading}
-            aria-label="Masuk dengan Google"
-            title="Masuk dengan Google"
+            aria-label={t("auth.googleLogin")}
+            title={t("auth.googleLogin")}
             className="flex h-12 w-14 cursor-pointer items-center justify-center rounded-2xl border border-[#6B7280] bg-white transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {googleLoading ? (
@@ -233,12 +235,12 @@ function LoginForm() {
         </div>
 
         <p className="mt-3 text-center text-xs text-[#6B7280]">
-          Belum punya akun?{" "}
+          {t("auth.noAccount")}{" "}
           <Link
             href="/register"
             className="inline-flex min-h-11 items-center px-1 font-semibold text-[#1B4332] underline underline-offset-4 hover:text-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
           >
-            Daftar di sini
+            {t("auth.registerHere")}
           </Link>
         </p>
       </div>

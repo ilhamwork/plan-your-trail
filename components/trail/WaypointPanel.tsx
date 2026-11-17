@@ -131,7 +131,7 @@ export const WaypointPanel = memo(function WaypointPanel({
     // Prevent adding new waypoints if limit is reached
     if (!editingId && isLimitReached) {
       setError(
-        `Batas ${maxCustom} waypoint kustom tercapai. Upgrade ke Pro untuk waypoint tanpa batas.`
+        t("waypointPanel.limitError", { max: maxCustom ?? 3 })
       )
       return
     }
@@ -142,16 +142,18 @@ export const WaypointPanel = memo(function WaypointPanel({
     const km = parseFloat(cleanDist)
 
     if (!trimmedName) {
-      setError("Silakan masukkan nama waypoint.")
+      setError(t("waypointPanel.nameRequiredError"))
       return
     }
     if (isNaN(km) || km < 0) {
-      setError("Silakan masukkan jarak yang valid (≥ 0).")
+      setError(t("waypointPanel.distanceInvalidError"))
       return
     }
     if (km > totalDistanceKm) {
       setError(
-        `Jarak melebihi panjang rute (${totalDistanceKm.toFixed(1)} km).`
+        t("waypointPanel.distanceExceedsError", {
+          total: totalDistanceKm.toFixed(1),
+        })
       )
       return
     }
@@ -161,7 +163,9 @@ export const WaypointPanel = memo(function WaypointPanel({
       (wp) => wp.id !== editingId && Math.abs(wp.distance / 1000 - km) < 0.05
     )
     if (duplicate) {
-      setError(`Waypoint sudah ada di sekitar ${km.toFixed(2)} km.`)
+      setError(
+        t("waypointPanel.duplicateDistanceError", { km: km.toFixed(2) })
+      )
       return
     }
 
@@ -187,7 +191,7 @@ export const WaypointPanel = memo(function WaypointPanel({
   const sorted = [...waypoints].sort((a, b) => a.distance - b.distance)
 
   return (
-    <section aria-label="Waypoint Rute">
+    <section aria-label={t("waypointPanel.sectionAria")}>
       {canManageWaypoints ? (
         <>
           {/* Header */}
@@ -285,11 +289,13 @@ export const WaypointPanel = memo(function WaypointPanel({
                 }}
                 onKeyDown={handleKeyDown}
                 disabled={isLimitReached && !editingId}
-                aria-label="Nama waypoint"
+                aria-label={t("waypointPanel.nameAria")}
                 placeholder={
                   isLimitReached && !editingId
-                    ? `Batas ${maxCustom} waypoint tercapai`
-                    : "Nama pos (cth: WS 1 Sumber Air)"
+                    ? t("waypointPanel.namePlaceholderLimit", {
+                        max: maxCustom ?? 3,
+                      })
+                    : t("waypointPanel.namePlaceholder")
                 }
                 className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 text-sm text-[#2D3436] placeholder-[#6B7280] transition focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-[#6B7280]"
               />
@@ -304,7 +310,7 @@ export const WaypointPanel = memo(function WaypointPanel({
                   }}
                   onKeyDown={handleKeyDown}
                   disabled={isLimitReached && !editingId}
-                  aria-label="Jarak waypoint dalam kilometer"
+                  aria-label={t("waypointPanel.distanceAria")}
                   placeholder="0.0"
                   className="min-h-11 w-full rounded-xl border border-[#D1D5DB] bg-white px-3 py-2 pr-8 text-sm font-medium text-[#2D3436] tabular-nums placeholder-[#6B7280] transition focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-[#6B7280]"
                 />
@@ -320,8 +326,8 @@ export const WaypointPanel = memo(function WaypointPanel({
                       type="button"
                       onClick={handleSubmit}
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 active:scale-95"
-                      title="Simpan perubahan"
-                      aria-label="Simpan perubahan waypoint"
+                      title={t("waypointPanel.saveTitle")}
+                      aria-label={t("waypointPanel.saveBtnAria")}
                     >
                       <Check className="h-4 w-4" />
                     </button>
@@ -329,8 +335,8 @@ export const WaypointPanel = memo(function WaypointPanel({
                       type="button"
                       onClick={handleCancelEdit}
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1D5DB] bg-white text-[#2D3436] transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
-                      title="Batal edit"
-                      aria-label="Batal edit waypoint"
+                      title={t("waypointPanel.cancelTitle")}
+                      aria-label={t("waypointPanel.cancelBtnAria")}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -343,10 +349,12 @@ export const WaypointPanel = memo(function WaypointPanel({
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1B4332] text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                     title={
                       isLimitReached
-                        ? `Batas ${maxCustom} waypoint kustom tercapai`
-                        : "Tambah waypoint"
+                        ? t("waypointPanel.addTitleLimit", {
+                            max: maxCustom ?? 3,
+                          })
+                        : t("waypointPanel.addTitle")
                     }
-                    aria-label="Tambah waypoint"
+                    aria-label={t("waypointPanel.addBtnAria")}
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -379,13 +387,13 @@ export const WaypointPanel = memo(function WaypointPanel({
             >
               <div className="flex flex-wrap items-center gap-1.5 overflow-hidden">
                 <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[#374151] ring-1 ring-[#E5E7EB]">
-                  Water · KM 12
+                  {t("waypointPanel.previewWater")}
                 </span>
                 <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[#374151] ring-1 ring-[#E5E7EB]">
-                  Checkpoint · KM 24
+                  {t("waypointPanel.previewCheckpoint")}
                 </span>
                 <span className="hidden rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[#374151] ring-1 ring-[#E5E7EB] sm:inline-block">
-                  Aid Station · KM 30
+                  {t("waypointPanel.previewAidStation")}
                 </span>
               </div>
               <span className="shrink-0 rounded-full bg-[#1B4332]/10 px-2 py-0.5 text-[11px] font-semibold text-[#1B4332]">
@@ -435,8 +443,8 @@ export const WaypointPanel = memo(function WaypointPanel({
                         type="button"
                         onClick={() => handleStartEdit(wp)}
                         className="flex h-10 w-10 items-center justify-center rounded-lg text-[#4B5563] transition hover:bg-[#FAF6F1] hover:text-[#2D3436] focus-visible:outline-2 focus-visible:outline-[#1B4332]"
-                        title="Edit waypoint"
-                        aria-label={`Edit ${wp.name}`}
+                        title={t("waypointPanel.editTitleAttr")}
+                        aria-label={t("waypointPanel.editAria", { name: wp.name })}
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -444,8 +452,8 @@ export const WaypointPanel = memo(function WaypointPanel({
                         type="button"
                         onClick={() => wp.id && onRemove(wp.id)}
                         className="flex h-10 w-10 items-center justify-center rounded-lg text-[#4B5563] transition hover:bg-red-50 hover:text-[#B91C1C] focus-visible:outline-2 focus-visible:outline-[#B91C1C]"
-                        title="Hapus waypoint"
-                        aria-label={`Hapus ${wp.name}`}
+                        title={t("waypointPanel.deleteTitleAttr")}
+                        aria-label={t("waypointPanel.deleteAria", { name: wp.name })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
