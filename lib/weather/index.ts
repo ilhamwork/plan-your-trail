@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm"
 import { getSession, type SessionUser } from "../auth"
 import { can, RATE_LIMITS } from "../entitlements"
 import { checkRateLimit } from "../rate-limit"
+import { getServerTranslations } from "../i18n/server"
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -37,6 +38,8 @@ export async function getWeatherForecast(
   date: string,
   userOverride?: SessionUser | null
 ): Promise<ActionResult<WeatherData>> {
+  const { t } = await getServerTranslations()
+
   // 1. Authorization check
   const session = userOverride !== undefined ? (userOverride ? { user: userOverride } : null) : await getSession()
   const user = session?.user ?? null
@@ -46,7 +49,7 @@ export async function getWeatherForecast(
       ok: false,
       error: {
         code: "UNAUTHORIZED",
-        message: "Prakiraan cuaca hanya tersedia untuk pengguna terdaftar. Silakan masuk atau daftar.",
+        message: t("actions.weatherUnauthorized"),
       },
     }
   }
@@ -89,7 +92,9 @@ export async function getWeatherForecast(
       ok: false,
       error: {
         code: "RATE_LIMITED",
-        message: `Batas harian analisis cuaca tercapai (${RATE_LIMITS.weatherPerDay}x/hari). Silakan coba lagi dalam beberapa jam.`,
+        message: t("actions.weatherRateLimited", {
+          limit: RATE_LIMITS.weatherPerDay,
+        }),
       },
     }
   }
@@ -108,7 +113,7 @@ export async function getWeatherForecast(
         ok: false,
         error: {
           code: "INVALID_DATE",
-          message: "Prakiraan cuaca hanya tersedia hingga 14 hari ke depan.",
+          message: t("actions.weatherInvalidDate"),
         },
       }
     }
@@ -137,7 +142,7 @@ export async function getWeatherForecast(
         ok: false,
         error: {
           code: "API_ERROR",
-          message: "Layanan cuaca sedang tidak dapat dihubungi. Silakan coba beberapa saat lagi.",
+          message: t("actions.weatherApiError"),
         },
       }
     }
@@ -215,7 +220,7 @@ export async function getWeatherForecast(
       ok: false,
       error: {
         code: "FETCH_FAILED",
-        message: "Gagal memuat prakiraan cuaca. Silakan coba lagi.",
+        message: t("actions.weatherFetchFailed"),
       },
     }
   }

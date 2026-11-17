@@ -9,6 +9,7 @@ import {
   getWaitlistEntry,
 } from "@/lib/db/queries/waitlist"
 import type { ActionResult } from "@/lib/types"
+import { getServerTranslations } from "@/lib/i18n/server"
 
 const JoinWaitlistInputSchema = z
   .object({
@@ -36,13 +37,16 @@ export interface JoinWaitlistResult {
 export async function joinWaitlistAction(
   rawInput: unknown
 ): Promise<ActionResult<JoinWaitlistResult>> {
-  const session = await getSession()
+  const [{ t }, session] = await Promise.all([
+    getServerTranslations(),
+    getSession(),
+  ])
   if (!session?.user) {
     return {
       ok: false,
       error: {
         code: "UNAUTHORIZED",
-        message: "Silakan login untuk bergabung ke early access waitlist.",
+        message: t("actions.waitlistUnauthorized"),
       },
     }
   }
@@ -53,7 +57,7 @@ export async function joinWaitlistAction(
       ok: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: parsed.error.issues[0]?.message || "Input waitlist tidak valid.",
+        message: parsed.error.issues[0]?.message || t("actions.waitlistInputInvalid"),
       },
     }
   }
@@ -72,8 +76,7 @@ export async function joinWaitlistAction(
       ok: false,
       error: {
         code: "RATE_LIMITED",
-        message:
-          "Terlalu banyak permintaan waitlist. Silakan tunggu beberapa saat.",
+        message: t("actions.waitlistRateLimited"),
       },
     }
   }
@@ -112,7 +115,7 @@ export async function joinWaitlistAction(
       ok: false,
       error: {
         code: "INTERNAL_ERROR",
-        message: "Gagal mendaftar waitlist. Silakan coba lagi.",
+        message: t("actions.waitlistError"),
       },
     }
   }

@@ -17,6 +17,7 @@ import { putObject, deleteObject } from "@/lib/storage"
 import { parseGPXSync } from "@/lib/gpx-parser"
 import { simplifyTrack } from "@/lib/gpx/simplify"
 import type { ActionResult, GPXData } from "@/lib/types"
+import { getServerTranslations } from "@/lib/i18n/server"
 
 const gzip = promisify(zlib.gzip)
 
@@ -73,13 +74,16 @@ const UpdateRouteInputSchema = z
 export async function saveRouteAction(
   rawInput: unknown
 ): Promise<ActionResult<{ routeId: string; name: string }>> {
-  const session = await getSession()
+  const [{ t }, session] = await Promise.all([
+    getServerTranslations(),
+    getSession(),
+  ])
   if (!session?.user) {
     return {
       ok: false,
       error: {
         code: "UNAUTHORIZED",
-        message: "Silakan masuk untuk menyimpan rute.",
+        message: t("actions.routeSaveUnauthorized"),
       },
     }
   }
@@ -90,7 +94,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "FORBIDDEN",
-        message: "Paket Anda tidak memiliki izin untuk menyimpan rute.",
+        message: t("actions.routeSaveForbidden"),
       },
     }
   }
@@ -101,7 +105,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: parsed.error.issues[0]?.message || "Input rute tidak valid.",
+        message: parsed.error.issues[0]?.message || t("actions.routeInputInvalid"),
       },
     }
   }
@@ -117,8 +121,8 @@ export async function saveRouteAction(
         code: "FILE_TOO_LARGE",
         message:
           user.plan === "pro"
-            ? "File ini melebihi batas upload 20 MB."
-            : "File ini lebih dari 10 MB. Daftar early access Pro untuk upload sampai 20 MB.",
+            ? t("actions.routeFileTooLargePro")
+            : t("actions.routeFileTooLargeFree"),
       },
     }
   }
@@ -135,7 +139,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "RATE_LIMITED",
-        message: "Terlalu banyak permintaan penyimpanan rute. Silakan coba lagi nanti.",
+        message: t("actions.routeSaveRateLimited"),
       },
     }
   }
@@ -150,8 +154,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "LIMIT_REACHED",
-        message:
-          "Kamu sudah menyimpan 3 rute. Hapus salah satu rute, atau daftar early access Pro.",
+        message: t("actions.routeLimitReached"),
       },
     }
   }
@@ -169,7 +172,9 @@ export async function saveRouteAction(
         ok: false,
         error: {
           code: "WAYPOINT_LIMIT_REACHED",
-          message: `Akun Free hanya dapat menambahkan hingga ${userLimits.maxCustomWaypoints} waypoint kustom. Upgrade ke Pro untuk waypoint tanpa batas.`,
+          message: t("actions.waypointLimitReached", {
+            max: userLimits.maxCustomWaypoints,
+          }),
         },
       }
     }
@@ -185,7 +190,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "PARSE_ERROR",
-        message: "Gagal memproses file GPX. Pastikan format file valid.",
+        message: t("actions.gpxParseFailed"),
       },
     }
   }
@@ -195,7 +200,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "EMPTY_TRACK",
-        message: "File GPX tidak memiliki track points.",
+        message: t("actions.gpxEmptyTrack"),
       },
     }
   }
@@ -213,7 +218,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "COMPRESSION_ERROR",
-        message: "Gagal mengompresi data GPX.",
+        message: t("actions.gpxCompressionFailed"),
       },
     }
   }
@@ -232,7 +237,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "STORAGE_ERROR",
-        message: "Gagal menyimpan file ke penyimpanan cloud.",
+        message: t("actions.routeStorageError"),
       },
     }
   }
@@ -268,7 +273,7 @@ export async function saveRouteAction(
       ok: false,
       error: {
         code: "DB_ERROR",
-        message: "Gagal menyimpan metadata rute ke database.",
+        message: t("actions.routeDbSaveError"),
       },
     }
   }
@@ -290,13 +295,16 @@ export async function saveRouteAction(
 export async function deleteRouteAction(
   rawInput: unknown
 ): Promise<ActionResult<{ success: true }>> {
-  const session = await getSession()
+  const [{ t }, session] = await Promise.all([
+    getServerTranslations(),
+    getSession(),
+  ])
   if (!session?.user) {
     return {
       ok: false,
       error: {
         code: "UNAUTHORIZED",
-        message: "Silakan masuk untuk menghapus rute.",
+        message: t("actions.routeDeleteUnauthorized"),
       },
     }
   }
@@ -307,7 +315,7 @@ export async function deleteRouteAction(
       ok: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: "ID rute tidak valid.",
+        message: t("actions.routeIdInvalid"),
       },
     }
   }
@@ -323,7 +331,7 @@ export async function deleteRouteAction(
       ok: false,
       error: {
         code: "RATE_LIMITED",
-        message: "Terlalu banyak permintaan penghapusan rute. Silakan coba lagi nanti.",
+        message: t("actions.routeDeleteRateLimited"),
       },
     }
   }
@@ -336,7 +344,7 @@ export async function deleteRouteAction(
       ok: false,
       error: {
         code: "NOT_FOUND",
-        message: "Rute tidak ditemukan atau Anda tidak memiliki akses.",
+        message: t("actions.routeNotFound"),
       },
     }
   }
@@ -357,7 +365,7 @@ export async function deleteRouteAction(
       ok: false,
       error: {
         code: "DB_ERROR",
-        message: "Gagal menghapus rute dari database.",
+        message: t("actions.routeDbDeleteError"),
       },
     }
   }
@@ -377,13 +385,16 @@ export async function deleteRouteAction(
 export async function updateRouteAction(
   rawInput: unknown
 ): Promise<ActionResult<{ routeId: string; name: string }>> {
-  const session = await getSession()
+  const [{ t }, session] = await Promise.all([
+    getServerTranslations(),
+    getSession(),
+  ])
   if (!session?.user) {
     return {
       ok: false,
       error: {
         code: "UNAUTHORIZED",
-        message: "Silakan masuk untuk mengubah rute.",
+        message: t("actions.routeUpdateUnauthorized"),
       },
     }
   }
@@ -394,7 +405,7 @@ export async function updateRouteAction(
       ok: false,
       error: {
         code: "FORBIDDEN",
-        message: "Paket Anda tidak memiliki izin untuk mengubah rute.",
+        message: t("actions.routeUpdateForbidden"),
       },
     }
   }
@@ -405,7 +416,7 @@ export async function updateRouteAction(
       ok: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: parsed.error.issues[0]?.message || "Input rute tidak valid.",
+        message: parsed.error.issues[0]?.message || t("actions.routeInputInvalid"),
       },
     }
   }
@@ -421,7 +432,9 @@ export async function updateRouteAction(
         ok: false,
         error: {
           code: "WAYPOINT_LIMIT_REACHED",
-          message: `Akun Free hanya dapat menambahkan hingga ${userLimits.maxCustomWaypoints} waypoint kustom. Upgrade ke Pro untuk waypoint tanpa batas.`,
+          message: t("actions.waypointLimitReached", {
+            max: userLimits.maxCustomWaypoints,
+          }),
         },
       }
     }
@@ -438,7 +451,7 @@ export async function updateRouteAction(
       ok: false,
       error: {
         code: "RATE_LIMITED",
-        message: "Terlalu banyak permintaan pembaruan rute. Silakan coba lagi nanti.",
+        message: t("actions.routeUpdateRateLimited"),
       },
     }
   }
@@ -450,7 +463,7 @@ export async function updateRouteAction(
       ok: false,
       error: {
         code: "NOT_FOUND",
-        message: "Rute tidak ditemukan atau Anda tidak memiliki akses.",
+        message: t("actions.routeNotFound"),
       },
     }
   }
@@ -473,7 +486,7 @@ export async function updateRouteAction(
         ok: false,
         error: {
           code: "NOT_FOUND",
-          message: "Gagal memperbarui rute.",
+          message: t("actions.routeUpdateFailed"),
         },
       }
     }
@@ -491,7 +504,7 @@ export async function updateRouteAction(
       ok: false,
       error: {
         code: "DB_ERROR",
-        message: "Gagal memperbarui rute ke database.",
+        message: t("actions.routeDbUpdateError"),
       },
     }
   }

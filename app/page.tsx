@@ -337,17 +337,6 @@ export default function Home() {
                   </motion.div>
                 )}
 
-                {saveError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    role="alert"
-                    className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-[#B91C1C] shadow-xs"
-                  >
-                    {saveError}
-                  </motion.div>
-                )}
-
                 {/* Route Title, Metadata & Telemetry Summary */}
                 <div className="pb-5">
                   <HeaderInfo

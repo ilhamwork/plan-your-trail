@@ -4,6 +4,7 @@ import { z } from "zod"
 import { getSession } from "@/lib/auth"
 import { createRouteAnalysis } from "@/lib/db/queries/route-analysis"
 import type { ActionResult } from "@/lib/types"
+import { getServerTranslations } from "@/lib/i18n/server"
 
 const RouteStatsSchema = z.object({
   totalDistance: z.number().nonnegative(),
@@ -47,6 +48,7 @@ export type RecordRouteAnalysisInput = z.infer<
 export async function recordRouteAnalysisAction(
   rawInput: unknown
 ): Promise<ActionResult<{ id: string }>> {
+  const { t } = await getServerTranslations()
   const parsed = RecordRouteAnalysisInputSchema.safeParse(rawInput)
   if (!parsed.success) {
     return {
@@ -54,7 +56,7 @@ export async function recordRouteAnalysisAction(
       error: {
         code: "VALIDATION_ERROR",
         message:
-          parsed.error.issues[0]?.message || "Input analisis rute tidak valid.",
+          parsed.error.issues[0]?.message || t("actions.analysisInputInvalid"),
       },
     }
   }
@@ -90,7 +92,7 @@ export async function recordRouteAnalysisAction(
       ok: false,
       error: {
         code: "DATABASE_ERROR",
-        message: "Gagal menyimpan metrik analisis rute.",
+        message: t("actions.analysisDbError"),
       },
     }
   }
