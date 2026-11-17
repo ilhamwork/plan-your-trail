@@ -126,7 +126,7 @@ export const SegmentList = memo(function SegmentList({
           <div
             role="tablist"
             aria-label={t("segments.modeAria")}
-            className="inline-flex rounded-full border border-[#E5E7EB] bg-[#F3F4F6] p-1"
+            className="w-full inline-flex rounded-full border border-[#E5E7EB] bg-[#F3F4F6] p-1"
           >
             <button
               type="button"
@@ -139,7 +139,7 @@ export const SegmentList = memo(function SegmentList({
                   onTabChange?.("waypoints")
                 }
               }}
-              className={`min-h-8 cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
+              className={`min-h-8 w-full cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
                 tab === "waypoints"
                   ? "bg-[#1B4332] text-[#FAF6F1] shadow-xs"
                   : "text-[#4B5563] hover:text-[#111827]"
@@ -158,7 +158,7 @@ export const SegmentList = memo(function SegmentList({
                   onTabChange?.("gradient")
                 }
               }}
-              className={`min-h-8 cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
+              className={`min-h-8 w-full cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
                 tab === "gradient"
                   ? "bg-[#1B4332] text-[#FAF6F1] shadow-xs"
                   : "text-[#4B5563] hover:text-[#111827]"
@@ -289,7 +289,7 @@ function WaypointSegmentRow({
             transition={{ duration: 0.2 }}
             className="overflow-hidden bg-[#1B4332]"
           >
-            <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 px-4 pt-1 pb-4 sm:grid-cols-3">
               <StatCell
                 label={t("segments.startElev")}
                 value={`${segment.startElevation} m`}
@@ -307,6 +307,10 @@ function WaypointSegmentRow({
                 label={t("segments.lossLabel")}
                 value={`-${segment.elevationLoss} m`}
                 color="text-amber-200"
+              />
+              <StatCell
+                label={t("segments.avgGradientLabel")}
+                value={`${segment.avgGradient}%`}
               />
             </div>
           </motion.div>
@@ -411,10 +415,6 @@ function GradientSegmentRow({
               <StatCell
                 label={t("segments.avgGradientLabel")}
                 value={`${segment.avgGradient}%`}
-              />
-              <StatCell
-                label={t("segments.elevChangeLabel")}
-                value={`${segment.elevationChange > 0 ? "+" : ""}${segment.elevationChange} m`}
               />
             </div>
           </motion.div>

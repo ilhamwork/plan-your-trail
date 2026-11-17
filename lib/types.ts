@@ -60,6 +60,7 @@ export interface WaypointSegment {
   endElevation: number;
   elevationGain: number;
   elevationLoss: number;
+  avgGradient: number; // percent
   startIndex: number;
   endIndex: number;
 }
