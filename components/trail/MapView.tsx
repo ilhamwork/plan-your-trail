@@ -16,7 +16,6 @@ import {
   ChevronUp,
   BarChart3,
   Heart,
-  Share,
   Loader2,
 } from "lucide-react"
 import "maplibre-gl/dist/maplibre-gl.css"
@@ -42,6 +41,8 @@ interface MapViewProps {
   onSave?: () => void
   isSaving?: boolean
   isSaved?: boolean
+  saveError?: string | null
+  onDismissSaveError?: () => void
   onShare?: () => void
   isSharing?: boolean
   topLeftSlot?: React.ReactNode
@@ -66,8 +67,8 @@ export function MapView({
   onSave,
   isSaving = false,
   isSaved = false,
-  onShare,
-  isSharing = false,
+  saveError,
+  onDismissSaveError,
   topLeftSlot,
   betweenMapAndChartSlot,
 }: MapViewProps) {
@@ -241,21 +242,8 @@ export function MapView({
             </button>
           </div>
 
-          {/* Right: Share & Love (Save Route) Actions (Airbnb-inspired top-right overlay) */}
+          {/* Right: Love (Save Route) Action (Share button hidden until feature is ready) */}
           <div className="pointer-events-auto flex items-center gap-2">
-            {onShare && (
-              <button
-                type="button"
-                onClick={onShare}
-                disabled={isSharing}
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white/95 text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:opacity-50"
-                title={t("routeChart.shareRoute")}
-                aria-label={t("routeChart.shareRoute")}
-              >
-                <Share className="h-4 w-4" />
-              </button>
-            )}
-
             {(onSave || isSaved) && (
               <button
                 type="button"
@@ -283,6 +271,26 @@ export function MapView({
             )}
           </div>
         </div>
+
+        {/* Floating Save Error Alert inside map viewport */}
+        {saveError && (
+          <div
+            role="alert"
+            className="pointer-events-auto absolute bottom-4 left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-start justify-between gap-3 rounded-2xl border border-red-200 bg-red-50/95 px-4 py-3 text-xs font-medium text-[#B91C1C] shadow-lg backdrop-blur-xs"
+          >
+            <span className="leading-relaxed">{saveError}</span>
+            {onDismissSaveError && (
+              <button
+                type="button"
+                onClick={onDismissSaveError}
+                aria-label="Tutup"
+                className="shrink-0 rounded-lg p-1 text-[#B91C1C]/80 transition hover:bg-red-100 hover:text-[#B91C1C]"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {betweenMapAndChartSlot}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "@/lib/auth/client"
-import { saveRouteAction } from "@/app/actions/routes"
+import { saveRouteAction, deleteRouteAction } from "@/app/actions/routes"
 import { trackEvent } from "@/lib/analytics/events"
 import type { Waypoint } from "@/lib/types"
 
@@ -180,6 +180,32 @@ export function usePendingRouteSave() {
     [user]
   )
 
+  const unsaveRoute = useCallback(async () => {
+    if (!user || !savedRouteId) {
+      return { ok: false, error: "Rute belum tersimpan." }
+    }
+
+    setIsSaving(true)
+    setSaveError(null)
+    try {
+      const res = await deleteRouteAction({ routeId: savedRouteId })
+      if (res.ok) {
+        setSavedRouteId(null)
+        setSaveMessage("Rute dihapus dari daftar tersimpan.")
+        return { ok: true }
+      } else {
+        setSaveError(res.error.message)
+        return { ok: false, error: res.error.message }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Gagal menghapus rute."
+      setSaveError(msg)
+      return { ok: false, error: msg }
+    } finally {
+      setIsSaving(false)
+    }
+  }, [user, savedRouteId])
+
   return {
     isSaving,
     savedRouteId,
@@ -188,5 +214,6 @@ export function usePendingRouteSave() {
     setSaveError,
     setSaveMessage,
     saveRoute,
+    unsaveRoute,
   }
 }

@@ -19,6 +19,7 @@ import { useWaypoints } from "@/components/trail/hooks/useWaypoints"
 import { useRunnerSession } from "@/components/trail/hooks/useRunnerSession"
 import { useRouteUpload } from "@/components/trail/hooks/useRouteUpload"
 import { usePendingRouteSave } from "@/components/trail/hooks/usePendingRouteSave"
+import { useSegmentNavigation } from "@/components/trail/hooks/useSegmentNavigation"
 import Link from "next/link"
 import { useI18n } from "@/lib/i18n/context"
 import { useEntitlements } from "@/lib/entitlements"
@@ -167,10 +168,16 @@ export default function Home() {
     savedRouteId,
     saveMessage,
     saveError,
+    setSaveError,
     saveRoute,
+    unsaveRoute,
   } = usePendingRouteSave()
 
   const handleSaveRoute = useCallback(async () => {
+    if (savedRouteId) {
+      await unsaveRoute()
+      return
+    }
     if (!rawGpxContent) return
     const res = await saveRoute({
       gpxContent: rawGpxContent,
@@ -182,9 +189,9 @@ export default function Home() {
     })
 
     if (res?.needsAuth) {
-      window.location.href = "/register"
+      window.location.href = "/login"
     }
-  }, [rawGpxContent, fileName, routeDetails, sessionRunnerName, waypoints, saveRoute])
+  }, [savedRouteId, unsaveRoute, rawGpxContent, fileName, routeDetails, sessionRunnerName, waypoints, saveRoute])
 
   // Synchronize gpxData with waypoint hook
   if (tempGpxForWaypoints !== gpxData) {
@@ -233,56 +240,18 @@ export default function Home() {
     return gpxData?.segments || []
   }, [effectiveSegmentTab, hasWaypointSegments, mergedWaypointSegments, gpxData?.segments])
 
-  const activeSegmentIndex = useMemo(() => {
-    if (!highlightRange || activeSegmentsList.length === 0) return -1
-    return activeSegmentsList.findIndex(
-      (s) =>
-        s.startIndex === highlightRange.startIndex &&
-        s.endIndex === highlightRange.endIndex
-    )
-  }, [highlightRange, activeSegmentsList])
-
-  const hasPrevSegment =
-    activeSegmentIndex === -1
-      ? activeSegmentsList.length > 0
-      : activeSegmentIndex > 0
-
-  const hasNextSegment =
-    activeSegmentIndex === -1
-      ? activeSegmentsList.length > 0
-      : activeSegmentIndex < activeSegmentsList.length - 1
-
-  const handlePrevSegment = useCallback(() => {
-    if (activeSegmentIndex > 0) {
-      selectHighlight(activeSegmentsList[activeSegmentIndex - 1])
-    } else if (activeSegmentsList.length > 0) {
-      // Saat semua rute aktif atau di awal, prev langsung memilih segmen terakhir atau segmen 0
-      selectHighlight(
-        activeSegmentIndex === -1
-          ? activeSegmentsList[activeSegmentsList.length - 1]
-          : activeSegmentsList[0]
-      )
-    }
-  }, [activeSegmentIndex, activeSegmentsList, selectHighlight])
-
-  const handleNextSegment = useCallback(() => {
-    if (
-      activeSegmentIndex >= 0 &&
-      activeSegmentIndex < activeSegmentsList.length - 1
-    ) {
-      selectHighlight(activeSegmentsList[activeSegmentIndex + 1])
-    } else if (activeSegmentsList.length > 0) {
-      // Saat semua rute aktif, next langsung memilih segmen pertama
-      selectHighlight(activeSegmentsList[0])
-    }
-  }, [activeSegmentIndex, activeSegmentsList, selectHighlight])
-
-  const currentSegmentLabel =
-    activeSegmentIndex >= 0
-      ? "name" in activeSegmentsList[activeSegmentIndex]
-        ? (activeSegmentsList[activeSegmentIndex] as WaypointSegment).name
-        : (activeSegmentsList[activeSegmentIndex] as Segment).label
-      : undefined
+  const {
+    hasPrevSegment,
+    hasNextSegment,
+    handlePrevSegment,
+    handleNextSegment,
+    currentSegmentLabel,
+  } = useSegmentNavigation({
+    segments: activeSegmentsList,
+    highlightRange,
+    selectHighlight,
+    clearHighlight,
+  })
 
   const mapProps = useMemo(() => {
     if (!gpxData) return null
@@ -340,6 +309,8 @@ export default function Home() {
                   onSave={handleSaveRoute}
                   isSaving={isSaving}
                   isSaved={!!savedRouteId}
+                  saveError={saveError}
+                  onDismissSaveError={() => setSaveError(null)}
                 />
               )}
 

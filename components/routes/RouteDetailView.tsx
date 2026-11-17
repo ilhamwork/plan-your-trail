@@ -19,6 +19,7 @@ import {
 import type { GPXData, TrackPoint, Segment, WaypointSegment } from "@/lib/types"
 import { useHighlightRange } from "@/lib/use-highlight-range"
 import { useWaypoints } from "@/components/trail/hooks/useWaypoints"
+import { useSegmentNavigation } from "@/components/trail/hooks/useSegmentNavigation"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { SegmentList, type SegmentTabType } from "@/components/trail/SegmentList"
 import { WaypointPanel } from "@/components/trail/WaypointPanel"
@@ -213,54 +214,18 @@ export function RouteDetailView({
     return gpxData.segments || []
   }, [effectiveSegmentTab, hasWaypointSegments, mergedWaypointSegments, gpxData.segments])
 
-  const activeSegmentIndex = useMemo(() => {
-    if (!highlightRange || activeSegmentsList.length === 0) return -1
-    return activeSegmentsList.findIndex(
-      (s) =>
-        s.startIndex === highlightRange.startIndex &&
-        s.endIndex === highlightRange.endIndex
-    )
-  }, [highlightRange, activeSegmentsList])
-
-  const hasPrevSegment =
-    activeSegmentIndex === -1
-      ? activeSegmentsList.length > 0
-      : activeSegmentIndex > 0
-
-  const hasNextSegment =
-    activeSegmentIndex === -1
-      ? activeSegmentsList.length > 0
-      : activeSegmentIndex < activeSegmentsList.length - 1
-
-  const handlePrevSegment = useCallback(() => {
-    if (activeSegmentIndex > 0) {
-      selectHighlight(activeSegmentsList[activeSegmentIndex - 1])
-    } else if (activeSegmentsList.length > 0) {
-      selectHighlight(
-        activeSegmentIndex === -1
-          ? activeSegmentsList[activeSegmentsList.length - 1]
-          : activeSegmentsList[0]
-      )
-    }
-  }, [activeSegmentIndex, activeSegmentsList, selectHighlight])
-
-  const handleNextSegment = useCallback(() => {
-    if (
-      activeSegmentIndex >= 0 &&
-      activeSegmentIndex < activeSegmentsList.length - 1
-    ) {
-      selectHighlight(activeSegmentsList[activeSegmentIndex + 1])
-    } else if (activeSegmentsList.length > 0) {
-      selectHighlight(activeSegmentsList[0])
-    }
-  }, [activeSegmentIndex, activeSegmentsList, selectHighlight])
-
-  const currentSegmentLabel =
-    activeSegmentIndex >= 0
-      ? "name" in activeSegmentsList[activeSegmentIndex]
-        ? (activeSegmentsList[activeSegmentIndex] as WaypointSegment).name
-        : (activeSegmentsList[activeSegmentIndex] as Segment).label
-      : undefined
+  const {
+    hasPrevSegment,
+    hasNextSegment,
+    handlePrevSegment,
+    handleNextSegment,
+    currentSegmentLabel,
+  } = useSegmentNavigation({
+    segments: activeSegmentsList,
+    highlightRange,
+    selectHighlight,
+    clearHighlight,
+  })
 
   const handleDelete = async () => {
     const res = await deleteRouteAction({ routeId })
@@ -341,9 +306,11 @@ export function RouteDetailView({
           hasNextSegment={hasNextSegment}
           currentSegmentLabel={currentSegmentLabel}
           onShare={() => setShowShareModal(true)}
-          onSave={hasUnsavedChanges ? handleSaveChanges : undefined}
+          onSave={hasUnsavedChanges ? handleSaveChanges : () => setShowDeleteModal(true)}
           isSaving={isSavingChanges}
           isSaved={!hasUnsavedChanges}
+          saveError={saveError}
+          onDismissSaveError={() => setSaveError(null)}
         />
       )}
 
