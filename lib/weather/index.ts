@@ -51,25 +51,7 @@ export async function getWeatherForecast(
     }
   }
 
-  // 2. Per-account rate limit from config (20 calls per day)
-  const rateLimitKey = `weather:${user.id}`
-  const limitResult = await checkRateLimit(
-    rateLimitKey,
-    RATE_LIMITS.weatherPerDay,
-    RATE_LIMITS.weatherWindowSeconds
-  )
-
-  if (!limitResult.allowed) {
-    return {
-      ok: false,
-      error: {
-        code: "RATE_LIMITED",
-        message: `Batas harian analisis cuaca tercapai (${RATE_LIMITS.weatherPerDay}x/hari). Silakan coba lagi dalam beberapa jam.`,
-      },
-    }
-  }
-
-  // 3. PostgreSQL Cache Lookup
+  // 2. PostgreSQL Cache Lookup (check cache before rate limit so cached reads don't burn daily quota)
   const cacheKey = `weather:${lat.toFixed(2)}:${lon.toFixed(2)}:${date}`
   const now = new Date()
 
@@ -90,8 +72,26 @@ export async function getWeatherForecast(
       }
     }
   } catch (err) {
-    // If DB cache check fails, proceed to fetch directly
+    // If DB cache check fails, proceed to rate limit + fetch
     console.error("Weather cache lookup error:", err)
+  }
+
+  // 3. Per-account rate limit from config (20 uncached calls per day)
+  const rateLimitKey = `weather:${user.id}`
+  const limitResult = await checkRateLimit(
+    rateLimitKey,
+    RATE_LIMITS.weatherPerDay,
+    RATE_LIMITS.weatherWindowSeconds
+  )
+
+  if (!limitResult.allowed) {
+    return {
+      ok: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: `Batas harian analisis cuaca tercapai (${RATE_LIMITS.weatherPerDay}x/hari). Silakan coba lagi dalam beberapa jam.`,
+      },
+    }
   }
 
   // 4. Cache miss: Fetch from Open-Meteo
