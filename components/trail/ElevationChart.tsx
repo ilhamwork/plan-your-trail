@@ -19,7 +19,7 @@ import type {
   RouteStats,
   HighlightRange,
 } from "@/lib/types"
-import { Lock, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
+import { Lock, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEntitlements } from "@/lib/entitlements"
 import { useI18n } from "@/lib/i18n/context"
 
@@ -49,11 +49,11 @@ export const ElevationChart = memo(function ElevationChart({
   stats,
   hoveredPoint,
   highlightRange,
-  onClearHighlight,
   onPrevSegment,
   onNextSegment,
   hasPrevSegment = false,
   hasNextSegment = false,
+  currentSegmentLabel,
   className = "",
   showSubHeader = true,
 }: ElevationChartProps) {
@@ -167,7 +167,7 @@ export const ElevationChart = memo(function ElevationChart({
       : `${computedSummary.totalDistanceKm.toFixed(1)} km`
 
   const elevationLabel = hoveredPoint
-    ? t("routeChart.elevAndGrade")
+    ? t("routeChart.elevation")
     : highlightedSegmentMetrics
       ? t("routeChart.segmentGain")
       : t("routeChart.elevGain")
@@ -177,10 +177,6 @@ export const ElevationChart = memo(function ElevationChart({
     : highlightedSegmentMetrics
       ? `+${highlightedSegmentMetrics.elevationGainM.toLocaleString(numLocale)} m`
       : `+${computedSummary.elevationGainM.toLocaleString(numLocale)} m`
-
-  const hoveredGradientText = hoveredPoint
-    ? `${hoveredPoint.gradient > 0 ? "+" : ""}${hoveredPoint.gradient.toFixed(1)}%`
-    : null
 
   return (
     <div className={className}>
@@ -223,23 +219,12 @@ export const ElevationChart = memo(function ElevationChart({
                     <ChevronLeft className="h-4 w-4" />
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={onClearHighlight}
-                    disabled={!highlightedSegmentMetrics}
-                    className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-[#1B4332] ${
-                      highlightedSegmentMetrics
-                        ? "text-[#2D3436] hover:bg-[#FAF6F1]"
-                        : "cursor-default bg-[#FAF6F1] text-[#525B66]"
-                    }`}
-                    title={
-                      highlightedSegmentMetrics
-                        ? t("routeChart.backToAllRoute")
-                        : t("routeChart.showingAllRoute")
-                    }
+                  <span
+                    className="inline-flex h-8 max-w-[140px] items-center truncate px-2 text-xs font-semibold text-[#2D3436] select-none sm:max-w-[200px]"
+                    title={currentSegmentLabel ?? t("routeChart.allRoute")}
                   >
-                    <span>{t("routeChart.allRoute")}</span>
-                  </button>
+                    {currentSegmentLabel ?? t("routeChart.allRoute")}
+                  </span>
 
                   <button
                     type="button"
@@ -261,11 +246,6 @@ export const ElevationChart = memo(function ElevationChart({
                 <p className="text-2xl font-extrabold tracking-tight text-[#1B4332] tabular-nums sm:text-3xl">
                   {elevationValue}
                 </p>
-                {hoveredGradientText && (
-                  <span className="rounded-md bg-[#F1EDE8] px-1.5 py-0.5 text-xs font-bold text-[#2D3436] tabular-nums">
-                    {hoveredGradientText}
-                  </span>
-                )}
               </div>
             </div>
           </div>
