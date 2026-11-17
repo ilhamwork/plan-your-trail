@@ -1,7 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Check, Clock, CloudSun, Loader2, Flag } from "lucide-react"
+import {
+  Check,
+  Clock,
+  CloudSun,
+  CloudRain,
+  Droplets,
+  Lock,
+  Loader2,
+  Flag,
+  Sun,
+} from "lucide-react"
 import type { Waypoint } from "@/lib/types"
 import { useEntitlements } from "@/lib/entitlements"
 import { useI18n } from "@/lib/i18n/context"
@@ -135,15 +145,72 @@ export function ProFeaturesTeaser({ waypoints = [] }: ProFeaturesTeaserProps) {
         {/* 2. Hourly Weather Forecast */}
         {!hasHourlyAccess && (
           <div className={!hasCutoffAccess ? "border-t border-[#E5E7EB] pt-5" : ""}>
-            <div className="flex items-center gap-2">
-              <CloudSun className="h-4 w-4 shrink-0 text-[#1B4332]" aria-hidden="true" />
-              <h4 className="text-sm font-bold text-[#111827]">
-                {t("proTeaser.hourlyTitle")}
-              </h4>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CloudSun className="h-4 w-4 shrink-0 text-[#1B4332]" aria-hidden="true" />
+                <h4 className="text-sm font-bold text-[#111827]">
+                  {t("proTeaser.hourlyTitle")}
+                </h4>
+              </div>
+              <span className="shrink-0 rounded-full bg-[#1B4332]/10 px-2 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+                {t("authWall.exampleBadge")}
+              </span>
             </div>
             <p className="mt-1 text-xs text-[#4B5563]">
               {t("proTeaser.hourlyDesc")}
             </p>
+
+            {/* Subtle horizontal hourly forecast teaser strip */}
+            <div
+              aria-hidden="true"
+              className="mt-3 flex items-stretch gap-2 overflow-x-auto pb-1"
+            >
+              {[
+                { time: "05:00", temp: "13°", rain: "10%", Icon: Sun, alert: false },
+                { time: "06:00", temp: "15°", rain: "15%", Icon: CloudSun, alert: false },
+                { time: "07:00", temp: "18°", rain: "25%", Icon: CloudSun, alert: false },
+                { time: "08:00", temp: "19°", rain: "65%", Icon: CloudRain, alert: true },
+              ].map((slot) => (
+                <div
+                  key={slot.time}
+                  className={`flex min-w-[72px] flex-1 flex-col items-center rounded-xl border px-2 py-2 text-center tabular-nums ${
+                    slot.alert
+                      ? "border-amber-300 bg-amber-50/70"
+                      : "border-[#E5E7EB] bg-[#FAF6F1]/60"
+                  }`}
+                >
+                  <span className="text-[11px] font-semibold text-[#4B5563]">
+                    {slot.time}
+                  </span>
+                  <slot.Icon
+                    className={`my-1 h-4 w-4 ${
+                      slot.alert ? "text-amber-700" : "text-[#1B4332]"
+                    }`}
+                  />
+                  <span className="text-xs font-bold text-[#111827]">
+                    {slot.temp}
+                  </span>
+                  <span
+                    className={`mt-0.5 inline-flex items-center gap-0.5 text-[10px] font-medium ${
+                      slot.alert ? "text-amber-800" : "text-[#4B5563]"
+                    }`}
+                  >
+                    <Droplets className="h-2.5 w-2.5" />
+                    {slot.rain}
+                  </span>
+                </div>
+              ))}
+
+              <div className="flex min-w-[72px] flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] px-2 py-2 text-center">
+                <span className="text-[11px] font-semibold text-[#6B7280]">
+                  09:00+
+                </span>
+                <Lock className="my-1.5 h-3.5 w-3.5 text-[#6B7280]" />
+                <span className="text-[10px] font-semibold text-[#1B4332]">
+                  Pro
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>
