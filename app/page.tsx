@@ -10,6 +10,7 @@ import { useGPXParser } from "@/lib/use-gpx-parser"
 import { useHighlightRange } from "@/lib/use-highlight-range"
 
 import { Header } from "@/components/trail/Header"
+// import { TierBanner } from "@/components/trail/TierBanner"
 import { UploadCard } from "@/components/trail/UploadCard"
 import { HeaderInfo } from "@/components/trail/HeaderInfo"
 import { SegmentList, type SegmentTabType } from "@/components/trail/SegmentList"
@@ -74,13 +75,13 @@ const ProFeaturesTeaser = dynamic(
   { ssr: false }
 )
 
-const DonationSection = dynamic(
-  () =>
-    import("@/components/trail/DonationSection").then(
-      (mod) => mod.DonationSection
-    ),
-  { ssr: false }
-)
+// const DonationSection = dynamic(
+//   () =>
+//     import("@/components/trail/DonationSection").then(
+//       (mod) => mod.DonationSection
+//     ),
+//   { ssr: false }
+// )
 
 const ModalFormInfo = dynamic(
   () =>
@@ -282,13 +283,14 @@ export default function Home() {
   }, [gpxData, sortedWaypoints, routeDetails.raceName, fileName, t])
 
   return (
-    <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-12">
+    <div className="min-h-screen bg-[#FAF6F1] pb-14 sm:pb-4">
       <Header />
+      {/* <TierBanner /> */}
 
       <main>
         <AnimatePresence mode="wait">
           {!gpxData ? (
-            <div className="mx-auto max-w-4xl px-4 py-6">
+            <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-14">
               <EmptyState
                 sessionRunnerName={sessionRunnerName}
                 onFileLoaded={handleFileLoaded}
@@ -331,8 +333,8 @@ export default function Home() {
                 </div>
               )}
 
-              {/* 2. Flat Editorial Sections below Map & Elevation */}
-              <div className="mx-auto flex max-w-4xl flex-col px-4 py-6">
+              {/* 2. Two-Column Airbnb/AllTrails Editorial Layout below Map & Elevation */}
+              <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                 {saveMessage && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -349,149 +351,172 @@ export default function Home() {
                   </motion.div>
                 )}
 
-                {/* Route Title, Metadata & Telemetry Summary */}
-                <div className="pb-5">
-                  <HeaderInfo
-                    raceName={routeDetails.raceName}
-                    userName={sessionRunnerName}
-                    raceDate={routeDetails.raceDate}
-                    stats={gpxData.stats}
-                    waypointCount={sortedWaypoints.length}
-                    fileName={fileName}
-                  />
-                </div>
-
-                {/* Compact GPX Switcher Bar */}
-                <div className="pb-7 sm:pb-8">
-                  <UploadCard
-                    onFileLoaded={handleFileLoaded}
-                    onError={setError}
-                    fileName={fileName}
-                    fileSizeBytes={
-                      rawGpxContent ? new Blob([rawGpxContent]).size : undefined
-                    }
-                    error={error}
-                    isLoading={isParsingGPX || isSubmittingDetails}
-                    disabled={!canUpload}
-                  />
-                </div>
-
-                {/* Waypoint Management when logged in - placed right before Segment Breakdown */}
-                {user && (
-                  <div
-                    id="waypoint-management"
-                    data-tour="waypoint-panel"
-                    className="border-t border-[#D1D5DB] py-6 sm:py-8"
-                  >
-                    <WaypointPanel
-                      totalDistanceKm={gpxData.stats.totalDistance / 1000}
-                      waypoints={waypoints}
-                      trackPoints={gpxData.trackPoints}
-                      fileName={fileName}
-                      onAdd={handleAddWaypoint}
-                      onEdit={handleEditWaypoint}
-                      onRemove={handleRemoveWaypoint}
-                    />
-                  </div>
-                )}
-
-                {/* 3. Segment Breakdown */}
-                <div
-                  data-tour="segment-list"
-                  className="border-t border-[#D1D5DB] py-6 sm:py-8"
-                >
-                  <SegmentList
-                    key={fileName}
-                    segments={gpxData.segments}
-                    waypointSegments={mergedWaypointSegments}
-                    highlightRange={highlightRange}
-                    activeTab={effectiveSegmentTab}
-                    onSegmentClick={handleSegmentClick}
-                    onWaypointSegmentClick={handleWaypointSegmentClick}
-                    onTabChange={handleSegmentTabChange}
-                  />
-                </div>
-
-                {/* 5. Gradient Distribution */}
-                <div
-                  data-tour="gradient-distribution"
-                  className="border-t border-[#D1D5DB] py-6 sm:py-8"
-                >
-                  <GradientDistribution points={gpxData.trackPoints} />
-                </div>
-
-                {/* 6. Account Features Group (Pace, Waypoints when locked, Weather) — 1 unified section with 1 CTA when locked */}
-                <div
-                  data-tour={!user ? "guest-locked-features" : undefined}
-                  className="flex flex-col gap-5 border-t border-[#D1D5DB] py-6 sm:py-8"
-                >
-                  {!authLoading && !user && (
-                    <div className="mb-1">
-                      <h2 className="text-lg font-bold tracking-tight text-[#111827]">
-                        {t("authWall.heading")}
-                      </h2>
-                      <p className="mt-1 text-sm text-[#4B5563]">
-                        {t("authWall.subheading")}
-                      </p>
+                <div className="grid grid-cols-1 lg:grid-cols-12 lg:items-start lg:gap-10">
+                  {/* Left Main Editorial Column */}
+                  <div className="flex flex-col lg:col-span-7 xl:col-span-8">
+                    {/* Route Title, Metadata & Telemetry Summary */}
+                    <div className="pb-5 lg:pb-6">
+                      <HeaderInfo
+                        raceName={routeDetails.raceName}
+                        userName={sessionRunnerName}
+                        raceDate={routeDetails.raceDate}
+                        stats={gpxData.stats}
+                        waypointCount={sortedWaypoints.length}
+                        fileName={fileName}
+                      />
                     </div>
-                  )}
 
-                  <div data-tour={user ? "pace-estimator" : undefined}>
-                    <PaceEstimator stats={gpxData.stats} />
-                  </div>
+                    {/* Compact GPX Switcher Bar on mobile/tablet (moves to sidebar on desktop) */}
+                    <div className="pb-7 sm:pb-8 lg:hidden">
+                      <UploadCard
+                        onFileLoaded={handleFileLoaded}
+                        onError={setError}
+                        fileName={fileName}
+                        fileSizeBytes={
+                          rawGpxContent ? new Blob([rawGpxContent]).size : undefined
+                        }
+                        error={error}
+                        isLoading={isParsingGPX || isSubmittingDetails}
+                        disabled={!canUpload}
+                      />
+                    </div>
 
-                  {/* Waypoint Management when anonymous (stays in locked group with login CTA) */}
-                  {!user && (
-                    <WaypointPanel
-                      totalDistanceKm={gpxData.stats.totalDistance / 1000}
-                      waypoints={waypoints}
-                      trackPoints={gpxData.trackPoints}
-                      fileName={fileName}
-                      onAdd={handleAddWaypoint}
-                      onEdit={handleEditWaypoint}
-                      onRemove={handleRemoveWaypoint}
-                    />
-                  )}
-
-                  <div data-tour={user ? "weather-forecast" : undefined}>
-                    <WeatherForecast
-                      center={gpxData.center}
-                      initialDate={routeDetails.raceDate}
-                    />
-                  </div>
-
-                  {!authLoading && !user && (
-                    <div className="pt-2 text-center">
-                      <Link
-                        href="/login"
-                        className="flex min-h-12 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-3 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                    {/* Waypoint Management when logged in - placed right before Segment Breakdown */}
+                    {user && (
+                      <div
+                        id="waypoint-management"
+                        data-tour="waypoint-panel"
+                        className="border-t border-[#D1D5DB] py-6 sm:py-8"
                       >
-                        {t("authWall.ctaPrimary")}
-                      </Link>
-                      <p className="mt-3 text-xs font-medium text-[#4B5563]">
-                        {t("authWall.ctaSecondaryPrompt")}{" "}
-                        <Link
-                          href="/register"
-                          className="font-semibold text-[#1B4332] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
-                        >
-                          {t("authWall.ctaSecondaryLink")}
-                        </Link>
-                      </p>
-                    </div>
-                  )}
-                </div>
+                        <WaypointPanel
+                          totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                          waypoints={waypoints}
+                          trackPoints={gpxData.trackPoints}
+                          fileName={fileName}
+                          onAdd={handleAddWaypoint}
+                          onEdit={handleEditWaypoint}
+                          onRemove={handleRemoveWaypoint}
+                        />
+                      </div>
+                    )}
 
-                {/* Pro Features Teaser (Cutoff Estimator + Hourly Weather) — only when logged in, right before Donate */}
-                {user && (
-                  <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
-                    <ProFeaturesTeaser waypoints={sortedWaypoints} />
+                    {/* 3. Segment Breakdown */}
+                    <div
+                      data-tour="segment-list"
+                      className="border-t border-[#D1D5DB] py-6 sm:py-8"
+                    >
+                      <SegmentList
+                        key={fileName}
+                        segments={gpxData.segments}
+                        waypointSegments={mergedWaypointSegments}
+                        highlightRange={highlightRange}
+                        activeTab={effectiveSegmentTab}
+                        onSegmentClick={handleSegmentClick}
+                        onWaypointSegmentClick={handleWaypointSegmentClick}
+                        onTabChange={handleSegmentTabChange}
+                      />
+                    </div>
+
+                    {/* 5. Gradient Distribution */}
+                    <div
+                      data-tour="gradient-distribution"
+                      className="border-t border-[#D1D5DB] py-6 sm:py-8"
+                    >
+                      <GradientDistribution points={gpxData.trackPoints} />
+                    </div>
                   </div>
-                )}
+
+                  {/* Right Sticky Planning Sidebar (Airbnb Listing Sidebar Pattern) */}
+                  <aside className="flex flex-col gap-5 lg:sticky lg:top-20 lg:col-span-5 xl:col-span-4">
+                    {/* Compact GPX Switcher Bar on desktop */}
+                    <div className="hidden lg:block">
+                      <UploadCard
+                        onFileLoaded={handleFileLoaded}
+                        onError={setError}
+                        fileName={fileName}
+                        fileSizeBytes={
+                          rawGpxContent ? new Blob([rawGpxContent]).size : undefined
+                        }
+                        error={error}
+                        isLoading={isParsingGPX || isSubmittingDetails}
+                        disabled={!canUpload}
+                      />
+                    </div>
+
+                    {/* 6. Account Features Group (Pace, Waypoints when locked, Weather) — 1 unified section with 1 CTA when locked */}
+                    <div
+                      data-tour={!user ? "guest-locked-features" : undefined}
+                      className="flex flex-col gap-5 border-t border-[#D1D5DB] pt-6 lg:border-t-0 lg:pt-0"
+                    >
+                      {!authLoading && !user && (
+                        <div className="mb-1">
+                          <h2 className="text-lg font-bold tracking-tight text-[#111827]">
+                            {t("authWall.heading")}
+                          </h2>
+                          <p className="mt-1 text-sm text-[#4B5563]">
+                            {t("authWall.subheading")}
+                          </p>
+                        </div>
+                      )}
+
+                      <div data-tour={user ? "pace-estimator" : undefined}>
+                        <PaceEstimator stats={gpxData.stats} />
+                      </div>
+
+                      {/* Waypoint Management when anonymous (stays in locked group with login CTA) */}
+                      {!user && (
+                        <WaypointPanel
+                          totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                          waypoints={waypoints}
+                          trackPoints={gpxData.trackPoints}
+                          fileName={fileName}
+                          onAdd={handleAddWaypoint}
+                          onEdit={handleEditWaypoint}
+                          onRemove={handleRemoveWaypoint}
+                        />
+                      )}
+
+                      <div data-tour={user ? "weather-forecast" : undefined}>
+                        <WeatherForecast
+                          center={gpxData.center}
+                          initialDate={routeDetails.raceDate}
+                        />
+                      </div>
+
+                      {!authLoading && !user && (
+                        <div className="pt-2 text-center">
+                          <Link
+                            href="/login"
+                            className="flex min-h-12 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-3 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                          >
+                            {t("authWall.ctaPrimary")}
+                          </Link>
+                          <p className="mt-3 text-xs font-medium text-[#4B5563]">
+                            {t("authWall.ctaSecondaryPrompt")}{" "}
+                            <Link
+                              href="/register"
+                              className="font-semibold text-[#1B4332] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                            >
+                              {t("authWall.ctaSecondaryLink")}
+                            </Link>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Pro Features Teaser (Cutoff Estimator + Hourly Weather) — only when logged in */}
+                    {user && (
+                      <div className="border-t border-[#D1D5DB] pt-6 lg:border-t-0 lg:pt-0">
+                        <ProFeaturesTeaser waypoints={sortedWaypoints} />
+                      </div>
+                    )}
+                  </aside>
+                </div>
 
                 {/* Community Support & Footer */}
-                <div className="border-t border-[#D1D5DB] pt-14">
+                {/* <div className="mt-6 border-t border-[#D1D5DB] pt-12">
                   <DonationSection />
-                </div>
+                </div> */}
                 <Footer runnerName={sessionRunnerName} />
               </div>
             </motion.div>

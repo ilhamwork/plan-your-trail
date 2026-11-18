@@ -76,13 +76,13 @@ const ProFeaturesTeaser = dynamic(
   { ssr: false }
 )
 
-const DonationSection = dynamic(
-  () =>
-    import("@/components/trail/DonationSection").then(
-      (mod) => mod.DonationSection
-    ),
-  { ssr: false }
-)
+// const DonationSection = dynamic(
+//   () =>
+//     import("@/components/trail/DonationSection").then(
+//       (mod) => mod.DonationSection
+//     ),
+//   { ssr: false }
+// )
 
 const Footer = dynamic(
   () => import("@/components/trail/Footer").then((mod) => mod.Footer),
@@ -317,8 +317,8 @@ export function RouteDetailView({
         />
       )}
 
-      {/* 2. Flat Editorial Sections (No Card Wrapper, separated by dividers) */}
-      <div className="mx-auto flex max-w-4xl flex-col px-4 py-6">
+      {/* 2. Two-Column Airbnb/AllTrails Editorial Layout */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {saveMessage && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -338,115 +338,122 @@ export function RouteDetailView({
           </motion.div>
         )}
 
-        <div className="pb-5">
-          <HeaderInfo
-            raceName={routeDetails.raceName}
-            userName={runnerName || ""}
-            raceDate={routeDetails.raceDate}
-            stats={gpxData.stats}
-            waypointCount={sortedWaypoints.length}
-            actionSlot={
-              <div className="flex flex-wrap items-center gap-2.5">
-                {formattedDate && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3 py-1.5 text-xs font-semibold text-[#1B4332]">
-                    <CloudCheck className="h-3.5 w-3.5 text-[#1B4332]" aria-hidden="true" />
-                    <span>{t("routeDetail.savedBadge", { date: formattedDate })}</span>
-                  </span>
-                )}
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:items-start lg:gap-10">
+          {/* Left Main Editorial Column */}
+          <div className="flex flex-col lg:col-span-7 xl:col-span-8">
+            <div className="pb-5 lg:pb-6">
+              <HeaderInfo
+                raceName={routeDetails.raceName}
+                userName={runnerName || ""}
+                raceDate={routeDetails.raceDate}
+                stats={gpxData.stats}
+                waypointCount={sortedWaypoints.length}
+                actionSlot={
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {formattedDate && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3 py-1.5 text-xs font-semibold text-[#1B4332]">
+                        <CloudCheck className="h-3.5 w-3.5 text-[#1B4332]" aria-hidden="true" />
+                        <span>{t("routeDetail.savedBadge", { date: formattedDate })}</span>
+                      </span>
+                    )}
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadGPX(
-                      gpxData.trackPoints,
-                      sortedWaypoints,
-                      (routeDetails.raceName || routeName).replace(/\.gpx$/i, "")
-                    )
-                  }
-                  disabled={gpxData.trackPoints.length === 0}
-                  className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#1B4332] bg-[#1B4332] px-3.5 text-xs font-semibold text-[#FAF6F1] shadow-[0_1px_2px_rgba(27,67,50,0.18)] transition hover:border-[#143326] hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
-                  title={t("routeDetail.downloadTitle")}
-                >
-                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{t("routeDetail.downloadGpx")}</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadGPX(
+                          gpxData.trackPoints,
+                          sortedWaypoints,
+                          (routeDetails.raceName || routeName).replace(/\.gpx$/i, "")
+                        )
+                      }
+                      disabled={gpxData.trackPoints.length === 0}
+                      className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#1B4332] bg-[#1B4332] px-3.5 text-xs font-semibold text-[#FAF6F1] shadow-[0_1px_2px_rgba(27,67,50,0.18)] transition hover:border-[#143326] hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+                      title={t("routeDetail.downloadTitle")}
+                    >
+                      <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t("routeDetail.downloadGpx")}</span>
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsEditingDetails(true)}
-                  className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-[#D1D5DB] bg-white px-3 text-xs font-semibold text-[#2D3436] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:border-[#1B4332] hover:bg-[#FAF6F1] hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:translate-y-px"
-                  title={t("routeDetail.editDetailsAria")}
-                  aria-label={t("routeDetail.editDetailsAria")}
-                >
-                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{t("routeDetail.editBtn")}</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingDetails(true)}
+                      className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-[#D1D5DB] bg-white px-3 text-xs font-semibold text-[#2D3436] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:border-[#1B4332] hover:bg-[#FAF6F1] hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:translate-y-px"
+                      title={t("routeDetail.editDetailsAria")}
+                      aria-label={t("routeDetail.editDetailsAria")}
+                    >
+                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t("routeDetail.editBtn")}</span>
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-[#B91C1C] shadow-[0_1px_2px_rgba(185,28,28,0.06)] transition hover:border-[#B91C1C] hover:bg-[#B91C1C] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C] active:translate-y-px"
-                  title={t("routeDetail.deleteRouteAria")}
-                  aria-label={t("routeDetail.deleteRouteAria")}
-                >
-                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{t("routeDetail.deleteBtn")}</span>
-                </button>
-              </div>
-            }
-          />
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteModal(true)}
+                      className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-[#B91C1C] shadow-[0_1px_2px_rgba(185,28,28,0.06)] transition hover:border-[#B91C1C] hover:bg-[#B91C1C] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C] active:translate-y-px"
+                      title={t("routeDetail.deleteRouteAria")}
+                      aria-label={t("routeDetail.deleteRouteAria")}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t("routeDetail.deleteBtn")}</span>
+                    </button>
+                  </div>
+                }
+              />
+            </div>
+
+            {/* 3. Waypoint Management (placed right before Segment Breakdown) */}
+            <div id="waypoint-management" className="border-t border-[#D1D5DB] py-6 sm:py-8">
+              <WaypointPanel
+                totalDistanceKm={gpxData.stats.totalDistance / 1000}
+                waypoints={waypoints}
+                trackPoints={gpxData.trackPoints}
+                fileName={routeDetails.raceName}
+                hideDownload
+                onAdd={handleAddWaypoint}
+                onEdit={handleEditWaypoint}
+                onRemove={handleRemoveWaypoint}
+              />
+            </div>
+
+            {/* 4. Segment Breakdown */}
+            <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
+              <SegmentList
+                key={routeId}
+                segments={gpxData.segments}
+                waypointSegments={mergedWaypointSegments}
+                highlightRange={highlightRange}
+                activeTab={effectiveSegmentTab}
+                onSegmentClick={handleSegmentClick}
+                onWaypointSegmentClick={handleWaypointSegmentClick}
+                onTabChange={handleSegmentTabChange}
+              />
+            </div>
+
+            {/* 5. Gradient Distribution */}
+            <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
+              <GradientDistribution points={gpxData.trackPoints} />
+            </div>
+          </div>
+
+          {/* Right Sticky Planning Sidebar */}
+          <aside className="flex flex-col gap-5 lg:sticky lg:top-20 lg:col-span-5 xl:col-span-4">
+            <div className="flex flex-col gap-5 border-t border-[#D1D5DB] pt-6 lg:border-t-0 lg:pt-0">
+              <PaceEstimator stats={gpxData.stats} />
+              <WeatherForecast
+                center={gpxData.center}
+                initialDate={routeDetails.raceDate || undefined}
+              />
+            </div>
+
+            {/* Pro Features Teaser (Cutoff Estimator + Hourly Weather) */}
+            <div className="border-t border-[#D1D5DB] pt-6 lg:border-t-0 lg:pt-0">
+              <ProFeaturesTeaser waypoints={sortedWaypoints} />
+            </div>
+          </aside>
         </div>
 
-        {/* 3. Waypoint Management (placed right before Segment Breakdown) */}
-        <div id="waypoint-management" className="border-t border-[#D1D5DB] py-6 sm:py-8">
-          <WaypointPanel
-            totalDistanceKm={gpxData.stats.totalDistance / 1000}
-            waypoints={waypoints}
-            trackPoints={gpxData.trackPoints}
-            fileName={routeDetails.raceName}
-            hideDownload
-            onAdd={handleAddWaypoint}
-            onEdit={handleEditWaypoint}
-            onRemove={handleRemoveWaypoint}
-          />
-        </div>
-
-        {/* 4. Segment Breakdown */}
-        <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
-          <SegmentList
-            key={routeId}
-            segments={gpxData.segments}
-            waypointSegments={mergedWaypointSegments}
-            highlightRange={highlightRange}
-            activeTab={effectiveSegmentTab}
-            onSegmentClick={handleSegmentClick}
-            onWaypointSegmentClick={handleWaypointSegmentClick}
-            onTabChange={handleSegmentTabChange}
-          />
-        </div>
-
-        {/* 5. Gradient Distribution */}
-        <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
-          <GradientDistribution points={gpxData.trackPoints} />
-        </div>
-
-        {/* 6. Account Features Group (Pace & Weather) */}
-        <div className="flex flex-col gap-5 border-t border-[#D1D5DB] py-6 sm:py-8">
-          <PaceEstimator stats={gpxData.stats} />
-          <WeatherForecast
-            center={gpxData.center}
-            initialDate={routeDetails.raceDate || undefined}
-          />
-        </div>
-
-        {/* Pro Features Teaser (Cutoff Estimator + Hourly Weather) — right before Donate */}
-        <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
-          <ProFeaturesTeaser waypoints={sortedWaypoints} />
-        </div>
-
-        <div className="border-t border-[#D1D5DB] pt-10">
+        {/* <div className="border-t border-[#D1D5DB] pt-10 lg:mt-6">
           <DonationSection />
-        </div>
+        </div> */}
         <Footer runnerName={runnerName} />
       </div>
 
