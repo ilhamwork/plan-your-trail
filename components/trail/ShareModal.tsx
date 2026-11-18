@@ -6,6 +6,7 @@ import { X, Share2, Download, Share } from "lucide-react"
 import { toPng } from "html-to-image"
 import { ShareCard } from "./ShareCard"
 import type { GPXData } from "@/lib/types"
+import { useI18n } from "@/lib/i18n/context"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -24,6 +25,7 @@ export function ShareModal({
   userName,
   raceDate,
 }: ShareModalProps) {
+  const { t } = useI18n()
   const [isDownloading, setIsDownloading] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -88,7 +90,7 @@ export function ShareModal({
 
   const handleNativeShare = async () => {
     if (!navigator.share) {
-      alert("Sharing is not supported on this browser.")
+      alert(t("share.unsupportedShare"))
       return
     }
 
@@ -104,13 +106,13 @@ export function ShareModal({
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
-            title: raceName || "My Trail Run",
-            text: "Check out my route analysis on Plan Your Trail!",
+            title: raceName || t("share.defaultRouteTitle"),
+            text: t("share.shareText"),
           })
           // Record telemetry
           await recordShareTelemetry()
         } else {
-          alert("Your browser doesn't support file sharing.")
+          alert(t("share.unsupportedFileShare"))
         }
       } catch (err) {
         console.error("Share failed:", err)
@@ -139,12 +141,13 @@ export function ShareModal({
             className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-              <h3 className="flex items-center gap-2 text-lg font-bold text-[#1B4332]">
+              <h3 className="heading-3 flex items-center gap-2 text-[#1B4332]">
                 <Share2 className="h-5 w-5 text-[#2A9D8F]" />
-                Share Stats
+                {t("share.title")}
               </h3>
               <button
                 onClick={onClose}
+                aria-label={t("common.close")}
                 className="cursor-pointer rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
               >
                 <X className="h-5 w-5" />
@@ -154,11 +157,11 @@ export function ShareModal({
             <div className="px-6 py-8">
               <div className="space-y-6">
                 <div className="space-y-1 text-center">
-                  <p className="text-sm font-medium text-gray-500">
-                    Your route stats are ready to share
+                  <p className="body-medium text-[#4B5563]">
+                    {t("share.readyDesc")}
                   </p>
-                  <p className="text-sm leading-relaxed text-gray-400">
-                    Don&apos;t forget to tag{" "}
+                  <p className="body-sm text-[#6B7280]">
+                    {t("share.tagPrompt")}{" "}
                     <span className="font-semibold text-[#1B4332]">
                       @ilhamontrail
                     </span>{" "}
@@ -180,7 +183,7 @@ export function ShareModal({
                         ) : (
                           <Share className="h-4 w-4" />
                         )}
-                        Share to Stories
+                        {t("share.shareToStories")}
                       </button>
                     )
                   ) : (
@@ -195,7 +198,7 @@ export function ShareModal({
                       ) : (
                         <Download className="h-4 w-4" />
                       )}
-                      Save to device
+                      {t("share.saveToDevice")}
                     </button>
                   )}
                 </div>

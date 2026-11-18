@@ -11,12 +11,13 @@ import {
   Check,
   Download,
   Lock,
-  Sparkles,
+  Flag,
 } from "lucide-react"
 import type { Waypoint, TrackPoint } from "@/lib/types"
 import { downloadGPX } from "@/lib/gpx-export"
 import { formatKm, formatKmLabel } from "@/lib/format"
 import { useEntitlements } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 import { trackEvent } from "@/lib/analytics/events"
 import { joinWaitlistAction } from "@/app/actions/waitlist"
 import { ComingSoonLock } from "./ComingSoonLock"
@@ -26,6 +27,7 @@ interface WaypointPanelProps {
   waypoints: Waypoint[]
   trackPoints: TrackPoint[]
   fileName?: string
+  hideDownload?: boolean
   onAdd: (name: string, distanceKm: number) => void
   onEdit: (id: string, name: string, distanceKm: number) => void
   onRemove: (id: string) => void
@@ -36,11 +38,13 @@ export const WaypointPanel = memo(function WaypointPanel({
   waypoints,
   trackPoints,
   fileName,
+  hideDownload = false,
   onAdd,
   onEdit,
   onRemove,
 }: WaypointPanelProps) {
   const { can, limits, user } = useEntitlements()
+  const { t } = useI18n()
   const canManageWaypoints = can("waypoint_management")
   const canDownloadGpx = can("download_gpx")
 
@@ -55,9 +59,9 @@ export const WaypointPanel = memo(function WaypointPanel({
   const isPro = user?.plan === "pro"
   const maxCustom = limits.maxCustomWaypoints
 
-  // Count only custom waypoints added by the user
+  // Count only custom waypoints added by the user (explicitly isFromGpx === false)
   const customWaypointsCount = useMemo(
-    () => waypoints.filter((wp) => !wp.isFromGpx).length,
+    () => waypoints.filter((wp) => wp.isFromGpx === false).length,
     [waypoints]
   )
 
@@ -127,26 +131,29 @@ export const WaypointPanel = memo(function WaypointPanel({
     // Prevent adding new waypoints if limit is reached
     if (!editingId && isLimitReached) {
       setError(
-        `Batas ${maxCustom} waypoint kustom tercapai. Upgrade ke Pro untuk waypoint tanpa batas.`
+        t("waypointPanel.limitError", { max: maxCustom ?? 3 })
       )
       return
     }
 
     setError("")
     const trimmedName = name.trim()
-    const km = parseFloat(distanceStr)
+    const cleanDist = distanceStr.trim().replace(",", ".")
+    const km = parseFloat(cleanDist)
 
     if (!trimmedName) {
-      setError("Silakan masukkan nama waypoint.")
+      setError(t("waypointPanel.nameRequiredError"))
       return
     }
     if (isNaN(km) || km < 0) {
-      setError("Silakan masukkan jarak yang valid (≥ 0).")
+      setError(t("waypointPanel.distanceInvalidError"))
       return
     }
     if (km > totalDistanceKm) {
       setError(
-        `Jarak melebihi panjang rute (${totalDistanceKm.toFixed(1)} km).`
+        t("waypointPanel.distanceExceedsError", {
+          total: totalDistanceKm.toFixed(1),
+        })
       )
       return
     }
@@ -156,7 +163,9 @@ export const WaypointPanel = memo(function WaypointPanel({
       (wp) => wp.id !== editingId && Math.abs(wp.distance / 1000 - km) < 0.05
     )
     if (duplicate) {
-      setError(`Waypoint sudah ada di sekitar ${km.toFixed(2)} km.`)
+      setError(
+        t("waypointPanel.duplicateDistanceError", { km: km.toFixed(2) })
+      )
       return
     }
 
@@ -182,235 +191,280 @@ export const WaypointPanel = memo(function WaypointPanel({
   const sorted = [...waypoints].sort((a, b) => a.distance - b.distance)
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-      {/* Header */}
-      <div className="border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-[#E76F51]" />
-            <h3 className="text-sm font-bold text-[#2D3436]">
-              {editingId ? "Edit Waypoint" : "Waypoint Rute"}
-            </h3>
-            {!user || !canManageWaypoints ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-                <Lock className="h-2.5 w-2.5" />
-                Perlu Akun
-              </span>
-            ) : isPro ? (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
-                Pro (Unlimited)
-              </span>
-            ) : (
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
-                Free ({customWaypointsCount}/{maxCustom ?? 3} Waypoint)
-              </span>
-            )}
-          </div>
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading || trackPoints.length === 0}
-            title={
-              canDownloadGpx
-                ? "Download GPX dengan waypoint"
-                : "Daftar akun untuk download GPX"
-            }
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 shadow-xs transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {isDownloading ? (
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-current/20 border-t-current" />
-            ) : !canDownloadGpx ? (
-              <Lock className="h-3 w-3 text-amber-600" />
-            ) : (
-              <Download className="h-3 w-3" />
-            )}
-            Download GPX
-          </button>
-        </div>
-        <p className="mt-0.5 text-xs text-gray-400">
-          {editingId
-            ? "Ubah rincian waypoint terpilih"
-            : "Kelola checkpoint, pos air, atau aid station"}
-        </p>
-      </div>
-
-      {/* Input row or Pro Gated Prompt */}
+    <section aria-label={t("waypointPanel.sectionAria")}>
       {canManageWaypoints ? (
-        <div className="border-b border-gray-50 bg-gray-50/50 px-4 pt-3 pb-2">
-          {/* Limit Reached Banner for Free Users */}
-          {isLimitReached && !editingId && (
-            <div className="mb-2.5 rounded-lg border border-amber-200 bg-amber-50/80 p-2.5 text-xs">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-1.5 text-amber-900">
-                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
-                  <span>
-                    Batas {maxCustom} waypoint kustom tercapai. Mau tambah tanpa batas?
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleJoinProWaitlist}
-                  disabled={isJoiningWaitlist || isJoinedWaitlist}
-                  className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md bg-[#1B4332] px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#143326] disabled:opacity-60"
-                >
-                  {isJoinedWaitlist ? (
-                    <>
-                      <Check className="h-3 w-3" />
-                      <span>Terdaftar Waitlist Pro</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-3 w-3 text-amber-300" />
-                      <span>Daftar Early Access Pro</span>
-                    </>
-                  )}
-                </button>
-              </div>
+        <>
+          {/* Header */}
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-xl font-bold tracking-tight text-[#111827]">
+                {editingId ? t("waypointPanel.editTitle") : t("waypointPanel.title")}
+              </h3>
+              {isPro ? (
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
+                  {t("waypointPanel.proBadge")}
+                </span>
+              ) : (
+                <span className="rounded-full bg-[#F1EDE8] px-2.5 py-0.5 text-xs font-semibold text-[#1B4332]">
+                  {t("waypointPanel.freeBadge", {
+                    used: customWaypointsCount,
+                    max: maxCustom ?? 3,
+                  })}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-xs font-medium text-[#4B5563]">
+              {editingId
+                ? t("waypointPanel.editSubtitle")
+                : t("waypointPanel.subtitle")}
+            </p>
+          </div>
+          
+          {canManageWaypoints && !hideDownload && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={isDownloading || trackPoints.length === 0}
+                title={
+                  canDownloadGpx
+                    ? t("waypointPanel.downloadTitle")
+                    : t("waypointPanel.downloadLockedTitle")
+                }
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 text-xs font-semibold text-[#2D3436] transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isDownloading ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current/20 border-t-current" />
+                ) : !canDownloadGpx ? (
+                  <Lock className="h-3.5 w-3.5 text-amber-700" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
+                <span>{t("waypointPanel.downloadGpx")}</span>
+              </button>
             </div>
           )}
 
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                setError("")
-              }}
-              onKeyDown={handleKeyDown}
-              disabled={isLimitReached && !editingId}
-              placeholder={
-                isLimitReached && !editingId
-                  ? `Batas ${maxCustom} waypoint tercapai`
-                  : "Nama waypoint (cth: WS 1 Water)"
-              }
-              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-            />
-            <div className="relative w-24 shrink-0">
+          {/* Input row */}
+          <div className="mt-4 pb-2">
+            {/* Limit Reached Banner for Free Users */}
+            {isLimitReached && !editingId && (
+              <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-1.5 text-amber-900">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-700" />
+                    <span>
+                      {t("waypointPanel.limitReached", { max: maxCustom ?? 3 })}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleJoinProWaitlist}
+                    disabled={isJoiningWaitlist || isJoinedWaitlist}
+                    className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#1B4332] px-3 py-1.5 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#143326] disabled:opacity-60"
+                  >
+                    {isJoinedWaitlist ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        <span>{t("waypointPanel.waitlistJoined")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Flag className="h-3.5 w-3.5 text-amber-300" />
+                        <span>{t("waypointPanel.waitlistJoin")}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2 sm:flex-nowrap">
               <input
-                type="number"
-                value={distanceStr}
+                type="text"
+                value={name}
                 onChange={(e) => {
-                  setDistanceStr(e.target.value)
+                  setName(e.target.value)
                   setError("")
                 }}
                 onKeyDown={handleKeyDown}
                 disabled={isLimitReached && !editingId}
-                placeholder="0.0"
-                min={0}
-                max={totalDistanceKm}
-                step={0.01}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-7 text-xs font-medium text-[#2D3436] placeholder-gray-400 transition outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                aria-label={t("waypointPanel.nameAria")}
+                placeholder={
+                  isLimitReached && !editingId
+                    ? t("waypointPanel.namePlaceholderLimit", {
+                        max: maxCustom ?? 3,
+                      })
+                    : t("waypointPanel.namePlaceholder")
+                }
+                className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 text-sm text-[#2D3436] placeholder-[#6B7280] transition focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-[#6B7280]"
               />
-              <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] font-semibold text-gray-400">
-                km
-              </span>
-            </div>
-
-            <div className="flex gap-1">
-              {editingId ? (
-                <>
-                  <button
-                    onClick={handleSubmit}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs transition hover:bg-emerald-700 active:scale-95"
-                    title="Simpan perubahan"
-                  >
-                    <Check className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-200 text-gray-600 shadow-xs transition hover:bg-gray-300 active:scale-95"
-                    title="Batal edit"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLimitReached}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1B4332] text-white shadow-xs transition hover:bg-[#143326] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                  title={
-                    isLimitReached
-                      ? `Batas ${maxCustom} waypoint kustom tercapai`
-                      : "Tambah waypoint"
-                  }
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {error && (
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-red-500">
-              <AlertCircle className="h-3 w-3 shrink-0" />
-              {error}
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="border-b border-amber-100 bg-amber-50/60 p-3">
-          <ComingSoonLock
-            feature="waypoint_management"
-            title="Manajemen Waypoint"
-            description="Tambah dan edit pos atau checkpoint hingga 3 waypoint kustom di peta & chart rute."
-            source="waypoint_panel_gated"
-            badgeText="Buka di Akun Free"
-            variant="card"
-          />
-        </div>
-      )}
-
-      {/* Waypoint List */}
-      <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
-        {sorted.length === 0 ? (
-          <div className="py-8 text-center text-xs text-gray-400">
-            {canManageWaypoints
-              ? "Belum ada waypoint. Tambahkan pos air atau aid station pertama kamu."
-              : "Tidak ada waypoint pada file GPX ini."}
-          </div>
-        ) : (
-          sorted.map((wp) => (
-            <div
-              key={wp.id}
-              className="flex items-center justify-between px-4 py-2.5 transition hover:bg-gray-50/80"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-800">
-                  {formatKmLabel(wp.distance)}
+              <div className="relative w-28 shrink-0">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={distanceStr}
+                  onChange={(e) => {
+                    setDistanceStr(e.target.value)
+                    setError("")
+                  }}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLimitReached && !editingId}
+                  aria-label={t("waypointPanel.distanceAria")}
+                  placeholder="0.0"
+                  className="min-h-11 w-full rounded-xl border border-[#D1D5DB] bg-white px-3 py-2 pr-8 text-sm font-medium text-[#2D3436] tabular-nums placeholder-[#6B7280] transition focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-[#6B7280]"
+                />
+                <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs font-semibold text-[#4B5563]">
+                  km
                 </span>
-                <span className="truncate text-xs font-medium text-[#2D3436]">
-                  {wp.name}
-                </span>
-                {wp.isFromGpx && (
-                  <span className="rounded bg-gray-100 px-1 py-0.5 text-[9px] font-medium text-gray-500">
-                    GPX
-                  </span>
-                )}
               </div>
 
-              {canManageWaypoints && (
-                <div className="flex items-center gap-1">
+              <div className="flex gap-1.5">
+                {editingId ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 active:scale-95"
+                      title={t("waypointPanel.saveTitle")}
+                      aria-label={t("waypointPanel.saveBtnAria")}
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1D5DB] bg-white text-[#2D3436] transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
+                      title={t("waypointPanel.cancelTitle")}
+                      aria-label={t("waypointPanel.cancelBtnAria")}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={() => handleStartEdit(wp)}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                    title="Edit waypoint"
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isLimitReached}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1B4332] text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                    title={
+                      isLimitReached
+                        ? t("waypointPanel.addTitleLimit", {
+                            max: maxCustom ?? 3,
+                          })
+                        : t("waypointPanel.addTitle")
+                    }
+                    aria-label={t("waypointPanel.addBtnAria")}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Plus className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => wp.id && onRemove(wp.id)}
-                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                    title="Hapus waypoint"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          ))
-        )}
-      </div>
-    </div>
+
+            {error && (
+              <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#B91C1C]">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{error}</span>
+              </p>
+            )}
+          </div>
+        </>
+      ) : (
+        <ComingSoonLock
+          feature="waypoint_management"
+          title={t("waypoints.lockedTitle")}
+          description={t("authWall.waypointDesc")}
+          source="waypoint_panel_gated"
+          badgeText=""
+          icon={MapPin}
+          variant="inline"
+          hideCta
+          previewSlot={
+            <div
+              aria-hidden="true"
+              className="mt-3.5 flex max-h-20 items-center justify-between gap-2 rounded-xl border border-[#E5E7EB]/80 bg-[#FAF6F1]/70 px-3 py-2.5"
+            >
+              <div className="flex flex-wrap items-center gap-1.5 overflow-hidden">
+                <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[#374151] ring-1 ring-[#E5E7EB]">
+                  {t("waypointPanel.previewWater")}
+                </span>
+                <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[#374151] ring-1 ring-[#E5E7EB]">
+                  {t("waypointPanel.previewCheckpoint")}
+                </span>
+                <span className="hidden rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[#374151] ring-1 ring-[#E5E7EB] sm:inline-block">
+                  {t("waypointPanel.previewAidStation")}
+                </span>
+              </div>
+              <span className="shrink-0 rounded-full bg-[#1B4332]/10 px-2 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+                {t("authWall.exampleBadge")}
+              </span>
+            </div>
+          }
+        />
+      )}
+
+      {/* Single-row Waypoint List */}
+      {(canManageWaypoints || sorted.length > 0) && (
+        <div className="mt-4 divide-y divide-[#E5E7EB]">
+          {sorted.length === 0 ? (
+            <p className="py-4 text-sm text-[#4B5563]">
+              {t("waypointPanel.emptyState")}
+            </p>
+          ) : (
+            sorted.map((wp) => (
+              <div
+                key={wp.id}
+                className="flex items-center justify-between gap-3 py-3"
+              >
+                <div className="flex min-w-0 items-center gap-3.5">
+                  <MapPin
+                    className="h-5 w-5 shrink-0 text-[#2D3436] stroke-[1.75]"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate text-[15px] font-normal text-[#2D3436]">
+                    {wp.name}
+                  </span>
+                  {wp.isFromGpx && (
+                    <span className="rounded-md bg-[#F1EDE8] px-2 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+                      GPX
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2 tabular-nums">
+                  <span className="text-[15px] font-bold text-[#2D3436]">
+                    {formatKmLabel(wp.distance)}
+                  </span>
+
+                  {canManageWaypoints && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(wp)}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg text-[#4B5563] transition hover:bg-[#FAF6F1] hover:text-[#2D3436] focus-visible:outline-2 focus-visible:outline-[#1B4332]"
+                        title={t("waypointPanel.editTitleAttr")}
+                        aria-label={t("waypointPanel.editAria", { name: wp.name })}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => wp.id && onRemove(wp.id)}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg text-[#4B5563] transition hover:bg-red-50 hover:text-[#B91C1C] focus-visible:outline-2 focus-visible:outline-[#B91C1C]"
+                        title={t("waypointPanel.deleteTitleAttr")}
+                        aria-label={t("waypointPanel.deleteAria", { name: wp.name })}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </section>
   )
 })

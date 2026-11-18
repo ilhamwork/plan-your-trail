@@ -242,14 +242,20 @@ export function buildWaypointSegments(
       else loss += Math.abs(diff);
     }
 
+    const elevationChange = endPt.ele - startPt.ele;
+    const avgGrad = distance > 0 ? (elevationChange / distance) * 100 : 0;
+
     segments.push({
       id: i,
       name: `${prevName} - ${b.name}`,
+      startKm: startPt.distance / 1000,
+      endKm: endPt.distance / 1000,
       distance,
       startElevation: Math.round(startPt.ele),
       endElevation: Math.round(endPt.ele),
       elevationGain: Math.round(gain),
       elevationLoss: Math.round(loss),
+      avgGradient: Math.round(avgGrad * 10) / 10,
       startIndex: prevIndex,
       endIndex: b.index,
     });

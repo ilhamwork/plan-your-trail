@@ -6,6 +6,7 @@ import { X, Send, MessageSquare, User, Mail, CheckCircle2 } from "lucide-react"
 import { sendFeedbackAction } from "@/lib/feedback/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useI18n } from "@/lib/i18n/context"
 
 interface FeedbackModalProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ export function FeedbackModal({
   onClose,
   runnerName,
 }: FeedbackModalProps) {
+  const { t } = useI18n()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
@@ -55,7 +57,7 @@ export function FeedbackModal({
       }, 3000)
     } catch (err) {
       console.error("Feedback submission error:", err)
-      setError("Failed to send feedback. Please try again.")
+      setError(t("feedback.errorMsg"))
     } finally {
       setIsSubmitting(false)
     }
@@ -73,12 +75,13 @@ export function FeedbackModal({
           >
             <div className="bg-[#1B4332] p-4 text-white">
               <div className="flex items-center justify-between">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
+                <h3 className="heading-3 flex items-center gap-2 text-white">
                   <MessageSquare className="h-5 w-5" />
-                  Send Feedback
+                  {t("feedback.title")}
                 </h3>
                 <button
                   onClick={onClose}
+                  aria-label={t("common.close")}
                   className="cursor-pointer rounded-full p-1 transition-colors hover:bg-white/10"
                 >
                   <X className="h-5 w-5" />
@@ -94,23 +97,23 @@ export function FeedbackModal({
                   className="flex flex-col items-center py-6 text-center"
                 >
                   <CheckCircle2 className="mb-3 h-12 w-12 text-green-500" />
-                  <p className="font-bold text-[#1B4332]">Thank You!</p>
+                  <p className="font-bold text-[#1B4332]">{t("feedback.thankYou")}</p>
                   <p className="text-sm text-gray-500">
-                    Your feedback has been sent.
+                    {t("feedback.sentDesc")}
                   </p>
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-500">
-                      Name (Optional)
+                      {t("feedback.nameLabel")}
                     </label>
                     <div className="relative">
                       <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       <Input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Your name"
+                        placeholder={t("feedback.namePlaceholder")}
                         className="pl-9"
                       />
                     </div>
@@ -118,7 +121,7 @@ export function FeedbackModal({
 
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-500">
-                      Email (Optional)
+                      {t("feedback.emailLabel")}
                     </label>
                     <div className="relative">
                       <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -126,7 +129,7 @@ export function FeedbackModal({
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com"
+                        placeholder={t("feedback.emailPlaceholder")}
                         className="pl-9"
                       />
                     </div>
@@ -134,13 +137,13 @@ export function FeedbackModal({
 
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-500">
-                      Message <span className="text-red-500">*</span>
+                      {t("feedback.messageLabel")} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       required
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Bug report, feature idea, or just a hello..."
+                      placeholder={t("feedback.messagePlaceholder")}
                       rows={4}
                       className="w-full rounded-md border border-gray-200 p-3 text-sm transition-all outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
                     />
@@ -160,7 +163,7 @@ export function FeedbackModal({
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        Send Feedback
+                        {t("feedback.submitBtn")}
                       </>
                     )}
                   </Button>

@@ -7,12 +7,14 @@ import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements } from "@/lib/entitlements"
 import { useI18n } from "@/lib/i18n/context"
 import { recordRouteAnalysisAction } from "@/app/actions/analysis"
+import { generateUUID } from "@/lib/utils"
 
 const EXAMPLE_FILE_NAME = "Rinjani-36K-2026.gpx"
 
 interface UseRouteUploadOptions {
   parseGPX: (content: string) => Promise<GPXData>
   sessionRunnerName: string
+  canUpload?: boolean
   onWaypointsLoaded: (waypoints: Waypoint[]) => void
   onResetInteractions?: () => void
 }
@@ -20,6 +22,7 @@ interface UseRouteUploadOptions {
 export function useRouteUpload({
   parseGPX,
   sessionRunnerName,
+  canUpload = true,
   onWaypointsLoaded,
   onResetInteractions,
 }: UseRouteUploadOptions) {
@@ -47,7 +50,7 @@ export function useRouteUpload({
       setFileName(name)
       const initialWps = parsed.waypoints.map((wp) => ({
         ...wp,
-        id: wp.id || crypto.randomUUID(),
+        id: wp.id || generateUUID(),
         isFromGpx: true,
       }))
       onWaypointsLoaded(initialWps)
@@ -61,6 +64,11 @@ export function useRouteUpload({
 
   const handleFileLoaded = useCallback(
     async (content: string, name: string) => {
+      if (!canUpload || (!user && !sessionRunnerName.trim())) {
+        setError(t("home.upload.authOrGuestRequired"))
+        return
+      }
+
       const source = name === EXAMPLE_FILE_NAME ? "example" : "upload"
       trackEvent("upload_started", {
         fileName: name,
@@ -145,6 +153,7 @@ export function useRouteUpload({
       }
     },
     [
+      canUpload,
       parseGPX,
       finishUpload,
       sessionRunnerName,

@@ -10,15 +10,7 @@ function subscribe(callback: () => void) {
 
 function getStoredRunnerName(): string | null {
   try {
-    return sessionStorage.getItem("runnerName")
-  } catch {
-    return null
-  }
-}
-
-function getStoredRunnerMode(): string | null {
-  try {
-    return sessionStorage.getItem("runnerMode")
+    return localStorage.getItem("runnerName")
   } catch {
     return null
   }
@@ -27,17 +19,10 @@ function getStoredRunnerMode(): string | null {
 export function useRunnerSession() {
   const { data: sessionData, isPending } = useSession()
   const [overrideName, setOverrideName] = useState<string | null>(null)
-  const [modalDismissed, setModalDismissed] = useState(false)
 
   const storedName = useSyncExternalStore(
     subscribe,
     getStoredRunnerName,
-    () => null
-  )
-
-  const storedMode = useSyncExternalStore(
-    subscribe,
-    getStoredRunnerMode,
     () => null
   )
 
@@ -47,29 +32,30 @@ export function useRunnerSession() {
       "Pelari"
     : null
 
-  const sessionRunnerName = overrideName || authName || storedName || ""
+  const guestName = (overrideName ?? storedName ?? "").trim()
+  const sessionRunnerName = authName || guestName
 
-  const hasChosenMode =
-    modalDismissed || storedName !== null || storedMode !== null
-  const showSessionModal = !isPending && !authName && !hasChosenMode
+  const hasSessionIdentity = Boolean(authName || guestName)
+  const showSessionModal = !isPending && !hasSessionIdentity
+  const canUpload = !isPending && hasSessionIdentity
 
   const handleSessionNameSubmit = useCallback((name: string) => {
-    const finalName = name.trim() || "Pelari"
+    const finalName = name.trim()
+    if (!finalName) return
     try {
-      sessionStorage.setItem("runnerName", finalName)
-      sessionStorage.setItem("runnerMode", "guest")
+      localStorage.setItem("runnerName", finalName)
+      localStorage.setItem("runnerMode", "guest")
       window.dispatchEvent(new Event("storage"))
     } catch {
       // ignore
     }
     setOverrideName(finalName)
-    setModalDismissed(true)
   }, [])
 
   return {
     sessionRunnerName,
     showSessionModal,
-    setShowSessionModal: setModalDismissed,
+    canUpload,
     handleSessionNameSubmit,
   }
 }

@@ -5,6 +5,7 @@ import type { GPXData, Waypoint } from "@/lib/types"
 import { interpolateCoordinatesForDistance } from "@/lib/gpx/interpolate"
 import { buildWaypointSegments } from "@/lib/segment-analysis"
 import { trackEvent } from "@/lib/analytics/events"
+import { generateUUID } from "@/lib/utils"
 
 export function useWaypoints(
   gpxData: GPXData | null,
@@ -21,7 +22,7 @@ export function useWaypoints(
         distMeters
       )
       const newWp: Waypoint = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name,
         distance: distMeters,
         isFromGpx: false,

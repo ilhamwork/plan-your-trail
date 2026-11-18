@@ -1,28 +1,6 @@
 import { test, expect } from "@playwright/test"
 
-test.describe("Sprint 6 Critical Flows: Tier Banner, Anonymous Analysis, Gating & Security", () => {
-  test("tier announcement banner is visible, links to /register, and persists dismissal in sessionStorage", async ({
-    page,
-  }) => {
-    await page.goto("/")
-
-    const banner = page.getByRole("region", {
-      name: "Pengumuman perubahan layanan",
-    })
-    await expect(banner).toBeVisible()
-    await expect(banner).toContainText("Pembaruan Akun:")
-    await expect(
-      banner.getByRole("link", { name: "Daftar Akun" })
-    ).toHaveAttribute("href", "/register")
-
-    await banner.getByRole("button", { name: "Tutup pengumuman" }).click()
-    await expect(banner).not.toBeVisible()
-
-    // Reload within the same session — banner must remain dismissed (PRD 6.3)
-    await page.reload()
-    await expect(banner).not.toBeVisible()
-  })
-
+test.describe("Sprint 6 Critical Flows: Anonymous Analysis, Gating & Security", () => {
   test("anonymous GPX analysis displays locked states for weather, pace estimator, and waypoint management, and persists pending route on save", async ({
     page,
   }) => {
@@ -37,27 +15,18 @@ test.describe("Sprint 6 Critical Flows: Tier Banner, Anonymous Analysis, Gating 
     await guestButton.click()
 
     // Load sample GPX
-    await page.getByRole("button", { name: "Try GPX Example" }).click()
-
-    // Verify inline gated prompt appears after analysis completes (PRD 6.3)
-    const gatedPrompt = page.getByText(
-      "Dapatkan analisis lebih lengkap dengan akun"
-    )
-    await expect(gatedPrompt).toBeVisible({ timeout: 15000 })
+    await page
+      .getByRole("button", { name: /Try with a sample route|Coba dengan rute contoh/i })
+      .click()
 
     // Verify locked states for Free-tier and Pro-tier features
     await expect(
       page.getByText("Buka Prakiraan Cuaca Lengkap")
-    ).toBeVisible()
+    ).toBeVisible({ timeout: 15000 })
     await expect(
       page.getByText("Hitung Estimasi Finish Race")
     ).toBeVisible()
     await expect(page.getByText("Manajemen Waypoint")).toBeVisible()
-    await expect(page.getByText("Segera Hadir di Pro").first()).toBeVisible()
-
-    // Dismiss inline gated prompt and ensure it does not reappear in session
-    await page.getByRole("button", { name: "Tutup pesan" }).click()
-    await expect(gatedPrompt).not.toBeVisible()
 
     // Click "Simpan" as anonymous -> stores pending route in sessionStorage and redirects to /register (E4-T5)
     const saveBtn = page.getByRole("button", { name: "Simpan" })
@@ -103,9 +72,17 @@ test.describe("Sprint 6 Critical Flows: Tier Banner, Anonymous Analysis, Gating 
     page,
     request,
   }) => {
-    // 1. /routes redirects unauthenticated visitor to /login
-    await page.goto("/routes")
+    // 1. /account redirects unauthenticated visitor to /login, while /routes shows guest CTA
+    await page.goto("/account")
     await expect(page).toHaveURL(/.*\/login.*/)
+
+    await page.goto("/routes")
+    await expect(
+      page.getByRole("heading", { name: "Simpan & Kelola Koleksi Rute Kamu" })
+    ).toBeVisible()
+    await expect(
+      page.getByRole("link", { name: "Masuk ke Akun" })
+    ).toBeVisible()
 
     // 2. /api/routes/[id]/gpx returns 401 when unauthenticated
     const gpxRes = await request.get(

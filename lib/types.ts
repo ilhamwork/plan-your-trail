@@ -22,6 +22,7 @@ export interface RouteStats {
   elevationLoss: number; // meters
   highestPoint: number; // meters
   lowestPoint: number; // meters
+  averageElevation?: number; // meters
   waypointCount: number;
 }
 
@@ -52,11 +53,14 @@ export interface Segment {
 export interface WaypointSegment {
   id: number;
   name: string;
+  startKm: number;
+  endKm: number;
   distance: number; // meters
   startElevation: number;
   endElevation: number;
   elevationGain: number;
   elevationLoss: number;
+  avgGradient: number; // percent
   startIndex: number;
   endIndex: number;
 }

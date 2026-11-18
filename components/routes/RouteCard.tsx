@@ -1,8 +1,10 @@
 "use client"
 
+import { useMemo } from "react"
 import Link from "next/link"
-import { Calendar, Download, Trash2, ArrowUpRight, TrendingUp, Navigation } from "lucide-react"
+import { ArrowDownToLine, Trash2 } from "lucide-react"
 import type { Route } from "@/lib/db/schema"
+import type { TrackPoint } from "@/lib/types"
 import { useI18n } from "@/lib/i18n/context"
 
 interface RouteCardProps {
@@ -11,113 +13,275 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, onDelete }: RouteCardProps) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const dateLocale = locale === "id" ? "id-ID" : "en-US"
   const metrics = route.metrics as {
     stats?: {
       totalDistance?: number
       elevationGain?: number
       elevationLoss?: number
+      highestPoint?: number
     }
     raceDate?: string
     runnerName?: string
   }
 
-  const distanceKm = metrics?.stats?.totalDistance
-    ? (metrics.stats.totalDistance / 1000).toFixed(1)
-    : "—"
+  const totalDist = metrics?.stats?.totalDistance || 0
+  const distanceKm = (totalDist / 1000).toFixed(2)
 
   const elevationGainM = metrics?.stats?.elevationGain
     ? Math.round(metrics.stats.elevationGain)
-    : "—"
+    : 0
 
-  const formattedDate = route.createdAt
-    ? new Intl.DateTimeFormat("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }).format(new Date(route.createdAt))
-    : ""
+  const kmEffort = (totalDist / 1000 + elevationGainM * 0.01).toFixed(1)
+
+  let formattedDate = ""
+  if (metrics?.raceDate) {
+    try {
+      const d = new Date(metrics.raceDate)
+      if (!isNaN(d.getTime())) {
+        formattedDate = new Intl.DateTimeFormat(dateLocale, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }).format(d)
+      } else {
+        formattedDate = metrics.raceDate
+      }
+    } catch {
+      formattedDate = metrics.raceDate
+    }
+  } else if (route.createdAt) {
+    formattedDate = new Intl.DateTimeFormat(dateLocale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(route.createdAt))
+  }
+
+  // Build 2D GPS Trail Route Map projection
+  const mapData = useMemo(() => {
+    const pts = (route.trackSimplified as TrackPoint[] | null) || []
+    if (pts.length < 2) return null
+
+    let minLat = Infinity
+    let maxLat = -Infinity
+    let minLon = Infinity
+    let maxLon = -Infinity
+
+    for (const p of pts) {
+      if (p.lat < minLat) minLat = p.lat
+      if (p.lat > maxLat) maxLat = p.lat
+      if (p.lon < minLon) minLon = p.lon
+      if (p.lon > maxLon) maxLon = p.lon
+    }
+
+    const midLatRad = ((minLat + maxLat) / 2) * (Math.PI / 180)
+    const cosLat = Math.cos(midLatRad)
+
+    const spanX = Math.max((maxLon - minLon) * cosLat, 0.00001)
+    const spanY = Math.max(maxLat - minLat, 0.00001)
+
+    const width = 360
+    const height = 260
+    const pad = 28
+    const usableW = width - pad * 2
+    const usableH = height - pad * 2
+
+    const scale = Math.min(usableW / spanX, usableH / spanY)
+    const offsetX = pad + (usableW - spanX * scale) / 2
+    const offsetY = pad + (usableH - spanY * scale) / 2
+
+    const coords = pts.map((p) => {
+      const x = offsetX + (p.lon - minLon) * cosLat * scale
+      // Invert Y so north is top
+      const y = offsetY + (maxLat - p.lat) * scale
+      return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) }
+    })
+
+    const path = `M ${coords.map((c) => `${c.x},${c.y}`).join(" L ")}`
+    const startPoint = coords[0]
+    const endPoint = coords[coords.length - 1]
+
+    return { path, startPoint, endPoint }
+  }, [route.trackSimplified])
 
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs transition hover:border-[#1B4332]/30 hover:shadow-md">
+    <article className="group relative">
       <div>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="line-clamp-1 font-bold text-gray-900" title={route.name}>
-              {route.name}
-            </h3>
-            {metrics?.raceDate && (
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-gray-500">
-                <Calendar className="h-3.5 w-3.5" />
-                <span>Tanggal Race: {metrics.raceDate}</span>
+        {/* 1. AllTrails-Style 2D Topo Map Route Preview (Unboxed, directly in feed) */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#E8EDE6] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <Link
+            href={`/routes/${route.id}`}
+            className="block h-full w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+            aria-label={t("routes.cardOpenAria", { name: route.name })}
+          >
+            {mapData ? (
+              <svg
+                viewBox="0 0 360 260"
+                preserveAspectRatio="xMidYMid meet"
+                aria-hidden="true"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              >
+                <defs>
+                  {/* Soft alpine topographic hill terrain */}
+                  <linearGradient
+                    id={`terrain-${route.id}`}
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor="#DFE7DC" />
+                    <stop offset="45%" stopColor="#E9EFE7" />
+                    <stop offset="100%" stopColor="#D5DFD1" />
+                  </linearGradient>
+
+                  {/* Topographic organic contour curves */}
+                  <pattern
+                    id={`topo-${route.id}`}
+                    width="120"
+                    height="120"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <path
+                      d="M 0 30 Q 30 10 60 30 T 120 30 M 0 60 Q 30 40 60 60 T 120 60 M 0 90 Q 30 70 60 90 T 120 90"
+                      fill="none"
+                      stroke="#CBD7C8"
+                      strokeWidth="1"
+                      strokeOpacity="0.45"
+                    />
+                    <ellipse
+                      cx="60"
+                      cy="60"
+                      rx="35"
+                      ry="22"
+                      fill="none"
+                      stroke="#CBD7C8"
+                      strokeWidth="1"
+                      strokeOpacity="0.35"
+                    />
+                  </pattern>
+                </defs>
+
+                {/* Base terrain */}
+                <rect width="360" height="260" fill={`url(#terrain-${route.id})`} />
+                <rect width="360" height="260" fill={`url(#topo-${route.id})`} />
+
+                {/* Trail line shadow casing */}
+                <path
+                  d={mapData.path}
+                  fill="none"
+                  stroke="rgba(15, 60, 30, 0.22)"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {/* Vibrant trail route line */}
+                <path
+                  d={mapData.path}
+                  fill="none"
+                  stroke="#22C55E"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {/* Start Point Marker (Black dot with white ring like reference) */}
+                {mapData.startPoint && (
+                  <circle
+                    cx={mapData.startPoint.x}
+                    cy={mapData.startPoint.y}
+                    r="5"
+                    fill="#111827"
+                    stroke="#FFFFFF"
+                    strokeWidth="2.5"
+                  />
+                )}
+              </svg>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-[#1B4332] text-xs font-semibold text-white/80">
+                {t("routes.cardMapPlaceholder")}
               </div>
             )}
-          </div>
-          <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
-            {t("common.saved")}
-          </span>
+          </Link>
         </div>
 
-        {/* Metrics Grid */}
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-gray-50/80 p-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-[#1B4332]">
-              <Navigation className="h-3.5 w-3.5" />
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-gray-500">{t("routes.cardDistance")}</div>
-              <div className="text-sm font-bold text-gray-900">{distanceKm} km</div>
-            </div>
-          </div>
+        {/* 2. Route Name & Date */}
+        <div className="mt-3">
+          <Link
+            href={`/routes/${route.id}`}
+            className="block text-lg sm:text-xl font-bold tracking-tight text-[#111827] transition hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+          >
+            <span className="line-clamp-1">{route.name}</span>
+          </Link>
 
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
-              <TrendingUp className="h-3.5 w-3.5" />
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-gray-500">{t("routes.cardGain")}</div>
-              <div className="text-sm font-bold text-gray-900">+{elevationGainM} m</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-3 text-[11px] text-gray-400">
-          {t("routes.cardCreated")} {formattedDate}
+          {formattedDate && (
+            <p className="mt-0.5 text-xs sm:text-sm font-medium text-[#6B7280]">
+              {formattedDate}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Action Footer */}
-      <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-3">
-        <div className="flex items-center gap-1">
+      {/* 3. Stats Row & Action Buttons (Jarak | Elev. Gain | KM Effort + Download & Delete) */}
+      <div className="mt-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-5 sm:gap-7">
+          {/* Jarak */}
+          <div>
+            <span className="block text-[11px] sm:text-xs text-[#6B7280]">
+              {t("routes.cardDistance")}
+            </span>
+            <span className="mt-0.5 block text-xs sm:text-sm font-bold text-[#111827] tabular-nums whitespace-nowrap">
+              {distanceKm} km
+            </span>
+          </div>
+
+          {/* Elevasi Gain */}
+          <div>
+            <span className="block text-[11px] sm:text-xs text-[#6B7280]">
+              {t("routes.cardElevGain")}
+            </span>
+            <span className="mt-0.5 block text-xs sm:text-sm font-bold text-[#111827] tabular-nums whitespace-nowrap">
+              +{elevationGainM.toLocaleString(dateLocale)} m
+            </span>
+          </div>
+
+          {/* KM Effort */}
+          <div>
+            <span className="block text-[11px] sm:text-xs text-[#6B7280]">
+              {t("routes.cardKmEffort")}
+            </span>
+            <span className="mt-0.5 block text-xs sm:text-sm font-bold text-[#111827] tabular-nums whitespace-nowrap">
+              {kmEffort} km
+            </span>
+          </div>
+        </div>
+
+        {/* Action Buttons: Circular Outline Download & Delete */}
+        <div className="flex shrink-0 items-center gap-2">
           <a
             href={`/api/routes/${route.id}/gpx`}
             download
-            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-            title="Download file GPX"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D1D5DB] text-[#4B5563] transition hover:border-[#1B4332] hover:bg-white hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+            title={t("routes.cardDownloadAria")}
+            aria-label={t("routes.cardDownloadAria")}
           >
-            <Download className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t("common.download")}</span>
+            <ArrowDownToLine className="h-4 w-4" />
           </a>
 
           <button
             type="button"
             onClick={() => onDelete(route)}
-            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
-            title="Hapus rute"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-red-200 text-[#B91C1C] transition hover:border-red-300 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C]"
+            title={t("routes.cardDeleteAria")}
+            aria-label={t("routes.cardDeleteAria")}
           >
             <Trash2 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t("common.delete")}</span>
           </button>
         </div>
-
-        <Link
-          href={`/routes/${route.id}`}
-          className="flex items-center gap-1 rounded-lg bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46]"
-        >
-          <span>Buka Analisis</span>
-          <ArrowUpRight className="h-3.5 w-3.5" />
-        </Link>
       </div>
-    </div>
+    </article>
   )
 }

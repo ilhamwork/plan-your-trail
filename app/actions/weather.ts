@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { getWeatherForecast, type ActionResult, type WeatherData } from "@/lib/weather"
+import { getServerTranslations } from "@/lib/i18n/server"
 
 const WeatherInputSchema = z
   .object({
@@ -14,6 +15,7 @@ const WeatherInputSchema = z
 export async function fetchWeatherAction(
   rawInput: unknown
 ): Promise<ActionResult<WeatherData>> {
+  const { t } = await getServerTranslations()
   const parsed = WeatherInputSchema.safeParse(rawInput)
 
   if (!parsed.success) {
@@ -21,7 +23,7 @@ export async function fetchWeatherAction(
       ok: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: "Parameter lokasi atau tanggal tidak valid.",
+        message: t("actions.weatherInvalidParams"),
       },
     }
   }

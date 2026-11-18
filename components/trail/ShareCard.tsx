@@ -11,6 +11,7 @@ import {
 } from "recharts"
 import type { RouteStats, TrackPoint } from "@/lib/types"
 import { formatKm, formatNumber } from "@/lib/format"
+import { useI18n } from "@/lib/i18n/context"
 
 interface ShareCardProps {
   stats: RouteStats
@@ -27,6 +28,7 @@ export function ShareCard({
   raceName,
   raceDate,
 }: ShareCardProps) {
+  const { t, locale } = useI18n()
   // Downsample points for the chart
   const chartData = useMemo(() => {
     return points
@@ -78,13 +80,16 @@ export function ShareCard({
 
   const formattedDate = useMemo(() => {
     return raceDate
-      ? new Date(raceDate).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
+      ? new Date(raceDate).toLocaleDateString(
+          locale === "id" ? "id-ID" : "en-GB",
+          {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }
+        )
       : ""
-  }, [raceDate])
+  }, [raceDate, locale])
 
   return (
     <div
@@ -97,7 +102,7 @@ export function ShareCard({
         {/* Title & Date */}
         <div className="flex flex-col items-center space-y-1">
           <h1 className="text-6xl leading-tight font-black tracking-tight">
-            {raceName || "Untitled Trail"}
+            {raceName || t("share.untitledTrail")}
           </h1>
           <p className="text-2xl font-bold">{formattedDate}</p>
         </div>
@@ -112,7 +117,7 @@ export function ShareCard({
                 </span>
                 <span className="text-2xl font-bold">km</span>
               </div>
-              <p className="text-xl font-bold tracking-widest">distance</p>
+              <p className="text-xl font-bold tracking-widest">{t("share.statDistance")}</p>
             </div>
 
             <div className="flex flex-col items-center">
@@ -122,7 +127,7 @@ export function ShareCard({
                 </span>
                 <span className="text-2xl font-bold">m+</span>
               </div>
-              <p className="text-xl font-bold tracking-widest">gain</p>
+              <p className="text-xl font-bold tracking-widest">{t("share.statGain")}</p>
             </div>
 
             <div className="flex flex-col items-center">
@@ -135,7 +140,7 @@ export function ShareCard({
                 </span>
                 <span className="text-2xl font-bold">km</span>
               </div>
-              <p className="text-xl font-bold tracking-widest">effort</p>
+              <p className="text-xl font-bold tracking-widest">{t("share.statEffort")}</p>
             </div>
           </div>
         </div>
@@ -204,20 +209,20 @@ export function ShareCard({
             <div className="flex items-center gap-3">
               <span className="text-3xl text-[#EF4444]">▲</span>
               <span>
-                Uphill{" "}
+                {t("share.uphill")}{" "}
                 <span className="ml-1">{gradientDistribution.uphill}%</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-3xl text-[#FACC15]">▬</span>
               <span>
-                Flat <span className="ml-1">{gradientDistribution.flat}%</span>
+                {t("share.flat")} <span className="ml-1">{gradientDistribution.flat}%</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-3xl text-[#3B82F6]">▼</span>
               <span>
-                Downhill{" "}
+                {t("share.downhill")}{" "}
                 <span className="ml-1">{gradientDistribution.downhill}%</span>
               </span>
             </div>

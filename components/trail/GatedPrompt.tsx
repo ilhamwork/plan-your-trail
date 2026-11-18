@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Lock, X, ArrowRight } from "lucide-react"
 import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements, type Feature } from "@/lib/entitlements"
+import { useI18n } from "@/lib/i18n/context"
 
 interface GatedPromptProps {
   feature: Feature | string
@@ -27,12 +28,14 @@ export function GatedPrompt({
   title,
   description,
   source,
-  ctaText = "Daftar",
+  ctaText,
   href = "/register",
   className = "",
   guestOnly = true,
 }: GatedPromptProps) {
   const { isAuthenticated, can } = useEntitlements()
+  const { t } = useI18n()
+  const resolvedCtaText = ctaText ?? t("gating.defaultCta")
   const [localDismissed, setLocalDismissed] = useState(false)
 
   const isSessionDismissed = useSyncExternalStore(
@@ -85,10 +88,10 @@ export function GatedPrompt({
             <Lock className="h-4 w-4" />
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <h4 className="heading-4 text-gray-900 dark:text-gray-100">
               {title}
             </h4>
-            <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
+            <p className="mt-0.5 body-sm dark:text-gray-400">
               {description}
             </p>
             <div className="mt-3 flex items-center gap-2">
@@ -97,7 +100,7 @@ export function GatedPrompt({
                 onClick={handleCtaClick}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#1B4332] px-3 py-1.5 text-xs font-medium text-white shadow-xs transition hover:bg-[#143326] focus:outline-hidden"
               >
-                <span>{ctaText}</span>
+                <span>{resolvedCtaText}</span>
                 <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -108,7 +111,7 @@ export function GatedPrompt({
           type="button"
           onClick={handleDismiss}
           className="rounded-md p-1 text-gray-400 transition hover:bg-gray-200/50 hover:text-gray-600 focus:outline-hidden dark:hover:bg-gray-800 dark:hover:text-gray-200"
-          aria-label="Tutup pesan"
+          aria-label={t("gating.dismissAria")}
         >
           <X className="h-4 w-4" />
         </button>

@@ -2,28 +2,29 @@ import { notFound } from "next/navigation"
 import { requireUser } from "@/lib/auth"
 import { getRoute } from "@/lib/db/queries/routes"
 import { Header } from "@/components/trail/Header"
-import { TierAnnouncementBanner } from "@/components/trail/TierAnnouncementBanner"
 import { RouteDetailView } from "@/components/routes/RouteDetailView"
 import { analyzeSegments, buildWaypointSegments } from "@/lib/segment-analysis"
 import type { GPXData, RouteStats, TrackPoint, Waypoint } from "@/lib/types"
+import { getServerTranslations } from "@/lib/i18n/server"
 
 interface RouteDetailPageProps {
-  params: Promise<{ id: string }> | { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: RouteDetailPageProps) {
+  const { t } = await getServerTranslations()
   try {
     const user = await requireUser()
     const resolvedParams = await Promise.resolve(params)
     const savedRoute = await getRoute(user.id, resolvedParams.id)
     return {
       title: savedRoute
-        ? `${savedRoute.name} — Analisis Rute | PlanYourTrail.run`
-        : "Detail Rute | PlanYourTrail.run",
+        ? t("routes.detailMetadataTitle", { name: savedRoute.name })
+        : t("routes.detailMetadataFallback"),
     }
   } catch {
     return {
-      title: "Detail Rute | PlanYourTrail.run",
+      title: t("routes.detailMetadataFallback"),
     }
   }
 }
@@ -52,13 +53,28 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
   }
 
   const trackPoints = (savedRoute.trackSimplified as TrackPoint[]) || []
-  const waypoints = (metrics.waypoints || []) as Waypoint[]
+  const waypoints = ((metrics.waypoints || []) as Waypoint[]).map((wp, idx) => ({
+    ...wp,
+    id: wp.id || `wpt-${idx}`,
+    isFromGpx: wp.isFromGpx ?? true,
+  }))
   const segments = analyzeSegments(trackPoints)
   const waypointSegments = buildWaypointSegments(trackPoints, waypoints)
 
+  const computedAvgElevation =
+    metrics.stats.averageElevation ??
+    (trackPoints.length > 0
+      ? Math.round(
+          trackPoints.reduce((sum, p) => sum + p.ele, 0) / trackPoints.length
+        )
+      : Math.round((metrics.stats.highestPoint + metrics.stats.lowestPoint) / 2))
+
   const gpxData: GPXData = {
     trackPoints,
-    stats: metrics.stats,
+    stats: {
+      ...metrics.stats,
+      averageElevation: computedAvgElevation,
+    },
     segments,
     waypointSegments,
     waypoints,
@@ -67,11 +83,10 @@ export default async function RouteDetailPage({ params }: RouteDetailPageProps) 
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF6F1]">
+    <div className="min-h-screen bg-[#FAF6F1] pb-20 sm:pb-0">
       <Header />
-      <TierAnnouncementBanner />
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
+      <main>
         <RouteDetailView
           routeId={savedRoute.id}
           routeName={savedRoute.name}

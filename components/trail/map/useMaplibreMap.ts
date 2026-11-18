@@ -44,6 +44,7 @@ export function useMaplibreMap({
   const initialIs3DRef = useRef(is3D)
   const prevIs3DRef = useRef(is3D)
   const initialSatelliteRef = useRef(isSatellite)
+  const prevHighlightRangeRef = useRef<HighlightRange | null>(null)
 
   // Initialize MapLibre map (supports both 2D and 3D with 360° rotation)
   useEffect(() => {
@@ -114,7 +115,7 @@ export function useMaplibreMap({
         new maplibregl.NavigationControl({ visualizePitch: true }),
         "top-left"
       )
-      map.addControl(new maplibregl.ScaleControl(), "bottom-left")
+      map.addControl(new maplibregl.ScaleControl(), "top-left")
 
       map.on("load", () => {
         if (cancelled) return
@@ -354,7 +355,10 @@ export function useMaplibreMap({
   // Segment highlight
   useEffect(() => {
     const map = maplibreMapRef.current
-    if (!map || !maplibreReady) return
+    if (!map || !maplibreReady) {
+      prevHighlightRangeRef.current = highlightRange ?? null
+      return
+    }
 
     if (map.getLayer("segment-highlight")) {
       map.removeLayer("segment-highlight")
@@ -366,7 +370,10 @@ export function useMaplibreMap({
         highlightRange.startIndex,
         highlightRange.endIndex + 1
       )
-      if (segPoints.length < 2) return
+      if (segPoints.length < 2) {
+        prevHighlightRangeRef.current = highlightRange
+        return
+      }
 
       map.addSource("segment-highlight", {
         type: "geojson",
@@ -406,8 +413,24 @@ export function useMaplibreMap({
           duration: 1000,
         }
       )
+    } else if (prevHighlightRangeRef.current) {
+      // Zoom back out to full route when segment selection is cleared
+      map.fitBounds(
+        [
+          [bounds[0][1], bounds[0][0]],
+          [bounds[1][1], bounds[1][0]],
+        ],
+        {
+          padding: 50,
+          pitch: is3D ? 60 : 0,
+          bearing: map.getBearing(),
+          duration: 1000,
+        }
+      )
     }
-  }, [highlightRange, maplibreReady, is3D])
+
+    prevHighlightRangeRef.current = highlightRange ?? null
+  }, [highlightRange, maplibreReady, is3D, bounds])
 
   const resize = useCallback(() => {
     if (maplibreMapRef.current) {
@@ -415,9 +438,27 @@ export function useMaplibreMap({
     }
   }, [])
 
+  const resetView = useCallback(() => {
+    const map = maplibreMapRef.current
+    if (!map || !maplibreReady) return
+    map.fitBounds(
+      [
+        [bounds[0][1], bounds[0][0]],
+        [bounds[1][1], bounds[1][0]],
+      ],
+      {
+        padding: 50,
+        pitch: is3D ? 60 : 0,
+        bearing: is3D ? -20 : 0,
+        duration: 800,
+      }
+    )
+  }, [bounds, is3D, maplibreReady])
+
   return {
     mapReady: maplibreReady,
     maplibreReady,
     resize,
+    resetView,
   }
 }

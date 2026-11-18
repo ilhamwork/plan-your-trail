@@ -1,35 +1,42 @@
 "use client"
 
 import { memo, useCallback, useRef, useState } from "react"
-import { FileUp, FileCheck, Loader2 } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { FileUp, FileCheck, Loader2, Route, RotateCcw } from "lucide-react"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { useEntitlements } from "@/lib/entitlements"
 import { useI18n } from "@/lib/i18n/context"
+import { SAMPLE_ROUTE_META } from "@/lib/gpx/sample-route"
 
 interface UploadCardProps {
   onFileLoaded: (content: string, fileName: string) => void
   onError?: (message: string) => void
   fileName?: string
+  fileSizeBytes?: number
   error?: string
   isLoading?: boolean
+  disabled?: boolean
 }
 
 export const UploadCard = memo(function UploadCard({
   onFileLoaded,
   onError,
   fileName,
+  fileSizeBytes,
   error,
   isLoading,
+  disabled = false,
 }: UploadCardProps) {
   const { user, limits } = useEntitlements()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const prefersReducedMotion = useReducedMotion()
   const [isDragging, setIsDragging] = useState(false)
   const [isLoadingExample, setIsLoadingExample] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const maxMb = Math.round(limits.maxUploadBytes / (1024 * 1024))
+
   const handleFile = useCallback(
     (file: File) => {
-      // Clear previous errors if parent provided onError
       if (onError) onError("")
 
       if (!file.name.toLowerCase().endsWith(".gpx")) {
@@ -64,181 +71,286 @@ export const UploadCard = memo(function UploadCard({
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragging(false)
+      if (disabled) {
+        onError?.(t("home.upload.authOrGuestRequired"))
+        return
+      }
       const file = e.dataTransfer.files[0]
       if (file) handleFile(file)
     },
-    [handleFile]
+    [disabled, handleFile, onError, t]
   )
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (file) handleFile(file)
+      // Reset input so selecting the same file again triggers onChange
+      e.target.value = ""
     },
     [handleFile]
   )
 
+  const openFilePicker = useCallback(() => {
+    if (disabled) {
+      onError?.(t("home.upload.authOrGuestRequired"))
+      return
+    }
+    if (!isLoading && !isLoadingExample) {
+      inputRef.current?.click()
+    }
+  }, [disabled, isLoading, isLoadingExample, onError, t])
+
+  const handleRetry = useCallback(() => {
+    onError?.("")
+    openFilePicker()
+  }, [onError, openFilePicker])
+
   const handleLoadExample = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation()
+      if (disabled) {
+        onError?.(t("home.upload.authOrGuestRequired"))
+        return
+      }
       setIsLoadingExample(true)
       try {
-        const response = await fetch("/Rinjani-36K-2026.gpx")
+        const response = await fetch(SAMPLE_ROUTE_META.publicPath)
         const content = await response.text()
-        onFileLoaded(content, "Rinjani-36K-2026.gpx")
+        onFileLoaded(content, SAMPLE_ROUTE_META.fileName)
       } catch (err) {
         console.error("Failed to load example:", err)
+        onError?.(t("home.upload.parseError"))
       } finally {
         setIsLoadingExample(false)
       }
     },
-    [onFileLoaded]
+    [disabled, onError, onFileLoaded, t]
   )
 
   const hasFile = !!fileName
   const isBusy = isLoading || isLoadingExample
+  const isBlocked = isBusy || disabled
+
+  const formattedFileSize = (() => {
+    if (!fileSizeBytes || fileSizeBytes <= 0) return ""
+    if (fileSizeBytes >= 1024 * 1024) {
+      const mb = new Intl.NumberFormat(locale === "id" ? "id-ID" : "en-US", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(fileSizeBytes / (1024 * 1024))
+      return `${mb} MB`
+    }
+    const kb = Math.max(1, Math.round(fileSizeBytes / 1024))
+    return `${kb} KB`
+  })()
+
+  const formattedDistance = new Intl.NumberFormat(
+    locale === "id" ? "id-ID" : "en-US",
+    { maximumFractionDigits: 1 }
+  ).format(SAMPLE_ROUTE_META.distanceKm)
+  const formattedGain = new Intl.NumberFormat(
+    locale === "id" ? "id-ID" : "en-US"
+  ).format(SAMPLE_ROUTE_META.elevationGainM)
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.35 }}
     >
       <div className="flex flex-col gap-4">
-        <div
-          className={`relative cursor-pointer overflow-hidden rounded-2xl bg-[#1B4332] text-white shadow-lg transition-all duration-300 hover:bg-[#2D5A46] ${
-            hasFile ? "p-3" : "p-10 text-center"
-          } ${isDragging ? "scale-[1.02] ring-4 ring-[#E76F51]" : ""} ${
-            isBusy ? "pointer-events-none opacity-90" : ""
-          }`}
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".gpx"
+          onChange={handleChange}
+          className="hidden"
+          disabled={isBlocked}
+        />
+
+        <button
+          type="button"
+          aria-label={t("home.upload.dropzoneAria")}
+          onClick={openFilePicker}
           onDragOver={(e) => {
             e.preventDefault()
-            setIsDragging(true)
+            if (!disabled) setIsDragging(true)
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          onClick={() => !isBusy && inputRef.current?.click()}
+          disabled={isBusy}
+          className={`group relative w-full cursor-pointer overflow-hidden rounded-2xl text-white shadow-lg transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
+            hasFile ? "p-3 text-left" : "p-3 text-center sm:p-4"
+          } ${
+            isDragging
+              ? "bg-[#245540] ring-4 ring-[#E76F51]"
+              : "bg-[#1B4332] hover:bg-[#245540]"
+          } ${isBlocked ? "opacity-90" : ""}`}
         >
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".gpx"
-            onChange={handleChange}
-            className="hidden"
-            disabled={isBusy}
-          />
-
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.div
                 key="parsing"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="flex items-center justify-center gap-3 py-2"
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
+                className="flex items-center justify-center gap-3 py-4"
               >
-                <Loader2 className="h-6 w-6 animate-spin text-[#2A9D8F]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#74C69D]" />
                 <div className="text-left">
                   <p className="text-sm font-bold text-white">
                     {t("common.loading")}
                   </p>
-                  <p className="text-[11px] font-medium text-white/60">
-                    GPX analysis
+                  <p className="text-xs font-medium text-[#FAF6F1]/90">
+                    {t("home.upload.analyzingSubtitle")}
                   </p>
                 </div>
               </motion.div>
             ) : hasFile ? (
               <motion.div
                 key="loaded"
-                initial={{ opacity: 0, x: -10 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                className="flex items-center gap-3"
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 8 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
+                className="flex items-center justify-between gap-3"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/20 text-[#2A9D8F]">
-                  <FileCheck className="h-5 w-5" />
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A9D8F]/25 text-[#74C69D]">
+                    <FileCheck className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-white">
+                      {fileName}
+                    </p>
+                    <p className="text-xs font-medium text-[#FAF6F1]/90">
+                      {formattedFileSize
+                        ? t("home.upload.loadedSubtitle", { size: formattedFileSize })
+                        : "GPX"}
+                    </p>
+                  </div>
                 </div>
-                <div className="max-w-9/12 min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-white">
-                    {fileName}
-                  </p>
-                  <p className="text-[10px] font-medium text-white/50">
-                    GPX loaded • {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB max
-                  </p>
-                </div>
+                <span className="shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-[#FAF6F1] transition group-hover:bg-white/25">
+                  {t("home.upload.changeFileAction")}
+                </span>
               </motion.div>
             ) : (
               <motion.div
                 key="empty"
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="flex flex-col items-center gap-4"
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
+                className={`flex flex-col items-center gap-3.5 rounded-xl px-4 py-6 sm:px-6 sm:py-8 ${
+                  isDragging
+                    ? "border-2 border-solid border-[#FAF6F1]"
+                    : "border-2 border-dashed border-[#FAF6F1]/40"
+                }`}
               >
-                <div className="flex flex-col items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-                    <FileUp className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{t("home.upload.dropTitle")}</p>
-                    <p className="text-sm text-white/50">
-                      {t("home.upload.dropSubtitle")}
-                    </p>
-                    <p className="mt-1 text-[10px] font-medium text-white/30">
-                      (Maks {Math.round(limits.maxUploadBytes / (1024 * 1024))} MB)
-                    </p>
-                  </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
+                  <FileUp className="h-6 w-6 text-[#FAF6F1]" />
                 </div>
+
+                <div>
+                  <p className="text-lg font-bold tracking-tight text-[#FAF6F1]">
+                    <span className="hidden [@media(pointer:fine)]:inline">
+                      {t("home.upload.dropTitle")}
+                    </span>
+                    <span className="inline [@media(pointer:fine)]:hidden">
+                      {t("home.upload.dropTitleMobile")}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[#FAF6F1]/90">
+                    <span className="hidden [@media(pointer:fine)]:inline">
+                      {t("home.upload.dropSubtitle")}
+                    </span>
+                    <span className="inline [@media(pointer:fine)]:hidden">
+                      {t("home.upload.dropSubtitleMobile")}
+                    </span>
+                  </p>
+                </div>
+
+                <span className="mt-1 inline-flex min-h-11 items-center justify-center rounded-full bg-[#FAF6F1] px-6 py-2 text-sm font-semibold text-[#1B4332] shadow-xs transition group-hover:bg-white">
+                  {t("home.upload.browseBtn")}
+                </span>
+
+                <p className="text-xs font-medium text-[#FAF6F1]/90">
+                  {!user
+                    ? t("home.upload.helperFormatAnon", { maxMb })
+                    : t("home.upload.helperFormat", { maxMb })}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </button>
+
+        {error && (
+          <div
+            role="alert"
+            className="flex flex-col items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center sm:flex-row sm:text-left"
+          >
+            <p className="text-sm font-medium text-[#B91C1C]">{error}</p>
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#B91C1C]/30 bg-white px-3.5 py-2 text-xs font-semibold text-[#B91C1C] transition hover:bg-red-100/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B91C1C]"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>{t("home.upload.retryBtn")}</span>
+            </button>
+          </div>
+        )}
 
         {!hasFile && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{
+              delay: prefersReducedMotion ? 0 : 0.12,
+              duration: prefersReducedMotion ? 0 : 0.3,
+            }}
             className="flex flex-col items-center gap-3"
           >
             <div className="flex w-full items-center gap-3">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                OR
+              <div className="h-px flex-1 bg-[#E5E7EB]" />
+              <span className="text-xs font-medium text-[#4B5563]">
+                {t("home.upload.orDivider")}
               </span>
-              <div className="h-px flex-1 bg-gray-200" />
+              <div className="h-px flex-1 bg-[#E5E7EB]" />
             </div>
 
             <button
+              type="button"
               onClick={handleLoadExample}
-              disabled={isBusy}
-              className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#E76F51] bg-white px-4 py-2 text-sm font-black text-[#E76F51] shadow-sm transition-all hover:bg-[#E76F51] hover:text-white active:scale-[0.98] disabled:opacity-50"
+              disabled={isBlocked}
+              className="flex min-h-12 w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-[#1B4332] bg-white px-4 py-2.5 text-[#1B4332] shadow-2xs transition-colors hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-[0.99] disabled:opacity-50"
             >
               {isLoadingExample ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#E76F51]/20 border-t-[#E76F51]" />
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{t("home.upload.sampleLoading")}</span>
+                </div>
               ) : (
-                "Try GPX Example"
+                <>
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    <Route className="h-4 w-4 shrink-0" />
+                    <span>{t("home.upload.exampleBtn")}</span>
+                  </span>
+                  <span className="text-xs font-medium opacity-80">
+                    {t("home.upload.exampleHint", {
+                      name: SAMPLE_ROUTE_META.name,
+                      distance: formattedDistance,
+                      gain: formattedGain,
+                    })}
+                  </span>
+                </>
               )}
             </button>
-            <p className="text-center text-[11px] font-medium text-gray-400">
-              {t("home.upload.exampleBtn")}
-            </p>
           </motion.div>
         )}
       </div>
-
-      <AnimatePresence>
-        {error && (
-          <motion.p
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mt-2 text-center text-sm text-red-500"
-          >
-            {error}
-          </motion.p>
-        )}
-      </AnimatePresence>
     </motion.div>
   )
 })

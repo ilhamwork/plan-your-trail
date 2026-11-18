@@ -2,131 +2,173 @@ import Link from "next/link"
 import { requireUser } from "@/lib/auth"
 import { limits } from "@/lib/entitlements"
 import { SignOutButton } from "@/components/auth/SignOutButton"
+import { Header } from "@/components/trail/Header"
+import { getServerTranslations } from "@/lib/i18n/server"
 import {
   CloudSun,
   MapPin,
   Clock,
-  Sparkles,
-  ArrowLeft,
-  CheckCircle2,
+  Compass,
+  Route as RouteIcon,
+  ShieldCheck,
+  ChevronRight,
 } from "lucide-react"
-
-
 
 export const dynamic = "force-dynamic"
 
 export default async function AccountPage() {
-  const user = await requireUser()
+  const [{ t }, user] = await Promise.all([
+    getServerTranslations(),
+    requireUser(),
+  ])
   const userLimits = limits(user)
+  const initial = user.email.charAt(0).toUpperCase()
+  const maxUploadMb = Math.round(userLimits.maxUploadBytes / (1024 * 1024))
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        {/* Navigation back */}
-        <div className="mb-6 flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs hover:bg-gray-100"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Kembali ke Analisis</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-              <CheckCircle2 className="h-3 w-3" />
-              Paket: {user.plan.toUpperCase()}
-            </span>
-          </div>
+    <div className="min-h-screen bg-[#FAF6F1] pb-24 sm:pb-14">
+      <Header />
+
+      <main className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
+        {/* Page Heading */}
+        <div className="mb-8">
+          <h1 className="heading-1">
+            {t("account.heading")}
+          </h1>
+          <p className="mt-1 text-subhead">
+            {t("account.subtitle")}
+          </p>
         </div>
 
-        {/* Profile Card */}
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1B4332] text-xl font-bold text-white shadow-xs">
-                {user.email.charAt(0).toUpperCase()}
+        {/* Two-column Airbnb Profile Layout */}
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr] lg:gap-12">
+          {/* Left Column: Airbnb Identity Card */}
+          <div className="rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-[0_6px_20px_rgba(0,0,0,0.06)]">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#1B4332] text-3xl font-bold text-[#FAF6F1] shadow-sm">
+                {initial}
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{user.email}</h1>
-              </div>
+              <h2 className="heading-3 mt-4 max-w-full truncate text-base sm:text-lg font-bold tracking-tight text-[#2D3436]">
+                {user.email}
+              </h2>
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#F1EDE8] px-3.5 py-1 text-xs font-semibold text-[#1B4332]">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>{user.plan === "pro" ? t("account.planBadgePro") : t("account.planBadgeFree")}</span>
+              </span>
             </div>
-            <div>
-              <SignOutButton />
-            </div>
-          </div>
 
-          {/* Tier Limits & Benefits */}
-          <div className="mt-8">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">
-              Batas & Fitur Paket Kamu
-            </h2>
+            <div className="my-6 border-t border-[#E5E7EB]" />
 
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-4">
-                <div className="text-xs font-medium text-gray-500">
-                  Batas Ukuran Upload GPX
-                </div>
-                <div className="mt-1 text-2xl font-bold text-gray-900">
-                  {Math.round(userLimits.maxUploadBytes / (1024 * 1024))} MB
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Dua kali lipat dari batas upload anonim (5 MB).
-                </p>
+            <dl className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <dt className="text-[#4B5563]">{t("account.uploadLimitLabel")}</dt>
+                <dd className="font-semibold text-[#2D3436]">{maxUploadMb} MB</dd>
               </div>
-
-              <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-4">
-                <div className="text-xs font-medium text-gray-500">
-                  Kapasitas Penyimpanan Rute
-                </div>
-                <div className="mt-1 text-2xl font-bold text-gray-900">
-                  {userLimits.maxSavedRoutes ?? "Unlimited"} Rute
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Akses rute tersimpan dari perangkat mana saja.
-                </p>
+              <div className="flex items-center justify-between">
+                <dt className="text-[#4B5563]">{t("account.routesCapacityLabel")}</dt>
+                <dd className="font-semibold text-[#2D3436]">
+                  {userLimits.maxSavedRoutes ?? t("account.unlimited")}{" "}
+                  {userLimits.maxSavedRoutes !== null ? t("account.routesUnit") : ""}
+                </dd>
               </div>
-            </div>
-          </div>
+            </dl>
 
-          {/* Active Features */}
-          <div className="mt-8 border-t border-gray-100 pt-6">
-            <h3 className="text-sm font-bold text-gray-900">
-              Fitur Aktif di Akun Kamu
-            </h3>
-            <ul className="mt-3 space-y-2 text-xs text-gray-600">
-              <li className="flex items-center gap-2">
-                <CloudSun className="h-4 w-4 text-[#2A9D8F]" />
-                <span>Prakiraan cuaca per sesi (Pagi, Siang, Sore, Malam) untuk setiap rute</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-[#E76F51]" />
-                <span>Waypoint GPX dengan label jarak di chart elevasi</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#F4A261]" />
-                <span>Estimasi waktu finish dasar berdasarkan input pace (min/km)</span>
-              </li>
-            </ul>
-          </div>
+            <div className="mt-6 space-y-2.5">
+              <Link
+                href="/routes"
+                className="flex h-11 w-full items-center justify-between rounded-xl bg-[#FAF6F1] px-4 text-sm font-semibold text-[#1B4332] transition hover:bg-[#F1EDE8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <RouteIcon className="h-4 w-4" />
+                  <span>{t("account.viewSavedRoutes")}</span>
+                </span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
 
-          {/* Pro Teaser */}
-          <div className="mt-8 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
-            <div className="flex items-start gap-3">
-              <Sparkles className="mt-0.5 h-5 w-5 text-amber-600" />
-              <div>
-                <h4 className="text-sm font-semibold text-amber-900">
-                  Fitur Pro (Segera Hadir di 2027)
-                </h4>
-                <p className="mt-0.5 text-xs text-amber-800">
-                  Manajemen waypoint kustom tanpa batas, prakiraan cuaca per jam, cutoff estimator per checkpoint, ekspor PDF race brief,
-                  dan penyimpanan rute tanpa batas.
-                </p>
-              </div>
+              <SignOutButton className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#2D3436] bg-white px-4 text-sm font-semibold text-[#2D3436] transition hover:bg-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50">
+                <span>{t("account.signOutBtn")}</span>
+              </SignOutButton>
             </div>
           </div>
 
+          {/* Right Column: Flat Editorial Feature & Roadmap Sections (Airbnb Style) */}
+          <div className="space-y-8">
+            {/* Active Features List */}
+            <section aria-labelledby="active-features-heading">
+              <h2
+                id="active-features-heading"
+                className="heading-2 pb-4 border-b border-[#E5E7EB]"
+              >
+                {t("account.activeFeaturesHeading")}
+              </h2>
+
+              <ul className="divide-y divide-[#E5E7EB]">
+                <li className="flex items-start gap-4 py-5">
+                  <CloudSun className="mt-0.5 h-5 w-5 shrink-0 text-[#2A9D8F]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[#2D3436]">
+                      {t("account.featureWeatherTitle")}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
+                      {t("account.featureWeatherDesc")}
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex items-start gap-4 py-5">
+                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#E76F51]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[#2D3436]">
+                      {t("account.featureWaypointsTitle")}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
+                      {t("account.featureWaypointsDesc")}
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex items-start gap-4 py-5">
+                  <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#1B4332]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[#2D3436]">
+                      {t("account.featurePaceTitle")}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#4B5563]">
+                      {t("account.featurePaceDesc")}
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </section>
+
+            {/* Pro Roadmap Section */}
+            <section
+              aria-labelledby="pro-roadmap-heading"
+              className="border-t border-[#D1D5DB] pt-8"
+            >
+              <div className="flex items-start gap-4">
+                <Compass className="mt-0.5 h-5 w-5 shrink-0 text-[#1B4332]" />
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3
+                      id="pro-roadmap-heading"
+                      className="text-base font-bold text-[#2D3436]"
+                    >
+                      {t("account.proRoadmapTitle")}
+                    </h3>
+                    <span className="rounded-full bg-[#F1EDE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+                      {t("account.proRoadmapBadge")}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#4B5563]">
+                    {t("account.proRoadmapDesc")}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

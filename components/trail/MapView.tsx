@@ -1,47 +1,119 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import type { TrackPoint, Waypoint, HighlightRange } from "@/lib/types"
-import { Map, Globe, Maximize2, Minimize2, BarChart3 } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import type {
+  TrackPoint,
+  Waypoint,
+  HighlightRange,
+  RouteStats,
+} from "@/lib/types"
+import {
+  LocateFixed,
+  Layers,
+  Maximize2,
+  Minimize2,
+  X,
+  ChevronUp,
+  BarChart3,
+  Heart,
+  Loader2,
+} from "lucide-react"
 import "maplibre-gl/dist/maplibre-gl.css"
 import { ElevationChart } from "./ElevationChart"
 import { useMaplibreMap } from "./map/useMaplibreMap"
+import { useI18n } from "@/lib/i18n/context"
 
 interface MapViewProps {
   trackPoints: TrackPoint[]
   waypoints: Waypoint[]
   bounds: [[number, number], [number, number]]
+  stats?: RouteStats
+  routeName?: string
   hoveredPoint?: TrackPoint | null
   highlightRange?: HighlightRange | null
   onHover?: (point: TrackPoint | null) => void
+  onClearHighlight?: () => void
+  onPrevSegment?: () => void
+  onNextSegment?: () => void
+  hasPrevSegment?: boolean
+  hasNextSegment?: boolean
+  currentSegmentLabel?: string
+  onSave?: () => void
+  isSaving?: boolean
+  isSaved?: boolean
+  saveError?: string | null
+  onDismissSaveError?: () => void
+  onShare?: () => void
+  isSharing?: boolean
+  topLeftSlot?: React.ReactNode
+  betweenMapAndChartSlot?: React.ReactNode
 }
 
 export function MapView({
   trackPoints,
   waypoints,
   bounds,
+  stats,
+  routeName,
   hoveredPoint,
   highlightRange,
   onHover,
+  onClearHighlight,
+  onPrevSegment,
+  onNextSegment,
+  hasPrevSegment = false,
+  hasNextSegment = false,
+  currentSegmentLabel,
+  onSave,
+  isSaving = false,
+  isSaved = false,
+  saveError,
+  onDismissSaveError,
+  topLeftSlot,
+  betweenMapAndChartSlot,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
+  const { t } = useI18n()
 
   const [is3D, setIs3D] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showChart, setShowChart] = useState(true)
+  const isChartVisible = !isFullscreen || showChart
+
+  // Hover synchronization between chart and map
+  const [localHoveredPoint, setLocalHoveredPoint] = useState<TrackPoint | null>(
+    null
+  )
+  const activeHoveredPoint =
+    hoveredPoint !== undefined ? hoveredPoint : localHoveredPoint
+
+  const handleHover = useCallback(
+    (point: TrackPoint | null) => {
+      setLocalHoveredPoint(point)
+      onHover?.(point)
+    },
+    [onHover]
+  )
 
   // MapLibre map subsystem (supports both 2D and 3D with 360° rotation)
-  const { mapReady, resize } = useMaplibreMap({
+  const { mapReady, resize, resetView } = useMaplibreMap({
     containerRef: mapContainerRef,
     is3D,
     trackPoints,
     waypoints,
     bounds,
     isSatellite,
-    hoveredPoint,
+    hoveredPoint: activeHoveredPoint,
     highlightRange,
   })
+
+  const handleRecenter = useCallback(() => {
+    if (highlightRange && onClearHighlight) {
+      onClearHighlight()
+    }
+    resetView()
+  }, [highlightRange, onClearHighlight, resetView])
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -70,98 +142,213 @@ export function MapView({
   useEffect(() => {
     const timer = setTimeout(() => {
       resize()
-    }, 400)
+    }, 350)
 
     return () => clearTimeout(timer)
-  }, [isFullscreen, is3D, mapReady, showChart, resize])
+  }, [isFullscreen, is3D, mapReady, isChartVisible, resize])
 
   return (
-    <div
-      className={`overflow-hidden transition-all duration-300 ${
+    <section
+      aria-label={t("home.map.ariaLabel")}
+      className={`w-full transition-all duration-300 ${
         isFullscreen
-          ? "fixed inset-0 z-1003 bg-[#FAF6F1]"
-          : "rounded-xl border border-gray-100 bg-white shadow-sm"
+          ? "fixed inset-0 z-1003 flex flex-col bg-[#FAF6F1]"
+          : ""
       }`}
     >
-      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Map className="h-4 w-4 text-[#2A9D8F]" />
-          <h3 className="text-sm font-bold text-[#2D3436]">Route Map</h3>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIs3D(!is3D)}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
-              is3D
-                ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
-                : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
-            }`}
-          >
-            <Globe className="h-3 w-3" />
-            3D
-          </button>
-          <button
-            onClick={() => setIsSatellite(!isSatellite)}
-            className={`cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-all ${
-              isSatellite
-                ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
-                : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
-            }`}
-          >
-            Satellite
-          </button>
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className={`flex h-6 w-6 cursor-pointer items-center justify-center rounded-full ${
-              isFullscreen
-                ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
-                : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
-            }`}
-            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          >
-            {isFullscreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </button>
-
-          {isFullscreen && (
-            <button
-              onClick={() => setShowChart(!showChart)}
-              className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                showChart
-                  ? "bg-[#1B4332] text-white hover:bg-[#1B4332]/5 hover:text-[#1B4332]"
-                  : "bg-[#1B4332]/5 text-gray-600 hover:bg-[#1B4332] hover:text-white"
-              }`}
-            >
-              <BarChart3 className="h-3 w-3" />
-            </button>
-          )}
-        </div>
-      </div>
-
+      {/* Spatial Map Stage */}
       <div
-        ref={mapContainerRef}
-        className={`w-full transition-all duration-300 ${
-          isFullscreen ? "h-[calc(100vh-53px)]" : "h-[350px]"
+        className={`relative w-full ${
+          isFullscreen
+            ? "min-h-0 flex-1"
+            : isChartVisible
+              ? "h-[360px] sm:h-[420px] lg:h-[440px]"
+              : "h-[460px] sm:h-[520px]"
         }`}
-        style={{ position: "relative" }}
-      />
+      >
+        {/* MapLibre Canvas */}
+        <div
+          ref={mapContainerRef}
+          className="h-full w-full"
+          style={{ position: "relative" }}
+        />
 
-      {isFullscreen && showChart && (
-        <div className="absolute bottom-12 left-1/2 z-1000 w-[95%] -translate-x-1/2 overflow-hidden rounded-xl border border-white/20 bg-[#2D3436]/80 shadow-2xl lg:w-3/4">
-          <div className="flex flex-col gap-2">
-            <div className="h-[180px]">
-              <ElevationChart
-                trackPoints={trackPoints}
-                waypoints={waypoints}
-                onHover={onHover || (() => {})}
-              />
-            </div>
+        {/* Floating Top Overlay: Left (Back/Slot + Map Controls) & Right (Share + Love/Save) */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 p-3 sm:p-4">
+          {/* Left: Optional back/upload action + Map View Controls */}
+          <div className="pointer-events-auto flex flex-wrap items-center gap-2">
+            {topLeftSlot}
+
+            <button
+              type="button"
+              onClick={handleRecenter}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white/95 text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
+              title={t("home.map.recenter")}
+              aria-label={t("home.map.recenter")}
+            >
+              <LocateFixed className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIs3D(!is3D)}
+              className={`flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-3.5 text-xs font-bold shadow-md transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 ${
+                is3D
+                  ? "border-[#1B4332] bg-[#1B4332] text-[#FAF6F1]"
+                  : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1]"
+              }`}
+              title={is3D ? t("home.map.disable3D") : t("home.map.enable3D")}
+              aria-label={is3D ? t("home.map.disable3D") : t("home.map.enable3D")}
+              aria-pressed={is3D}
+            >
+              3D
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsSatellite(!isSatellite)}
+              className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border shadow-md transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 ${
+                isSatellite
+                  ? "border-[#1B4332] bg-[#1B4332] text-[#FAF6F1]"
+                  : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1]"
+              }`}
+              title={isSatellite ? t("home.map.useTopography") : t("home.map.useSatellite")}
+              aria-label={
+                isSatellite ? t("home.map.useTopography") : t("home.map.useSatellite")
+              }
+              aria-pressed={isSatellite}
+            >
+              <Layers className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border shadow-md transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 ${
+                isFullscreen
+                  ? "border-[#1B4332] bg-[#1B4332] text-[#FAF6F1]"
+                  : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1]"
+              }`}
+              title={isFullscreen ? t("home.map.exitFullscreenTitle") : t("home.map.fullscreen")}
+              aria-label={
+                isFullscreen ? t("home.map.exitFullscreen") : t("home.map.fullscreen")
+              }
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+
+          {/* Right: Love (Save Route) Action (Share button hidden until feature is ready) */}
+          <div className="pointer-events-auto flex items-center gap-2">
+            {(onSave || isSaved) && (
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={isSaving || (!onSave && isSaved)}
+                className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border shadow-md transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95 disabled:opacity-80 ${
+                  isSaved
+                    ? "border-[#E76F51]/40 bg-white text-[#E76F51]"
+                    : "border-[#D1D5DB] bg-white/95 text-[#2D3436] hover:border-[#E76F51] hover:text-[#E76F51]"
+                }`}
+                title={isSaved ? t("routeChart.routeSaved") : t("routeChart.saveRoute")}
+                aria-label={isSaved ? t("routeChart.saved") : t("routeChart.saveRoute")}
+                aria-pressed={isSaved}
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-[#1B4332]" />
+                ) : (
+                  <Heart
+                    className={`h-4 w-4 transition-transform ${
+                      isSaved ? "fill-[#E76F51] text-[#E76F51] scale-110" : ""
+                    }`}
+                  />
+                )}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Floating Save Error Alert inside map viewport */}
+        {saveError && (
+          <div
+            role="alert"
+            className="pointer-events-auto absolute bottom-4 left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-start justify-between gap-3 rounded-2xl border border-red-200 bg-red-50/95 px-4 py-3 text-xs font-medium text-[#B91C1C] shadow-lg backdrop-blur-xs"
+          >
+            <span className="leading-relaxed">{saveError}</span>
+            {onDismissSaveError && (
+              <button
+                type="button"
+                onClick={onDismissSaveError}
+                aria-label={t("home.map.dismissError")}
+                className="shrink-0 rounded-lg p-1 text-[#B91C1C]/80 transition hover:bg-red-100 hover:text-[#B91C1C]"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {betweenMapAndChartSlot}
+
+      {/* Elevation Profile Section (Flat, no card, no margin/padding) */}
+      {isChartVisible ? (
+        <div
+          className={`relative z-20 border-b p-4 border-[#E5E7EB] ${
+            isFullscreen ? "mx-auto w-full max-w-5xl bg-[#FAF6F1]" : ""
+          }`}
+        >
+          {/* Center Circular Toggle Button on the Seam (only in fullscreen) */}
+          {isFullscreen && (
+            <div className="absolute -top-5 left-1/2 z-30 -translate-x-1/2">
+              <button
+                type="button"
+                onClick={() => setShowChart(false)}
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
+                title={t("routeChart.hideChart")}
+                aria-label={t("routeChart.hideChart")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          <ElevationChart
+            trackPoints={trackPoints}
+            waypoints={waypoints}
+            stats={stats}
+            routeName={routeName}
+            hoveredPoint={activeHoveredPoint}
+            highlightRange={highlightRange}
+            onClearHighlight={onClearHighlight}
+            onPrevSegment={onPrevSegment}
+            onNextSegment={onNextSegment}
+            hasPrevSegment={hasPrevSegment}
+            hasNextSegment={hasNextSegment}
+            currentSegmentLabel={currentSegmentLabel}
+            onHover={handleHover}
+            embedded
+          />
+        </div>
+      ) : (
+        <div className="relative z-20 flex justify-center border-b border-[#E5E7EB] py-3">
+          <button
+            type="button"
+            onClick={() => setShowChart(true)}
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[#D1D5DB] bg-white px-4 py-2 text-xs font-bold text-[#1B4332] shadow-xs transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+            title={t("routeChart.showChart")}
+            aria-label={t("routeChart.showChart")}
+          >
+            <BarChart3 className="h-4 w-4 text-[#E76F51]" />
+            <span>{t("routeChart.showChart")}</span>
+            <ChevronUp className="h-4 w-4" />
+          </button>
+        </div>
       )}
-    </div>
+    </section>
   )
 }

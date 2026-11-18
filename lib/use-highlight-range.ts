@@ -23,10 +23,15 @@ export function useHighlightRange() {
     )
   }, [])
 
+  const selectHighlight = useCallback((range: HighlightRange) => {
+    setHighlightRange({ startIndex: range.startIndex, endIndex: range.endIndex })
+  }, [])
+
   return {
     highlightRange,
     setHighlightRange,
     clearHighlight,
     toggleHighlight,
+    selectHighlight,
   }
 }

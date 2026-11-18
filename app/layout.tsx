@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         alt: "PlanYourTrail — GPX Trail Route Analyzer",
       },
     ],
-    locale: "id_ID",
+    locale: "en_EN",
     type: "website",
   },
   twitter: {

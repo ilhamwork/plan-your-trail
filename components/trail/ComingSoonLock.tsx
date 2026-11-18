@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Sparkles, Check, ArrowRight, Loader2 } from "lucide-react"
+import { Check, Loader2, type LucideIcon } from "lucide-react"
 import { trackEvent } from "@/lib/analytics/events"
 import { useEntitlements } from "@/lib/entitlements"
 import { joinWaitlistAction } from "@/app/actions/waitlist"
+import { useI18n } from "@/lib/i18n/context"
 
 interface ComingSoonLockProps {
   feature: string
@@ -13,7 +14,10 @@ interface ComingSoonLockProps {
   description?: string
   source: string
   badgeText?: string
+  icon?: LucideIcon
   variant?: "banner" | "card" | "inline"
+  hideCta?: boolean
+  previewSlot?: React.ReactNode
   className?: string
   onSuccess?: () => void
 }
@@ -23,12 +27,17 @@ export function ComingSoonLock({
   title,
   description,
   source,
-  badgeText = "Segera Hadir di Pro",
-  variant = "inline",
+  badgeText,
+  icon: Icon,
+  hideCta = false,
+  previewSlot,
   className = "",
   onSuccess,
 }: ComingSoonLockProps) {
   const { user } = useEntitlements()
+  const { t } = useI18n()
+  const resolvedBadgeText =
+    badgeText !== undefined ? badgeText : t("comingSoon.badgeDefault")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isJoined, setIsJoined] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -53,7 +62,7 @@ export function ComingSoonLock({
         setErrorMsg(res.error.message)
       }
     } catch {
-      setErrorMsg("Gagal mendaftar waitlist. Silakan coba lagi.")
+      setErrorMsg(t("comingSoon.joinError"))
     } finally {
       setIsSubmitting(false)
     }
@@ -63,118 +72,71 @@ export function ComingSoonLock({
     trackEvent("register_clicked", { source, feature })
   }
 
-  if (variant === "card") {
-    return (
-      <div
-        className={`rounded-xl border border-amber-200/80 bg-amber-50/70 p-4 shadow-xs backdrop-blur-xs ${className}`}
-      >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-700">
-              <Sparkles className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-semibold text-amber-950">{title}</h4>
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
-                  {badgeText}
-                </span>
-              </div>
-              {description && (
-                <p className="mt-1 text-xs text-amber-800/90">{description}</p>
-              )}
-              {errorMsg && (
-                <p className="mt-1 text-xs text-red-600">{errorMsg}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="shrink-0 self-end sm:self-center">
-            {user ? (
-              isJoined ? (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                  <Check className="h-3.5 w-3.5" />
-                  Terdaftar Early Access
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleJoin}
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326] disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-                  )}
-                  <span>Daftar Early Access</span>
-                </button>
-              )
-            ) : (
-              <Link
-                href="/register"
-                onClick={handleRegisterClick}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#143326]"
-              >
-                <span>Daftar Akun</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Default: inline / banner variant
   return (
-    <div
-      className={`rounded-xl border border-dashed border-gray-200 bg-gray-50/70 p-3 transition-all ${className}`}
-    >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 shrink-0 text-amber-500" />
-          <span className="text-xs font-semibold text-gray-800">{title}</span>
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
-            {badgeText}
-          </span>
+    <div className={`rounded-2xl border border-[#E5E7EB] bg-white p-5 ${className}`}>
+      <div className="flex items-start gap-3">
+        {Icon && (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#1B4332]">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-bold leading-snug tracking-tight text-[#111827]">
+            {title}
+          </h3>
           {description && (
-            <span className="hidden text-xs text-gray-500 md:inline">
-              — {description}
-            </span>
+            <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[#4B5563]">
+              {description}
+            </p>
+          )}
+          {resolvedBadgeText && (
+            <p className="mt-1 text-xs font-medium text-[#525B66]">
+              {resolvedBadgeText}
+            </p>
           )}
         </div>
+      </div>
 
-        <div className="shrink-0 self-end sm:self-center">
+      {previewSlot}
+
+      {errorMsg && (
+        <p role="alert" className="mt-3 text-xs font-medium text-[#B91C1C]">
+          {errorMsg}
+        </p>
+      )}
+
+      {!hideCta && (
+        <div className="mt-5">
           {user ? (
             isJoined ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
-                <Check className="h-3 w-3" />
-                Terdaftar Early Access
-              </span>
+              <div className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-50 px-6 py-2.5 text-sm font-semibold text-emerald-900">
+                <Check className="h-4 w-4" />
+                <span>{t("comingSoon.joined")}</span>
+              </div>
             ) : (
               <button
                 type="button"
                 onClick={handleJoin}
                 disabled={isSubmitting}
-                className="text-xs font-medium text-[#1B4332] underline hover:text-[#143326] disabled:opacity-50"
+                className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1B4332] px-6 py-2.5 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50"
               >
-                {isSubmitting ? "Mendaftar..." : "Daftar Early Access"}
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                <span>
+                  {isSubmitting ? t("comingSoon.joining") : t("comingSoon.joinBtn")}
+                </span>
               </button>
             )
           ) : (
             <Link
-              href="/register"
+              href="/login"
               onClick={handleRegisterClick}
-              className="text-xs font-medium text-[#1B4332] underline hover:text-[#143326]"
+              className="flex min-h-11 w-full items-center justify-center rounded-full bg-[#1B4332] px-6 py-2.5 text-sm font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
             >
-              Daftar Akun
+              {t("comingSoon.loginBtn")}
             </Link>
           )}
         </div>
-      </div>
-      {errorMsg && <p className="mt-1 text-xs text-red-600">{errorMsg}</p>}
+      )}
     </div>
   )
 }

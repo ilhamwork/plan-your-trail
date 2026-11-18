@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "@/lib/auth/client"
-import { saveRouteAction } from "@/app/actions/routes"
+import { saveRouteAction, deleteRouteAction } from "@/app/actions/routes"
 import { trackEvent } from "@/lib/analytics/events"
 import type { Waypoint } from "@/lib/types"
+import { useI18n } from "@/lib/i18n/context"
 
 export const PENDING_ROUTE_KEY = "pyt_pending_route"
 
@@ -78,6 +79,7 @@ export function clearPendingRoute(): void {
 
 export function usePendingRouteSave() {
   const { data: sessionData } = useSession()
+  const { t } = useI18n()
   const user = sessionData?.user
 
   const [isSaving, setIsSaving] = useState(false)
@@ -105,7 +107,7 @@ export function usePendingRouteSave() {
       setIsSaving(true)
       try {
         const res = await saveRouteAction({
-          name: pending!.raceName || pending!.fileName || "Rute Saya",
+          name: pending!.raceName || pending!.fileName || t("pendingSave.defaultRouteName"),
           gpxContent: pending!.gpxContent,
           raceDate: pending!.raceDate,
           runnerName: pending!.runnerName,
@@ -114,7 +116,7 @@ export function usePendingRouteSave() {
 
         if (res.ok) {
           setSavedRouteId(res.data.routeId)
-          setSaveMessage("Rute dari sesi sebelumnya berhasil disimpan ke akun Anda!")
+          setSaveMessage(t("pendingSave.autoSaveSuccess"))
           clearPendingRoute()
           trackEvent("route_saved", {
             source: "anonymous_conversion",
@@ -124,14 +126,14 @@ export function usePendingRouteSave() {
           setSaveError(res.error.message)
         }
       } catch (err) {
-        setSaveError(err instanceof Error ? err.message : "Gagal menyimpan rute.")
+        setSaveError(err instanceof Error ? err.message : t("pendingSave.saveError"))
       } finally {
         setIsSaving(false)
       }
     }
 
     autoSave()
-  }, [user])
+  }, [user, t])
 
   // Explicit manual save handler
   const saveRoute = useCallback(
@@ -149,7 +151,7 @@ export function usePendingRouteSave() {
       setSaveError(null)
       try {
         const res = await saveRouteAction({
-          name: data.raceName || data.fileName || "Rute Saya",
+          name: data.raceName || data.fileName || t("pendingSave.defaultRouteName"),
           gpxContent: data.gpxContent,
           raceDate: data.raceDate,
           runnerName: data.runnerName,
@@ -158,7 +160,7 @@ export function usePendingRouteSave() {
 
         if (res.ok) {
           setSavedRouteId(res.data.routeId)
-          setSaveMessage("Rute berhasil disimpan!")
+          setSaveMessage(t("pendingSave.saveSuccess"))
           clearPendingRoute()
           trackEvent("route_saved", {
             source: "user_action",
@@ -170,15 +172,41 @@ export function usePendingRouteSave() {
           return { ok: false, error: res.error.message }
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Gagal menyimpan rute."
+        const msg = err instanceof Error ? err.message : t("pendingSave.saveError")
         setSaveError(msg)
         return { ok: false, error: msg }
       } finally {
         setIsSaving(false)
       }
     },
-    [user]
+    [user, t]
   )
+
+  const unsaveRoute = useCallback(async () => {
+    if (!user || !savedRouteId) {
+      return { ok: false, error: t("pendingSave.notSavedError") }
+    }
+
+    setIsSaving(true)
+    setSaveError(null)
+    try {
+      const res = await deleteRouteAction({ routeId: savedRouteId })
+      if (res.ok) {
+        setSavedRouteId(null)
+        setSaveMessage(t("pendingSave.deleteSuccess"))
+        return { ok: true }
+      } else {
+        setSaveError(res.error.message)
+        return { ok: false, error: res.error.message }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : t("pendingSave.deleteError")
+      setSaveError(msg)
+      return { ok: false, error: msg }
+    } finally {
+      setIsSaving(false)
+    }
+  }, [user, savedRouteId, t])
 
   return {
     isSaving,
@@ -188,5 +216,6 @@ export function usePendingRouteSave() {
     setSaveError,
     setSaveMessage,
     saveRoute,
+    unsaveRoute,
   }
 }
