@@ -27,7 +27,7 @@ export function Header() {
         transition={{ duration: 0.4 }}
         className="sticky top-0 z-1001 border-b border-[#1B4332]/10 bg-[#1B4332] shadow-md"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/text-logo-white.png"
@@ -56,26 +56,36 @@ export function Header() {
             {/* Desktop navigation (hidden on mobile where bottom navbar is used) */}
             <div className="hidden sm:flex sm:items-center">
               {isPending ? (
-                <div className="h-8 w-20 animate-pulse rounded-lg bg-white/10" />
+                <div className="h-8 w-28 animate-pulse rounded-lg bg-white/10" />
               ) : user ? (
-                <div className="flex items-center gap-2 sm:gap-3">
+                <nav aria-label="Primary navigation" className="flex items-center gap-2">
                   <Link
                     href="/routes"
                     data-tour="nav-routes"
-                    className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                      pathname.startsWith("/routes")
+                        ? "bg-white/20 text-white shadow-2xs"
+                        : "bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
+                    }`}
                     title={t("nav.myRoutes")}
                   >
-                    <Map className="h-3.5 w-3.5" />
+                    <Map className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="hidden md:inline">{t("nav.myRoutes")}</span>
                   </Link>
                   <Link
                     href="/account"
-                    className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                      pathname.startsWith("/account")
+                        ? "bg-white/20 text-white shadow-2xs"
+                        : "bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
+                    }`}
                     title={t("nav.manageAccount")}
                   >
-                    <User className="h-3.5 w-3.5" />
+                    <User className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="hidden md:inline">{t("nav.profile")}</span>
                   </Link>
-                  <SignOutButton className="rounded-lg bg-red-500/20 px-2.5 py-1.5 text-xs font-medium text-red-200 transition hover:bg-red-500/30" />
-                </div>
+                  <SignOutButton className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition hover:bg-red-500/25 hover:text-white" />
+                </nav>
               ) : (
                 <div data-tour="header-auth" className="flex items-center gap-2">
                   <Link
