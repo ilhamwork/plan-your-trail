@@ -187,6 +187,13 @@ const enMessages: TranslationSchema = {
     lossLabel: "Loss (D-)",
     avgGradientLabel: "Average Gradient",
     elevChangeLabel: "Elevation Change",
+    emptyWaypointsTitle: "No checkpoints yet",
+    emptyWaypointsDescLoggedIn:
+      "Add checkpoints or aid stations in Waypoint Management to see segment breakdowns between stops.",
+    emptyWaypointsDescGuest:
+      "Log in to add custom checkpoints and view segment breakdowns between stops.",
+    emptyWaypointsAddCta: "Add in Waypoint Management",
+    emptyWaypointsLoginCta: "Log in to Add Checkpoints",
   },
   gradientDist: {
     title: "Route Gradient Distribution",
@@ -404,7 +411,7 @@ const enMessages: TranslationSchema = {
     wind: "Wind",
     rain: "Rain Chance",
     lockedTitle: "Unlock Full Weather Forecast",
-    lockedDesc: "Sign up for a free account to view temperatures, rainfall chance, and wind speeds along the trail.",
+    lockedDesc: "Sign up to view temperatures, rainfall chance, and wind speeds along the trail.",
     lockedBtn: "Sign Up for Weather",
   },
   pace: {
@@ -415,13 +422,13 @@ const enMessages: TranslationSchema = {
     finishTime: "Estimated Finish Time",
     paceHelper: "Automatically adjusted for trail elevation gain.",
     lockedCutoffTitle: "Calculate Race Finish Estimate",
-    lockedCutoffDesc: "Sign up for a free account to unlock finish time estimation and race cutoff simulation.",
-    lockedBtn: "Create Free Account",
+    lockedCutoffDesc: "Sign up to unlock finish time estimation and race cutoff simulation.",
+    lockedBtn: "Create Account",
     exampleDuration: "08h 05m",
   },
   gating: {
     promptTitle: "Get deeper analysis with an account",
-    promptDesc: "Save this route, view session weather, and track finish pace for free.",
+    promptDesc: "Save this route, view session weather, and track finish pace.",
     registerBtn: "Sign Up Now",
     defaultCta: "Sign Up",
     dismissAria: "Dismiss message",
@@ -677,6 +684,72 @@ const enMessages: TranslationSchema = {
     weatherFetchFailed: "Failed to load weather forecast. Please try again.",
     analysisInputInvalid: "Invalid route analysis input.",
     analysisDbError: "Failed to save route analysis metrics.",
+  },
+  tour: {
+    triggerButton: "Guide",
+    triggerAria: "Open interactive guide",
+    badgeGuest: "Guest Guide",
+    badgeRegistered: "Member Guide",
+    stepCounter: "Step {current} of {total}",
+    prev: "Previous",
+    next: "Next",
+    finish: "Done",
+    skip: "Skip",
+    closeAria: "Close guide",
+    shared: {
+      upload: {
+        title: "Start Analyzing Your GPX Route",
+        desc: "Upload your .gpx file or click \"Try Sample Route\" to start analyzing your trail route right away.",
+      },
+      map: {
+        title: "Interactive Map & Elevation Profile",
+        desc: "Hover along the elevation chart to sync with the map. You can also toggle 3D terrain, satellite imagery, or save & share the route.",
+      },
+      segments: {
+        title: "Segment & Checkpoint Breakdown",
+        desc: "Inspect climb, descent, flat segments, and the Checkpoint tab. Click any segment to highlight it on the map and chart.",
+      },
+    },
+    guest: {
+      empty: {
+        auth: {
+          title: "Sign Up for Full Access",
+          desc: "As a guest, you can inspect maps, elevation, and segments. Sign up to save routes (up to 3), manage waypoints, estimate pace, and check weather.",
+        },
+      },
+      analysis: {
+        gradient: {
+          title: "Gradient Distribution",
+          desc: "See how steep the route is overall so you can plan your effort and gear before race day.",
+        },
+        locked: {
+          title: "Free Account Features",
+          desc: "Pace Estimator, Waypoint Management, Weather Forecast, and Saving Routes unlock once you log in or sign up.",
+        },
+      },
+    },
+    registered: {
+      empty: {
+        routes: {
+          title: "Access Saved Routes",
+          desc: "Save up to 3 routes and reopen them anytime from My Routes on any device.",
+        },
+      },
+      analysis: {
+        waypoints: {
+          title: "Manage Route Waypoints",
+          desc: "Add, edit, or remove checkpoints, water stations, or summits directly along your GPX track.",
+        },
+        pace: {
+          title: "Pace & Finish Time Estimator",
+          desc: "Enter your target running pace to estimate your total finish time for this route.",
+        },
+        weather: {
+          title: "Route Weather Forecast",
+          desc: "Check per-session weather conditions (morning, afternoon, evening, night) for your race or training date.",
+        },
+      },
+    },
   },
 }
 

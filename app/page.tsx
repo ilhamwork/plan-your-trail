@@ -20,6 +20,8 @@ import { useRunnerSession } from "@/components/trail/hooks/useRunnerSession"
 import { useRouteUpload } from "@/components/trail/hooks/useRouteUpload"
 import { usePendingRouteSave } from "@/components/trail/hooks/usePendingRouteSave"
 import { useSegmentNavigation } from "@/components/trail/hooks/useSegmentNavigation"
+import { useGuidedTour } from "@/components/trail/hooks/useGuidedTour"
+import { GuidedTour } from "@/components/trail/GuidedTour"
 import Link from "next/link"
 import { useI18n } from "@/lib/i18n/context"
 import { useEntitlements } from "@/lib/entitlements"
@@ -203,6 +205,16 @@ export default function Home() {
     setTempGpxForWaypoints(gpxData)
   }
 
+  const tour = useGuidedTour({
+    audience: user ? "registered" : "guest",
+    phase: gpxData ? "analysis" : "empty",
+    enabled:
+      !authLoading &&
+      !showSessionModal &&
+      !showDetailsModal &&
+      !showShareModal,
+  })
+
   const handleShare = useCallback(() => {
     setShowShareModal(true)
   }, [])
@@ -233,17 +245,15 @@ export default function Home() {
 
   const hasWaypointSegments = mergedWaypointSegments.length > 0
   const effectiveSegmentTab: SegmentTabType =
-    segmentTab === "waypoints" && !hasWaypointSegments
-      ? "gradient"
-      : (segmentTab ?? (hasWaypointSegments ? "waypoints" : "gradient"))
+    segmentTab ?? (hasWaypointSegments ? "waypoints" : "gradient")
 
   // Determine current active segments list based on the selected SegmentList tab
   const activeSegmentsList = useMemo(() => {
-    if (effectiveSegmentTab === "waypoints" && hasWaypointSegments) {
+    if (effectiveSegmentTab === "waypoints") {
       return mergedWaypointSegments
     }
     return gpxData?.segments || []
-  }, [effectiveSegmentTab, hasWaypointSegments, mergedWaypointSegments, gpxData?.segments])
+  }, [effectiveSegmentTab, mergedWaypointSegments, gpxData?.segments])
 
   const {
     hasPrevSegment,
@@ -299,24 +309,26 @@ export default function Home() {
             >
               {/* 1. Hero Stage: Route Map + Elevation Chart (No margin, no padding, no card) */}
               {mapProps && (
-                <MapView
-                  {...mapProps}
-                  hoveredPoint={hoveredPoint}
-                  highlightRange={highlightRange}
-                  onHover={setHoveredPoint}
-                  onClearHighlight={clearHighlight}
-                  onPrevSegment={handlePrevSegment}
-                  onNextSegment={handleNextSegment}
-                  hasPrevSegment={hasPrevSegment}
-                  hasNextSegment={hasNextSegment}
-                  currentSegmentLabel={currentSegmentLabel}
-                  onShare={handleShare}
-                  onSave={handleSaveRoute}
-                  isSaving={isSaving}
-                  isSaved={!!savedRouteId}
-                  saveError={saveError}
-                  onDismissSaveError={() => setSaveError(null)}
-                />
+                <div data-tour="map-view">
+                  <MapView
+                    {...mapProps}
+                    hoveredPoint={hoveredPoint}
+                    highlightRange={highlightRange}
+                    onHover={setHoveredPoint}
+                    onClearHighlight={clearHighlight}
+                    onPrevSegment={handlePrevSegment}
+                    onNextSegment={handleNextSegment}
+                    hasPrevSegment={hasPrevSegment}
+                    hasNextSegment={hasNextSegment}
+                    currentSegmentLabel={currentSegmentLabel}
+                    onShare={handleShare}
+                    onSave={handleSaveRoute}
+                    isSaving={isSaving}
+                    isSaved={!!savedRouteId}
+                    saveError={saveError}
+                    onDismissSaveError={() => setSaveError(null)}
+                  />
+                </div>
               )}
 
               {/* 2. Flat Editorial Sections below Map & Elevation */}
@@ -366,7 +378,11 @@ export default function Home() {
 
                 {/* Waypoint Management when logged in - placed right before Segment Breakdown */}
                 {user && (
-                  <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
+                  <div
+                    id="waypoint-management"
+                    data-tour="waypoint-panel"
+                    className="border-t border-[#D1D5DB] py-6 sm:py-8"
+                  >
                     <WaypointPanel
                       totalDistanceKm={gpxData.stats.totalDistance / 1000}
                       waypoints={waypoints}
@@ -380,7 +396,10 @@ export default function Home() {
                 )}
 
                 {/* 3. Segment Breakdown */}
-                <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
+                <div
+                  data-tour="segment-list"
+                  className="border-t border-[#D1D5DB] py-6 sm:py-8"
+                >
                   <SegmentList
                     key={fileName}
                     segments={gpxData.segments}
@@ -394,12 +413,18 @@ export default function Home() {
                 </div>
 
                 {/* 5. Gradient Distribution */}
-                <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
+                <div
+                  data-tour="gradient-distribution"
+                  className="border-t border-[#D1D5DB] py-6 sm:py-8"
+                >
                   <GradientDistribution points={gpxData.trackPoints} />
                 </div>
 
                 {/* 6. Account Features Group (Pace, Waypoints when locked, Weather) — 1 unified section with 1 CTA when locked */}
-                <div className="flex flex-col gap-5 border-t border-[#D1D5DB] py-6 sm:py-8">
+                <div
+                  data-tour={!user ? "guest-locked-features" : undefined}
+                  className="flex flex-col gap-5 border-t border-[#D1D5DB] py-6 sm:py-8"
+                >
                   {!authLoading && !user && (
                     <div className="mb-1">
                       <h2 className="text-lg font-bold tracking-tight text-[#111827]">
@@ -411,7 +436,9 @@ export default function Home() {
                     </div>
                   )}
 
-                  <PaceEstimator stats={gpxData.stats} />
+                  <div data-tour={user ? "pace-estimator" : undefined}>
+                    <PaceEstimator stats={gpxData.stats} />
+                  </div>
 
                   {/* Waypoint Management when anonymous (stays in locked group with login CTA) */}
                   {!user && (
@@ -426,10 +453,12 @@ export default function Home() {
                     />
                   )}
 
-                  <WeatherForecast
-                    center={gpxData.center}
-                    initialDate={routeDetails.raceDate}
-                  />
+                  <div data-tour={user ? "weather-forecast" : undefined}>
+                    <WeatherForecast
+                      center={gpxData.center}
+                      initialDate={routeDetails.raceDate}
+                    />
+                  </div>
 
                   {!authLoading && !user && (
                     <div className="pt-2 text-center">
@@ -491,6 +520,17 @@ export default function Home() {
           raceName={routeDetails.raceName}
           userName={sessionRunnerName}
           raceDate={routeDetails.raceDate}
+        />
+
+        <GuidedTour
+          isOpen={tour.isOpen}
+          audience={tour.audience}
+          stepIndex={tour.stepIndex}
+          totalSteps={tour.steps.length}
+          currentStep={tour.currentStep}
+          onNext={tour.nextStep}
+          onPrev={tour.prevStep}
+          onClose={tour.closeTour}
         />
       </main>
     </div>

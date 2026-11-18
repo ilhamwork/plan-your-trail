@@ -47,6 +47,7 @@ export function MobileBottomNav() {
 
         <Link
           href="/routes"
+          data-tour="mobile-nav-routes"
           aria-current={isRoutesActive ? "page" : undefined}
           className={`flex min-h-12 min-w-16 flex-col items-center justify-center gap-1 rounded-xl px-3 py-1 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
             isRoutesActive
@@ -80,6 +81,7 @@ export function MobileBottomNav() {
         ) : (
           <Link
             href="/login"
+            data-tour="mobile-nav-auth"
             aria-current={isAuthActive ? "page" : undefined}
             className={`flex min-h-12 min-w-16 flex-col items-center justify-center gap-1 rounded-xl px-3 py-1 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
               isAuthActive

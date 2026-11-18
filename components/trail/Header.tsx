@@ -3,17 +3,21 @@
 import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { Map, User, LogIn, UserPlus } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { Map, User, LogIn, UserPlus, HelpCircle } from "lucide-react"
 import { MobileBottomNav } from "@/components/trail/MobileBottomNav"
 import { useSession } from "@/lib/auth/client"
 import { SignOutButton } from "@/components/auth/SignOutButton"
 import { LanguageSwitcher } from "@/components/trail/LanguageSwitcher"
 import { useI18n } from "@/lib/i18n/context"
+import { dispatchStartTourEvent } from "@/components/trail/hooks/useGuidedTour"
 
 export function Header() {
   const { data: sessionData, isPending } = useSession()
   const { t } = useI18n()
+  const pathname = usePathname()
   const user = sessionData?.user
+  const isHome = pathname === "/"
 
   return (
     <>
@@ -35,6 +39,18 @@ export function Header() {
           </Link>
 
           <div className="flex items-center gap-2.5 sm:gap-3">
+            {isHome && (
+              <button
+                type="button"
+                onClick={dispatchStartTourEvent}
+                aria-label={t("tour.triggerAria")}
+                title={t("tour.triggerButton")}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-medium text-white/90 transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="hidden sm:inline">{t("tour.triggerButton")}</span>
+              </button>
+            )}
             <LanguageSwitcher />
 
             {/* Desktop navigation (hidden on mobile where bottom navbar is used) */}
@@ -45,6 +61,7 @@ export function Header() {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <Link
                     href="/routes"
+                    data-tour="nav-routes"
                     className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
                     title={t("nav.myRoutes")}
                   >
@@ -60,7 +77,7 @@ export function Header() {
                   <SignOutButton className="rounded-lg bg-red-500/20 px-2.5 py-1.5 text-xs font-medium text-red-200 transition hover:bg-red-500/30" />
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div data-tour="header-auth" className="flex items-center gap-2">
                   <Link
                     href="/login"
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/90 transition hover:bg-white/10"

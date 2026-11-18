@@ -185,6 +185,13 @@ const idMessages = {
     lossLabel: "Turun (D-)",
     avgGradientLabel: "Rata-rata Gradien",
     elevChangeLabel: "Selisih Elevasi",
+    emptyWaypointsTitle: "Belum ada pos checkpoint",
+    emptyWaypointsDescLoggedIn:
+      "Tambahkan pos checkpoint atau aid station di Waypoint Management untuk melihat analisis segmen antar pos.",
+    emptyWaypointsDescGuest:
+      "Masuk ke akun Anda untuk menambahkan pos checkpoint kustom dan melihat analisis segmen antar pos.",
+    emptyWaypointsAddCta: "Tambah di Waypoint Management",
+    emptyWaypointsLoginCta: "Masuk untuk Tambah Checkpoint",
   },
   gradientDist: {
     title: "Sebaran Kemiringan Rute",
@@ -402,7 +409,7 @@ const idMessages = {
     wind: "Angin",
     rain: "Peluang Hujan",
     lockedTitle: "Buka Prakiraan Cuaca Lengkap",
-    lockedDesc: "Daftar akun gratis untuk melihat prakiraan suhu, curah hujan, dan kecepatan angin di sepanjang lintasan.",
+    lockedDesc: "Daftar akun untuk melihat prakiraan suhu, curah hujan, dan kecepatan angin di sepanjang lintasan.",
     lockedBtn: "Daftar untuk Lihat Cuaca",
   },
   pace: {
@@ -413,13 +420,13 @@ const idMessages = {
     finishTime: "Perkiraan Waktu Finish",
     paceHelper: "Otomatis dihitung bareng elevasi rute.",
     lockedCutoffTitle: "Hitung Estimasi Finish Race",
-    lockedCutoffDesc: "Daftar akun gratis untuk menggunakan kalkulator estimasi finish race dan simulasi batas waktu (cutoff).",
-    lockedBtn: "Daftar Akun Gratis",
+    lockedCutoffDesc: "Daftar akun untuk menggunakan kalkulator estimasi finish race dan simulasi batas waktu (cutoff).",
+    lockedBtn: "Daftar Akun",
     exampleDuration: "08j 05m",
   },
   gating: {
     promptTitle: "Dapatkan analisis lebih lengkap dengan akun",
-    promptDesc: "Simpan rute ini, buka prakiraan cuaca, dan pantau estimasi waktu tempuh secara gratis.",
+    promptDesc: "Simpan rute ini, buka prakiraan cuaca, dan pantau estimasi waktu tempuh.",
     registerBtn: "Daftar Sekarang",
     defaultCta: "Daftar",
     dismissAria: "Tutup pesan",
@@ -480,7 +487,7 @@ const idMessages = {
     loginTitle: "Masuk ke Akun Kamu",
     loginSubtitle: "Yuk, akses rute tersimpan dan analisis cuaca trek kamu.",
     registerTitle: "Daftar Akun",
-    registerSubtitle: "Bikin akun gratis buat simpan rute, cek cuaca per sesi, dan hitung estimasi pace.",
+    registerSubtitle: "Bikin akun buat simpan rute, cek cuaca per sesi, dan hitung estimasi pace.",
     forgotTitle: "Lupa Kata Sandi?",
     forgotHeading: "Lupa Kata Sandi",
     forgotSubtitle: "Tenang, masukkan email kamu buat terima tautan atur ulang kata sandi.",
@@ -556,7 +563,7 @@ const idMessages = {
     planLabel: "Paket Kamu Saat Ini",
     planBadgeFree: "Paket Free",
     planBadgePro: "Paket Pro",
-    planFree: "Free (Akun Gratis)",
+    planFree: "Free",
     planPro: "Pro",
     uploadLimitLabel: "Batas upload GPX",
     routesCapacityLabel: "Kapasitas rute",
@@ -675,6 +682,72 @@ const idMessages = {
     weatherFetchFailed: "Gagal memuat prakiraan cuaca. Silakan coba lagi.",
     analysisInputInvalid: "Input analisis rute tidak valid.",
     analysisDbError: "Gagal menyimpan metrik analisis rute.",
+  },
+  tour: {
+    triggerButton: "Panduan",
+    triggerAria: "Buka panduan interaktif",
+    badgeGuest: "Panduan Tamu",
+    badgeRegistered: "Panduan Akun Terdaftar",
+    stepCounter: "Langkah {current} dari {total}",
+    prev: "Sebelumnya",
+    next: "Berikutnya",
+    finish: "Selesai",
+    skip: "Lewati",
+    closeAria: "Tutup panduan",
+    shared: {
+      upload: {
+        title: "Mulai Analisis Rute GPX",
+        desc: "Unggah file .gpx kamu atau klik \"Coba Rute Contoh\" untuk langsung menganalisis rute trail running.",
+      },
+      map: {
+        title: "Peta Interaktif & Profil Elevasi",
+        desc: "Geser kursor di grafik elevasi untuk melihat titik lokasi di peta. Kamu juga bisa beralih ke mode 3D, tampilan satelit, atau simpan & bagikan rute.",
+      },
+      segments: {
+        title: "Breakdown Segmen & Checkpoint",
+        desc: "Lihat rincian segmen tanjakan, turunan, datar, serta tab Checkpoint. Klik segmen mana saja untuk menyorotnya di peta dan grafik.",
+      },
+    },
+    guest: {
+      empty: {
+        auth: {
+          title: "Daftar untuk Fitur Lengkap",
+          desc: "Sebagai tamu, kamu bisa melihat peta, elevasi, dan segmen. Daftar untuk menyimpan rute (maks 3), kelola waypoint, estimasi pace, dan cek cuaca.",
+        },
+      },
+      analysis: {
+        gradient: {
+          title: "Distribusi Gradien",
+          desc: "Pantau sebaran kemiringan rute dari datar hingga curam untuk membantu persiapan fisik dan strategi lomba.",
+        },
+        locked: {
+          title: "Fitur Khusus Akun Gratis",
+          desc: "Estimasi Pace, Kelola Waypoint, Prakiraan Cuaca, dan Simpan Rute terbuka setelah kamu masuk atau mendaftar akun.",
+        },
+      },
+    },
+    registered: {
+      empty: {
+        routes: {
+          title: "Akses Rute Tersimpan",
+          desc: "Simpan hingga 3 rute favorit dan akses kembali dari menu Rute Saya di perangkat mana pun.",
+        },
+      },
+      analysis: {
+        waypoints: {
+          title: "Kelola Waypoint Rute",
+          desc: "Tambahkan, ubah, atau hapus titik checkpoint, water station, atau puncak langsung di atas rute GPX kamu.",
+        },
+        pace: {
+          title: "Estimasi Pace & Waktu Finish",
+          desc: "Masukkan target pace lari kamu untuk menghitung perkiraan total waktu tempuh di rute ini.",
+        },
+        weather: {
+          title: "Prakiraan Cuaca Lokasi Rute",
+          desc: "Cek prakiraan cuaca per sesi (pagi, siang, sore, malam) sesuai tanggal lomba atau jadwal latihanmu.",
+        },
+      },
+    },
   },
 } as const
 
