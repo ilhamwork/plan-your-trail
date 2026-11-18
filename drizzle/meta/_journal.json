@@ -22,6 +22,13 @@
       "when": 1793678935380,
       "tag": "0002_add_user_name_to_saved_route_and_route_analysis",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795000000000,
+      "tag": "0003_add_guided_tour_flags_to_profile",
+      "breakpoints": true
     }
   ]
 }

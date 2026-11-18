@@ -1,11 +1,13 @@
 "use client"
 
 import { memo, useState } from "react"
+import Link from "next/link"
 import type { Segment, SegmentType, WaypointSegment, HighlightRange } from "@/lib/types"
-import { ChevronRight, ChevronDown, Info } from "lucide-react"
+import { ChevronRight, ChevronDown, Info, MapPin, LogIn } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { formatKmLabel } from "@/lib/format"
 import { useI18n } from "@/lib/i18n/context"
+import { useEntitlements } from "@/lib/entitlements"
 import { SEGMENT_PILL_CLASSES } from "@/lib/terrain-colors"
 
 export type SegmentTabType = "waypoints" | "gradient"
@@ -30,13 +32,12 @@ export const SegmentList = memo(function SegmentList({
   onTabChange,
 }: SegmentListProps) {
   const { t } = useI18n()
+  const { user } = useEntitlements()
   const hasWaypoints = waypointSegments.length > 0
   const [selectedTab, setTab] = useState<SegmentTabType | null>(null)
   const rawTab = activeTab ?? selectedTab
   const tab: SegmentTabType =
-    rawTab === "waypoints" && !hasWaypoints
-      ? "gradient"
-      : (rawTab ?? (hasWaypoints ? "waypoints" : "gradient"))
+    rawTab ?? (hasWaypoints ? "waypoints" : "gradient")
 
   const [localExpandedId, setLocalExpandedId] = useState<number | null>(null)
   const [showGradeGuide, setShowGradeGuide] = useState(false)
@@ -122,58 +123,57 @@ export const SegmentList = memo(function SegmentList({
         </div>
 
         {/* Mode Switcher (AllTrails-style rounded pills) */}
-        {hasWaypoints && (
-          <div
-            role="tablist"
-            aria-label={t("segments.modeAria")}
-            className="w-full inline-flex rounded-full border border-[#E5E7EB] bg-[#F3F4F6] p-1"
+        <div
+          role="tablist"
+          aria-label={t("segments.modeAria")}
+          className="w-full inline-flex rounded-full border border-[#E5E7EB] bg-[#F3F4F6] p-1"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "waypoints"}
+            onClick={() => {
+              if (tab !== "waypoints") {
+                if (activeTab === undefined) setTab("waypoints")
+                setLocalExpandedId(null)
+                onTabChange?.("waypoints")
+              }
+            }}
+            className={`min-h-8 w-full cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
+              tab === "waypoints"
+                ? "bg-[#1B4332] text-[#FAF6F1] shadow-xs"
+                : "text-[#4B5563] hover:text-[#111827]"
+            }`}
           >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "waypoints"}
-              onClick={() => {
-                if (tab !== "waypoints") {
-                  if (activeTab === undefined) setTab("waypoints")
-                  setLocalExpandedId(null)
-                  onTabChange?.("waypoints")
-                }
-              }}
-              className={`min-h-8 w-full cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
-                tab === "waypoints"
-                  ? "bg-[#1B4332] text-[#FAF6F1] shadow-xs"
-                  : "text-[#4B5563] hover:text-[#111827]"
-              }`}
-            >
-              {t("segments.tabWaypoints")}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "gradient"}
-              onClick={() => {
-                if (tab !== "gradient") {
-                  if (activeTab === undefined) setTab("gradient")
-                  setLocalExpandedId(null)
-                  onTabChange?.("gradient")
-                }
-              }}
-              className={`min-h-8 w-full cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
-                tab === "gradient"
-                  ? "bg-[#1B4332] text-[#FAF6F1] shadow-xs"
-                  : "text-[#4B5563] hover:text-[#111827]"
-              }`}
-            >
-              {t("segments.tabGradient")}
-            </button>
-          </div>
-        )}
+            {t("segments.tabWaypoints")}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "gradient"}
+            onClick={() => {
+              if (tab !== "gradient") {
+                if (activeTab === undefined) setTab("gradient")
+                setLocalExpandedId(null)
+                onTabChange?.("gradient")
+              }
+            }}
+            className={`min-h-8 w-full cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] ${
+              tab === "gradient"
+                ? "bg-[#1B4332] text-[#FAF6F1] shadow-xs"
+                : "text-[#4B5563] hover:text-[#111827]"
+            }`}
+          >
+            {t("segments.tabGradient")}
+          </button>
+        </div>
       </div>
 
       {/* Single-row segment list (flat without card box) */}
       <div className="mt-3 divide-y divide-[#E5E7EB]">
-        {tab === "waypoints"
-          ? waypointSegments.map((seg) => (
+        {tab === "waypoints" ? (
+          hasWaypoints ? (
+            waypointSegments.map((seg) => (
               <WaypointSegmentRow
                 key={seg.id}
                 segment={seg}
@@ -184,17 +184,56 @@ export const SegmentList = memo(function SegmentList({
                 onClick={() => onWaypointSegmentClick?.(seg)}
               />
             ))
-          : segments.map((seg) => (
-              <GradientSegmentRow
-                key={seg.id}
-                segment={seg}
-                expanded={expandedId === seg.id}
-                onToggle={() =>
-                  setLocalExpandedId(expandedId === seg.id ? null : seg.id)
-                }
-                onClick={() => onSegmentClick?.(seg)}
-              />
-            ))}
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#D1D5DB] bg-[#FAF6F1]/50 px-5 py-8 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1B4332]/10 text-[#1B4332]">
+                <MapPin className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <p className="mt-3 text-sm font-semibold text-[#111827]">
+                {t("segments.emptyWaypointsTitle")}
+              </p>
+              <p className="mt-1 max-w-md text-xs leading-relaxed text-[#4B5563]">
+                {user
+                  ? t("segments.emptyWaypointsDescLoggedIn")
+                  : t("segments.emptyWaypointsDescGuest")}
+              </p>
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    document
+                      .getElementById("waypoint-management")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
+                  className="mt-4 inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#1B4332] px-4 py-2 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                >
+                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t("segments.emptyWaypointsAddCta")}</span>
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#1B4332] px-4 py-2 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#143326] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                >
+                  <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t("segments.emptyWaypointsLoginCta")}</span>
+                </Link>
+              )}
+            </div>
+          )
+        ) : (
+          segments.map((seg) => (
+            <GradientSegmentRow
+              key={seg.id}
+              segment={seg}
+              expanded={expandedId === seg.id}
+              onToggle={() =>
+                setLocalExpandedId(expandedId === seg.id ? null : seg.id)
+              }
+              onClick={() => onSegmentClick?.(seg)}
+            />
+          ))
+        )}
       </div>
     </section>
   )

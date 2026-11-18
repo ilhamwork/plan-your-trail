@@ -92,6 +92,8 @@ export const profile = pgTable("profile", {
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
   plan: text("plan").notNull().default("free"), // 'free' | 'pro'
+  tourEmptyDone: boolean("tour_empty_done").notNull().default(false),
+  tourAnalysisDone: boolean("tour_analysis_done").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -207,17 +207,15 @@ export function RouteDetailView({
 
   const hasWaypointSegments = mergedWaypointSegments.length > 0
   const effectiveSegmentTab: SegmentTabType =
-    segmentTab === "waypoints" && !hasWaypointSegments
-      ? "gradient"
-      : (segmentTab ?? (hasWaypointSegments ? "waypoints" : "gradient"))
+    segmentTab ?? (hasWaypointSegments ? "waypoints" : "gradient")
 
   // Determine current active segments list based on the selected SegmentList tab
   const activeSegmentsList = useMemo(() => {
-    if (effectiveSegmentTab === "waypoints" && hasWaypointSegments) {
+    if (effectiveSegmentTab === "waypoints") {
       return mergedWaypointSegments
     }
     return gpxData.segments || []
-  }, [effectiveSegmentTab, hasWaypointSegments, mergedWaypointSegments, gpxData.segments])
+  }, [effectiveSegmentTab, mergedWaypointSegments, gpxData.segments])
 
   const {
     hasPrevSegment,
@@ -400,7 +398,7 @@ export function RouteDetailView({
         </div>
 
         {/* 3. Waypoint Management (placed right before Segment Breakdown) */}
-        <div className="border-t border-[#D1D5DB] py-6 sm:py-8">
+        <div id="waypoint-management" className="border-t border-[#D1D5DB] py-6 sm:py-8">
           <WaypointPanel
             totalDistanceKm={gpxData.stats.totalDistance / 1000}
             waypoints={waypoints}

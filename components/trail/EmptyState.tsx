@@ -92,14 +92,16 @@ export function EmptyState({
       </motion.div>
 
       {/* Primary CTA: GPX Upload Zone */}
-      <UploadCard
-        onFileLoaded={onFileLoaded}
-        onError={onError}
-        fileName={fileName}
-        error={error}
-        isLoading={isLoading}
-        disabled={uploadDisabled}
-      />
+      <div data-tour="upload-card">
+        <UploadCard
+          onFileLoaded={onFileLoaded}
+          onError={onError}
+          fileName={fileName}
+          error={error}
+          isLoading={isLoading}
+          disabled={uploadDisabled}
+        />
+      </div>
 
       {/* Trust Hint */}
       <div className="mt-4 flex flex-col items-center text-center">
