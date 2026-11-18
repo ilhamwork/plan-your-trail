@@ -139,7 +139,7 @@ export function useMaplibreMap({
             source: "route",
             layout: { "line-join": "round", "line-cap": "round" },
             paint: {
-              "line-color": "#E76F51",
+              "line-color": "#1B4332",
               "line-width": 4,
               "line-opacity": 0.85,
             },
