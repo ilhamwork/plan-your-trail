@@ -102,8 +102,36 @@ export function RoutesListClient({
 
   return (
     <div>
+      {/* Desktop Editorial Page Header + Quota + Upload CTA (desktop only, mobile keeps original below-search row) */}
+      <div className="mb-6 hidden lg:flex lg:items-end lg:justify-between">
+        <div>
+          <h1 className="heading-1 text-3xl font-bold tracking-tight text-[#111827]">
+            {t("routes.title")}
+          </h1>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-[#4B5563]">
+            <span className="font-semibold text-[#111827]">
+              {maxRoutes !== null
+                ? t("routes.quotaCount", { active: activeCount, max: maxRoutes })
+                : t("routes.quotaCountUnlimited", { active: activeCount })}
+            </span>
+            <span className="text-[#9CA3AF]">·</span>
+            <span className="rounded-full bg-[#F1EDE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#1B4332]">
+              {currentPlan === "pro" ? t("routes.planBadgePro") : t("routes.planBadgeFree")}
+            </span>
+          </div>
+        </div>
+
+        <Link
+          href="/"
+          className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#1B4332] px-4 text-xs font-semibold text-[#FAF6F1] shadow-2xs transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+        >
+          <PlusCircle className="h-4 w-4" />
+          <span>{t("routes.uploadBtn")}</span>
+        </Link>
+      </div>
+
       {/* 1. Search Activities Bar & Sort Action (AllTrails Pill Input + Sort Icon) */}
-      <div className="relative mb-6 flex items-center gap-3">
+      <div className="relative mb-6 flex items-center gap-3 lg:max-w-lg">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
           <input
@@ -223,8 +251,8 @@ export function RoutesListClient({
         </div>
       </div>
 
-      {/* 2. Quota Status & Upload CTA - Clean single row without awkward line wraps */}
-      <div className="mb-5 flex items-center justify-between gap-3">
+      {/* 2. Mobile/Tablet Quota Status & Upload CTA (preserved below search on < lg) */}
+      <div className="mb-5 flex items-center justify-between gap-3 lg:hidden">
         <div className="flex items-center gap-2 text-xs text-[#4B5563]">
           <span className="font-semibold text-[#111827]">
             {maxRoutes !== null
@@ -250,7 +278,7 @@ export function RoutesListClient({
       {isLimitReached && (
         <div
           role="status"
-          className="mb-5 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2.5 text-xs text-amber-900 shadow-2xs"
+          className="mb-6 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-xs text-amber-900 shadow-2xs"
         >
           <AlertCircle className="h-4 w-4 shrink-0 text-amber-700" />
           <p className="font-medium leading-relaxed">
@@ -293,7 +321,7 @@ export function RoutesListClient({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {filteredRoutes.map((route) => (
             <RouteCard
               key={route.id}
