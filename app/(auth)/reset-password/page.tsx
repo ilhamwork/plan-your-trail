@@ -70,7 +70,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center bg-white px-4 py-8 sm:min-h-screen sm:px-6 sm:py-12">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center bg-white px-4 py-8 sm:min-h-screen sm:px-6 sm:py-12 lg:min-h-0">
       <div className="w-full max-w-md">
         {/* Brand mark & heading */}
         <div className="flex flex-col items-center text-center">

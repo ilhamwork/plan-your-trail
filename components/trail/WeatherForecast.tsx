@@ -320,8 +320,8 @@ export const WeatherForecast = memo(function WeatherForecast({
         </p>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="min-w-0">
           <label
             htmlFor="weather-location-input"
             className="mb-1.5 block text-xs font-semibold text-[#4B5563]"
@@ -340,7 +340,7 @@ export const WeatherForecast = memo(function WeatherForecast({
                   lat: center[0].toFixed(3),
                   lon: center[1].toFixed(3),
                 })}
-                className="flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-[#525B66]"
+                className="min-w-0 flex-1 bg-transparent text-sm text-[#2D3436] outline-none placeholder:text-[#525B66]"
               />
               {geoLoading && (
                 <Search className="h-4 w-4 shrink-0 animate-pulse text-[#4B5563]" />
@@ -401,7 +401,7 @@ export const WeatherForecast = memo(function WeatherForecast({
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="weather-date-input"
             className="mb-1.5 block text-xs font-semibold text-[#4B5563]"
@@ -414,13 +414,13 @@ export const WeatherForecast = memo(function WeatherForecast({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="min-h-11 flex-1 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 text-sm text-[#2D3436] focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332]"
+              className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#D1D5DB] bg-white px-3.5 py-2 text-sm text-[#2D3436] focus:border-[#1B4332] focus-visible:outline-2 focus-visible:outline-[#1B4332]"
             />
             <button
               type="button"
               onClick={fetchWeather}
               disabled={loading || !date}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50"
+              className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center whitespace-nowrap rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-semibold text-[#FAF6F1] transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] disabled:opacity-50"
             >
               {loading ? t("weatherPanel.loadingBtn") : t("weatherPanel.checkBtn")}
             </button>

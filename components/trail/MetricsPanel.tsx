@@ -120,11 +120,11 @@ export const MetricsPanel = memo(function MetricsPanel({
         {t("metrics.title")}
       </h3>
 
-      <ul className="mt-4 divide-y divide-[#E5E7EB]">
+      <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
         {rows.map((row) => (
           <li
             key={row.id}
-            className="flex items-center justify-between gap-4 py-3.5"
+            className="flex items-center justify-between gap-4 border-b border-[#E5E7EB] py-3.5"
           >
             <div
               ref={row.hasEffortInfo ? effortContainerRef : undefined}

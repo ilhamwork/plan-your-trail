@@ -162,8 +162,8 @@ export function MapView({
           isFullscreen
             ? "min-h-0 flex-1"
             : isChartVisible
-              ? "h-[360px] sm:h-[420px] lg:h-[440px]"
-              : "h-[460px] sm:h-[520px]"
+              ? "h-[360px] sm:h-[420px] lg:h-[480px]"
+              : "h-[460px] sm:h-[520px] lg:h-[560px]"
         }`}
       >
         {/* MapLibre Canvas */}
@@ -295,44 +295,46 @@ export function MapView({
 
       {betweenMapAndChartSlot}
 
-      {/* Elevation Profile Section (Flat, no card, no margin/padding) */}
+      {/* Elevation Profile Section (Flat, aligned with desktop content grid) */}
       {isChartVisible ? (
         <div
-          className={`relative z-20 border-b p-4 border-[#E5E7EB] ${
-            isFullscreen ? "mx-auto w-full max-w-5xl bg-[#FAF6F1]" : ""
+          className={`relative z-20 border-b border-[#E5E7EB] ${
+            isFullscreen ? "mx-auto w-full max-w-5xl bg-[#FAF6F1] p-4" : "lg:bg-white/40"
           }`}
         >
-          {/* Center Circular Toggle Button on the Seam (only in fullscreen) */}
-          {isFullscreen && (
-            <div className="absolute -top-5 left-1/2 z-30 -translate-x-1/2">
-              <button
-                type="button"
-                onClick={() => setShowChart(false)}
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
-                title={t("routeChart.hideChart")}
-                aria-label={t("routeChart.hideChart")}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          <div className={isFullscreen ? "" : "mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8"}>
+            {/* Center Circular Toggle Button on the Seam (only in fullscreen) */}
+            {isFullscreen && (
+              <div className="absolute -top-5 left-1/2 z-30 -translate-x-1/2">
+                <button
+                  type="button"
+                  onClick={() => setShowChart(false)}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#D1D5DB] bg-white text-[#2D3436] shadow-md transition hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-[#FAF6F1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:scale-95"
+                  title={t("routeChart.hideChart")}
+                  aria-label={t("routeChart.hideChart")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
 
-          <ElevationChart
-            trackPoints={trackPoints}
-            waypoints={waypoints}
-            stats={stats}
-            routeName={routeName}
-            hoveredPoint={activeHoveredPoint}
-            highlightRange={highlightRange}
-            onClearHighlight={onClearHighlight}
-            onPrevSegment={onPrevSegment}
-            onNextSegment={onNextSegment}
-            hasPrevSegment={hasPrevSegment}
-            hasNextSegment={hasNextSegment}
-            currentSegmentLabel={currentSegmentLabel}
-            onHover={handleHover}
-            embedded
-          />
+            <ElevationChart
+              trackPoints={trackPoints}
+              waypoints={waypoints}
+              stats={stats}
+              routeName={routeName}
+              hoveredPoint={activeHoveredPoint}
+              highlightRange={highlightRange}
+              onClearHighlight={onClearHighlight}
+              onPrevSegment={onPrevSegment}
+              onNextSegment={onNextSegment}
+              hasPrevSegment={hasPrevSegment}
+              hasNextSegment={hasNextSegment}
+              currentSegmentLabel={currentSegmentLabel}
+              onHover={handleHover}
+              embedded
+            />
+          </div>
         </div>
       ) : (
         <div className="relative z-20 flex justify-center border-b border-[#E5E7EB] py-3">

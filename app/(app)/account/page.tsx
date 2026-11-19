@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth"
 import { limits } from "@/lib/entitlements"
 import { SignOutButton } from "@/components/auth/SignOutButton"
 import { Header } from "@/components/trail/Header"
+import { Footer } from "@/components/trail/Footer"
 import { getServerTranslations } from "@/lib/i18n/server"
 import {
   CloudSun,
@@ -29,7 +30,7 @@ export default async function AccountPage() {
     <div className="min-h-screen bg-[#FAF6F1] pb-24 sm:pb-14">
       <Header />
 
-      <main className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
+      <main className="mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
         {/* Page Heading */}
         <div className="mb-8">
           <h1 className="heading-1">
@@ -41,9 +42,9 @@ export default async function AccountPage() {
         </div>
 
         {/* Two-column Airbnb Profile Layout */}
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr] lg:gap-12">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[340px_1fr] lg:gap-12">
           {/* Left Column: Airbnb Identity Card */}
-          <div className="rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-[0_6px_20px_rgba(0,0,0,0.06)]">
+          <div className="rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-[0_6px_20px_rgba(0,0,0,0.06)] lg:sticky lg:top-24">
             <div className="flex flex-col items-center text-center">
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#1B4332] text-3xl font-bold text-[#FAF6F1] shadow-sm">
                 {initial}
@@ -167,6 +168,10 @@ export default async function AccountPage() {
               </div>
             </section>
           </div>
+        </div>
+
+        <div className="mt-12 hidden border-t border-[#E5E7EB] pt-6 lg:block">
+          <Footer />
         </div>
       </main>
     </div>

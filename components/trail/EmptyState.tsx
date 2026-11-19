@@ -72,74 +72,82 @@ export function EmptyState({
       animate={{ opacity: 1 }}
       exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -16 }}
       transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
-      className="mx-auto max-w-lg"
+      className="mx-auto max-w-lg lg:max-w-none"
     >
-      {/* Greeting (subtle) + Primary Value Prop (h1) */}
-      <motion.div
-        initial={prefersReducedMotion ? false : { opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
-        className="mb-5 text-center"
-      >
-        {sessionRunnerName && (
-          <p className="text-sm font-medium text-[#4B5563]">
-            {t("home.empty.greeting", { name: sessionRunnerName })}
-          </p>
-        )}
-        <h1 className="mt-1 text-[22px] leading-snug font-semibold tracking-tight text-[#1F2937] sm:text-2xl">
-          {t("home.empty.headline")}
-        </h1>
-      </motion.div>
+      <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 lg:gap-y-6">
+        {/* Greeting (subtle) + Primary Value Prop (h1) */}
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
+          className="mb-5 text-center lg:col-span-6 lg:col-start-1 lg:mb-0 lg:pt-2 lg:text-left"
+        >
+          {sessionRunnerName && (
+            <p className="text-sm font-medium text-[#4B5563]">
+              {t("home.empty.greeting", { name: sessionRunnerName })}
+            </p>
+          )}
+          <h1 className="mt-1 text-[22px] leading-snug font-semibold tracking-tight text-[#1F2937] sm:text-2xl lg:text-4xl lg:leading-[1.15] lg:font-bold">
+            {t("home.empty.headline")}
+          </h1>
+        </motion.div>
 
-      {/* Primary CTA: GPX Upload Zone */}
-      <div data-tour="upload-card">
-        <UploadCard
-          onFileLoaded={onFileLoaded}
-          onError={onError}
-          fileName={fileName}
-          error={error}
-          isLoading={isLoading}
-          disabled={uploadDisabled}
-        />
-      </div>
-
-      {/* Trust Hint */}
-      <div className="mt-4 flex flex-col items-center text-center">
-        <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#4B5563]">
-          <Lock className="h-3.5 w-3.5 shrink-0 text-[#1B4332]" aria-hidden="true" />
-          <span>{t("home.privacy.hint")}</span>
-        </p>
-      </div>
-
-      {/* Feature Cards (Flattened info grid - Opsi A) */}
-      <motion.div
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          delay: prefersReducedMotion ? 0 : 0.18,
-          duration: prefersReducedMotion ? 0 : 0.3,
-        }}
-        className="my-5 grid grid-cols-2 gap-3"
-      >
-        {FEATURES.map((f) => (
+        {/* Primary CTA: GPX Upload Zone (Right column on desktop, elevated Airbnb surface) */}
+        <div className="lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:self-center">
           <div
-            key={f.titleKey}
-            className="rounded-xl border border-[#E5E7EB] bg-white/85 p-4"
+            data-tour="upload-card"
           >
-            <div
-              className={`mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl ${f.bg}`}
-            >
-              <f.icon className={`h-6 w-6 ${f.color}`} aria-hidden="true" />
-            </div>
-            <p className="heading-4 text-[#1F2937]">{t(f.titleKey)}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-[#4B5563]">
-              {t(f.descKey)}
+            <UploadCard
+              onFileLoaded={onFileLoaded}
+              onError={onError}
+              fileName={fileName}
+              error={error}
+              isLoading={isLoading}
+              disabled={uploadDisabled}
+            />
+          </div>
+
+          {/* Trust Hint */}
+          <div className="mt-4 flex flex-col items-center text-center">
+            <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#4B5563]">
+              <Lock className="h-3.5 w-3.5 shrink-0 text-[#1B4332]" aria-hidden="true" />
+              <span>{t("home.privacy.hint")}</span>
             </p>
           </div>
-        ))}
-      </motion.div>
+        </div>
 
-      <Footer runnerName={sessionRunnerName} />
+        {/* Feature Cards (Flattened info grid - Opsi A) */}
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: prefersReducedMotion ? 0 : 0.18,
+            duration: prefersReducedMotion ? 0 : 0.3,
+          }}
+          className="my-5 grid grid-cols-2 gap-3 lg:col-span-6 lg:col-start-1 lg:my-0 lg:gap-3.5"
+        >
+          {FEATURES.map((f) => (
+            <div
+              key={f.titleKey}
+              className="rounded-xl border border-[#E5E7EB] bg-white/85 p-4 transition hover:border-[#D1D5DB] hover:bg-white"
+            >
+              <div
+                className={`mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl ${f.bg}`}
+              >
+                <f.icon className={`h-6 w-6 ${f.color}`} aria-hidden="true" />
+              </div>
+              <p className="heading-4 text-[#1F2937]">{t(f.titleKey)}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-[#4B5563]">
+                {t(f.descKey)}
+              </p>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      <div className="lg:mt-16 lg:border-t lg:border-[#E5E7EB] lg:pt-8">
+        <Footer runnerName={sessionRunnerName} />
+      </div>
     </motion.div>
   )
 }
