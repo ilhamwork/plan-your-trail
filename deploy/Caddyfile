@@ -1,0 +1,40 @@
+# Caddyfile for SumoPod VPS Production
+
+# Ganti domain.anda.com dengan domain rujukan aplikasi Anda (misal: planyourtrail.run)
+
+planyourtrail.run {
+encode zstd gzip
+
+    # Reverse proxy ke Next.js container di port 3000
+    reverse_proxy web:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+}
+
+# (Opsional) Jika MinIO Console ingin diakses lewat subdomain dengan HTTPS:
+
+# console-storage.planyourtrail.run {
+
+# reverse_proxy minio:9001
+
+# }
+
+# (Opsional) Jika S3 API MinIO ingin diakses langsung dari luar lewat subdomain:
+
+# s3.planyourtrail.run {
+
+# reverse_proxy minio:9000
+
+# }

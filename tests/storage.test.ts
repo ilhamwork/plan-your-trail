@@ -7,6 +7,7 @@ import {
   createInMemoryStorage,
   _setStorageBackendForTesting,
 } from "@/lib/storage"
+import { _resetEnvForTesting } from "@/lib/env"
 
 describe("lib/storage S3 / Cloudflare R2 interface", () => {
   let fakeStorage: ReturnType<typeof createInMemoryStorage>
@@ -60,5 +61,37 @@ describe("lib/storage S3 / Cloudflare R2 interface", () => {
 
   it("throws when getting non-existent object", async () => {
     await expect(getObject("nonexistent.key")).rejects.toThrow("Object not found")
+  })
+
+  it("fails with informative error in production if storage credentials are missing", async () => {
+    _setStorageBackendForTesting(null)
+    const prevNodeEnv = process.env.NODE_ENV
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: "production",
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    })
+    delete process.env.R2_ACCOUNT_ID
+    delete process.env.R2_ACCESS_KEY_ID
+    delete process.env.R2_SECRET_ACCESS_KEY
+    delete process.env.R2_BUCKET_NAME
+    delete process.env.S3_ENDPOINT
+    delete process.env.S3_ACCESS_KEY_ID
+    delete process.env.S3_SECRET_ACCESS_KEY
+    delete process.env.S3_BUCKET_NAME
+    _resetEnvForTesting()
+
+    await expect(getObject("some-key")).rejects.toThrow(
+      "Storage credentials are not configured"
+    )
+
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: prevNodeEnv,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    })
+    _resetEnvForTesting()
   })
 })

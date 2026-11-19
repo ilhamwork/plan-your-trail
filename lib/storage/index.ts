@@ -3,6 +3,8 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  CreateBucketCommand,
+  HeadBucketCommand,
 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { env } from "../env"
@@ -30,37 +32,92 @@ export interface StorageBackend {
 
 let testBackend: StorageBackend | null = null
 let s3ClientInstance: S3Client | null = null
+let s3SigningClientInstance: S3Client | null = null
 
-function getR2Client(): { client: S3Client; bucket: string } {
+function getS3Client(): {
+  client: S3Client
+  signingClient: S3Client
+  bucket: string
+} {
   const envVars = env()
   const accountId = envVars.R2_ACCOUNT_ID
-  const accessKeyId = envVars.R2_ACCESS_KEY_ID
-  const secretAccessKey = envVars.R2_SECRET_ACCESS_KEY
-  const bucket = envVars.R2_BUCKET_NAME
+  const s3Endpoint = envVars.S3_ENDPOINT
+  const endpoint =
+    s3Endpoint ||
+    (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined)
 
-  if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
+  const accessKeyId = envVars.S3_ACCESS_KEY_ID || envVars.R2_ACCESS_KEY_ID
+  const secretAccessKey =
+    envVars.S3_SECRET_ACCESS_KEY || envVars.R2_SECRET_ACCESS_KEY
+  const bucket = envVars.S3_BUCKET_NAME || envVars.R2_BUCKET_NAME
+  const region = envVars.S3_REGION || "auto"
+  const forcePathStyle =
+    envVars.S3_FORCE_PATH_STYLE === "true" ||
+    Boolean(s3Endpoint && envVars.S3_FORCE_PATH_STYLE !== "false")
+
+  if (!endpoint || !accessKeyId || !secretAccessKey || !bucket) {
     throw new Error(
-      "Cloudflare R2 storage credentials (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME) are not configured."
+      "Storage credentials are not configured. Set either S3_* (MinIO/S3) or R2_* (Cloudflare R2) environment variables."
     )
   }
 
   if (!s3ClientInstance) {
     s3ClientInstance = new S3Client({
-      region: "auto",
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      region,
+      endpoint,
       credentials: {
         accessKeyId,
         secretAccessKey,
       },
+      forcePathStyle,
     })
   }
 
-  return { client: s3ClientInstance, bucket }
+  if (!s3SigningClientInstance) {
+    const publicUrl = envVars.S3_PUBLIC_URL || endpoint
+    if (publicUrl === endpoint) {
+      s3SigningClientInstance = s3ClientInstance
+    } else {
+      s3SigningClientInstance = new S3Client({
+        region,
+        endpoint: publicUrl,
+        credentials: {
+          accessKeyId,
+          secretAccessKey,
+        },
+        forcePathStyle,
+      })
+    }
+  }
+
+  return {
+    client: s3ClientInstance,
+    signingClient: s3SigningClientInstance,
+    bucket,
+  }
 }
 
-const defaultR2Backend: StorageBackend = {
+let bucketEnsured = false
+
+async function ensureBucket(client: S3Client, bucket: string): Promise<void> {
+  if (bucketEnsured) return
+  try {
+    await client.send(new HeadBucketCommand({ Bucket: bucket }))
+    bucketEnsured = true
+  } catch {
+    try {
+      await client.send(new CreateBucketCommand({ Bucket: bucket }))
+      bucketEnsured = true
+    } catch {
+      // Ignore if already created concurrently or if credentials lack create permission (e.g. read/write only R2)
+    }
+  }
+}
+
+const defaultS3Backend: StorageBackend = {
   async putObject(key: string, body: Uint8Array, opts?: StorageOptions) {
-    const { client, bucket } = getR2Client()
+    const { client, bucket } = getS3Client()
+    await ensureBucket(client, bucket)
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -72,7 +129,7 @@ const defaultR2Backend: StorageBackend = {
   },
 
   async getObject(key: string): Promise<Uint8Array> {
-    const { client, bucket } = getR2Client()
+    const { client, bucket } = getS3Client()
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -85,7 +142,7 @@ const defaultR2Backend: StorageBackend = {
   },
 
   async deleteObject(key: string): Promise<void> {
-    const { client, bucket } = getR2Client()
+    const { client, bucket } = getS3Client()
     const command = new DeleteObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -94,7 +151,7 @@ const defaultR2Backend: StorageBackend = {
   },
 
   async signedUrl(key: string, opts: SignedUrlOptions): Promise<string> {
-    const { client, bucket } = getR2Client()
+    const { signingClient, bucket } = getS3Client()
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -102,7 +159,7 @@ const defaultR2Backend: StorageBackend = {
         ? `attachment; filename="${opts.downloadFilename}"`
         : undefined,
     })
-    return await getSignedUrl(client, command, {
+    return await getSignedUrl(signingClient, command, {
       expiresIn: opts.expiresInSeconds,
     })
   },
@@ -114,20 +171,20 @@ function getBackend(): StorageBackend {
   if (testBackend) return testBackend
 
   const envVars = env()
-  const hasR2 =
-    envVars.R2_ACCOUNT_ID &&
-    envVars.R2_ACCESS_KEY_ID &&
-    envVars.R2_SECRET_ACCESS_KEY &&
-    envVars.R2_BUCKET_NAME
+  const hasStorage =
+    Boolean(envVars.R2_ACCOUNT_ID || envVars.S3_ENDPOINT) &&
+    Boolean(envVars.R2_ACCESS_KEY_ID || envVars.S3_ACCESS_KEY_ID) &&
+    Boolean(envVars.R2_SECRET_ACCESS_KEY || envVars.S3_SECRET_ACCESS_KEY) &&
+    Boolean(envVars.R2_BUCKET_NAME || envVars.S3_BUCKET_NAME)
 
-  if (!hasR2 && process.env.NODE_ENV !== "production") {
+  if (!hasStorage && process.env.NODE_ENV !== "production") {
     if (!devMemoryStorage) {
       devMemoryStorage = createInMemoryStorage()
     }
     return devMemoryStorage
   }
 
-  return defaultR2Backend
+  return defaultS3Backend
 }
 
 /**
@@ -174,6 +231,10 @@ export function _setStorageBackendForTesting(
   backend: StorageBackend | null
 ): void {
   testBackend = backend
+  s3ClientInstance = null
+  s3SigningClientInstance = null
+  devMemoryStorage = null
+  bucketEnsured = false
 }
 
 /**

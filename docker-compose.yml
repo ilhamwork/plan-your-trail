@@ -1,16 +1,79 @@
 services:
+  # 1. PostgreSQL Database (Pengganti Supabase)
+  db:
+    image: postgres:16-alpine
+    container_name: pyt-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-planyourtrail_dev}
+    volumes:
+      - pyt-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d planyourtrail_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. MinIO S3 Object Storage (Chainguard verified public image)
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    container_name: pyt-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000" # S3 API endpoint
+      - "9001:9001" # Web Console dashboard
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadminpassword}
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - pyt-minio-data:/data
+
+  # 3. Web Application (Next.js Standalone Runner)
   web:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: pyt-web
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=postgres://postgres:password@db:5432/planyourtrail_dev
+      - BETTER_AUTH_SECRET=simulasi_vps_secret_32_characters_panjang_sekali_123456
+      - BETTER_AUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - CRON_SECRET=test_cron_secret_lokal_12345
+      # MinIO Configuration
+      - S3_ENDPOINT=http://minio:9000
+      - S3_PUBLIC_URL=http://localhost:9000
+      - S3_ACCESS_KEY_ID=minioadmin
+      - S3_SECRET_ACCESS_KEY=minioadminpassword
+      - S3_BUCKET_NAME=planyourtrail
+      - S3_REGION=us-east-1
+      - S3_FORCE_PATH_STYLE=true
+      # Invoice Admin
+      - INVOICE_ADMIN_USER=admin
+      - INVOICE_ADMIN_PASSWORD=admin
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
+
+volumes:
+  pyt-postgres-data:
+  pyt-minio-data:
