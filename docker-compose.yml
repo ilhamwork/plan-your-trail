@@ -62,6 +62,15 @@ services:
       # Invoice Admin
       - INVOICE_ADMIN_USER=admin
       - INVOICE_ADMIN_PASSWORD=admin
+      # Logging & Error Tracking
+      - LOG_LEVEL=info
+      - GLITCHTIP_DSN=http://d94f51b0653a4675b9c43e9d3d59ba49@glitchtip:8000/1
+      - NEXT_PUBLIC_GLITCHTIP_DSN=http://d94f51b0653a4675b9c43e9d3d59ba49@127.0.0.1:8000/1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       db:
         condition: service_healthy
@@ -73,6 +82,26 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+
+  # 4. GlitchTip Error Tracking (Self-hosted Sentry alternative, internal port)
+  glitchtip:
+    image: glitchtip/glitchtip:latest
+    container_name: pyt-glitchtip
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: ${GLITCHTIP_DATABASE_URL:-postgres://postgres:password@db:5432/glitchtip}
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY:-glitchtip_secret_key_32_characters_123456}
+      GLITCHTIP_DOMAIN: "http://127.0.0.1:8000"
+      DEFAULT_FROM_EMAIL: ${EMAIL_FROM:-no-reply@planyourtrail.run}
+      CELERY_WORKER_CONCURRENCY: 1
+      REDIS_URL: ""
+      VALKEY_URL: ""
+      CACHE_URL: "locmem://"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pyt-postgres-data:

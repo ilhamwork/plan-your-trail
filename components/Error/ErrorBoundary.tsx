@@ -1,7 +1,9 @@
 "use client"
 
 import React from "react"
+import * as Sentry from "@sentry/nextjs"
 import { useI18n } from "@/lib/i18n/context"
+import { logger } from "@/lib/logger"
 
 function ErrorFallback() {
   const { t } = useI18n()
@@ -44,7 +46,10 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo)
+    logger.error({ err: error, errorInfo }, "Uncaught React error boundary catch")
+    Sentry.captureException(error, {
+      extra: { componentStack: errorInfo.componentStack },
+    })
   }
 
   render() {
