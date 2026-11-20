@@ -18,6 +18,8 @@ import { parseGPXSync } from "@/lib/gpx-parser"
 import { simplifyTrack } from "@/lib/gpx/simplify"
 import type { ActionResult, GPXData } from "@/lib/types"
 import { getServerTranslations } from "@/lib/i18n/server"
+import { logger } from "@/lib/logger"
+import { writeAuditLog } from "@/lib/db/queries/audit-log"
 
 const gzip = promisify(zlib.gzip)
 
@@ -185,7 +187,7 @@ export async function saveRouteAction(
   try {
     parsedGpx = parseGPXSync(parsed.data.gpxContent)
   } catch (err) {
-    console.error("Failed to parse GPX on server:", err)
+    logger.error({ err, userId: user.id }, "Failed to parse GPX on server")
     return {
       ok: false,
       error: {
@@ -213,7 +215,7 @@ export async function saveRouteAction(
   try {
     gzipped = await gzip(Buffer.from(parsed.data.gpxContent, "utf-8"))
   } catch (err) {
-    console.error("Failed to gzip GPX:", err)
+    logger.error({ err, userId: user.id }, "Failed to gzip GPX")
     return {
       ok: false,
       error: {
@@ -232,7 +234,10 @@ export async function saveRouteAction(
       contentEncoding: "gzip",
     })
   } catch (err) {
-    console.error("Failed to upload GPX to storage:", err)
+    logger.error(
+      { err, userId: user.id, key: gpxObjectKey },
+      "Failed to upload GPX to storage"
+    )
     return {
       ok: false,
       error: {
@@ -262,7 +267,7 @@ export async function saveRouteAction(
       hidden: false,
     })
   } catch (err) {
-    console.error("Failed to insert route in DB:", err)
+    logger.error({ err, userId: user.id, routeId }, "Failed to insert route in DB")
     // Clean up uploaded storage object if DB insert fails
     try {
       await deleteObject(gpxObjectKey)
@@ -277,6 +282,29 @@ export async function saveRouteAction(
       },
     }
   }
+
+  void writeAuditLog({
+    userId: user.id,
+    action: "route.save",
+    entityType: "route",
+    entityId: routeId,
+    payload: {
+      name: parsed.data.name,
+      distanceKm: parsedGpx.stats.totalDistance,
+      elevationGainM: parsedGpx.stats.elevationGain,
+    },
+  })
+
+  logger.info(
+    {
+      action: "saveRoute",
+      userId: user.id,
+      routeId,
+      name: parsed.data.name,
+      distanceKm: parsedGpx.stats.totalDistance,
+    },
+    "Route saved successfully"
+  )
 
   return {
     ok: true,
@@ -353,14 +381,20 @@ export async function deleteRouteAction(
   try {
     await deleteObject(existingRoute.gpxObjectKey)
   } catch (err) {
-    console.warn("Could not delete storage object:", err)
+    logger.warn(
+      { err, userId: session.user.id, key: existingRoute.gpxObjectKey },
+      "Could not delete storage object"
+    )
   }
 
   // Permanently delete database record
   try {
     await deleteRoute(session.user.id, routeId)
   } catch (err) {
-    console.error("Failed to delete route from DB:", err)
+    logger.error(
+      { err, userId: session.user.id, routeId },
+      "Failed to delete route from DB"
+    )
     return {
       ok: false,
       error: {
@@ -369,6 +403,26 @@ export async function deleteRouteAction(
       },
     }
   }
+
+  void writeAuditLog({
+    userId: session.user.id,
+    action: "route.delete",
+    entityType: "route",
+    entityId: routeId,
+    payload: {
+      name: existingRoute.name,
+    },
+  })
+
+  logger.info(
+    {
+      action: "deleteRoute",
+      userId: session.user.id,
+      routeId,
+      name: existingRoute.name,
+    },
+    "Route deleted successfully"
+  )
 
   return {
     ok: true,
@@ -499,7 +553,10 @@ export async function updateRouteAction(
       },
     }
   } catch (err) {
-    console.error("Failed to update route in DB:", err)
+    logger.error(
+      { err, userId: session.user.id, routeId: parsed.data.routeId },
+      "Failed to update route in DB"
+    )
     return {
       ok: false,
       error: {

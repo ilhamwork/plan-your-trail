@@ -200,6 +200,19 @@ export const invoices = pgTable("invoices", {
     .defaultNow(),
 })
 
+export const auditLog = pgTable("audit_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }),
+  action: text("action").notNull(),
+  entityType: text("entity_type"),
+  entityId: text("entity_id"),
+  payload: jsonb("payload"),
+  ipHash: text("ip_hash"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
 // Type exports
 export type User = typeof user.$inferSelect
 export type NewUser = typeof user.$inferInsert
@@ -232,3 +245,6 @@ export type NewFeedback = typeof feedback.$inferInsert
 
 export type Invoice = typeof invoices.$inferSelect
 export type NewInvoice = typeof invoices.$inferInsert
+
+export type AuditLog = typeof auditLog.$inferSelect
+export type NewAuditLog = typeof auditLog.$inferInsert

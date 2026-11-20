@@ -10,6 +10,8 @@ import {
 } from "@/lib/db/queries/waitlist"
 import type { ActionResult } from "@/lib/types"
 import { getServerTranslations } from "@/lib/i18n/server"
+import { logger } from "@/lib/logger"
+import { writeAuditLog } from "@/lib/db/queries/audit-log"
 
 const JoinWaitlistInputSchema = z
   .object({
@@ -101,6 +103,24 @@ export async function joinWaitlistAction(
       survey
     )
 
+    void writeAuditLog({
+      userId: session.user.id,
+      action: "waitlist.join",
+      entityType: "waitlist",
+      entityId: created.id,
+      payload: { feature },
+    })
+
+    logger.info(
+      {
+        action: "joinWaitlist",
+        userId: session.user.id,
+        waitlistId: created.id,
+        feature,
+      },
+      "User joined waitlist successfully"
+    )
+
     return {
       ok: true,
       data: {
@@ -110,7 +130,7 @@ export async function joinWaitlistAction(
       },
     }
   } catch (error) {
-    console.error("Failed to join waitlist:", error)
+    logger.error({ err: error, userId: session.user.id, feature }, "Failed to join waitlist")
     return {
       ok: false,
       error: {
