@@ -50,7 +50,7 @@ services:
       - BETTER_AUTH_SECRET=simulasi_vps_secret_32_characters_panjang_sekali_123456
       - BETTER_AUTH_URL=http://localhost:3000
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - CRON_SECRET=test_cron_secret_lokal_12345
+      - CRON_SECRET=${CRON_SECRET:-test_cron_secret_lokal_12345}
       # MinIO Configuration
       - S3_ENDPOINT=http://minio:9000
       - S3_PUBLIC_URL=http://localhost:9000
@@ -101,6 +101,21 @@ services:
       CACHE_URL: "locmem://"
     depends_on:
       db:
+        condition: service_healthy
+
+  # 5. Scheduled Cron Runner (Keep-alive, Quota-monitor & Daily Analytics)
+  cron:
+    image: alpine:latest
+    container_name: pyt-cron
+    restart: unless-stopped
+    environment:
+      - CRON_SECRET=${CRON_SECRET:-test_cron_secret_lokal_12345}
+      - WEB_URL=http://web:3000
+    volumes:
+      - ./scripts/docker-cron.sh:/scripts/docker-cron.sh:ro
+    entrypoint: ["/bin/sh", "-c", "tr -d '\\r' < /scripts/docker-cron.sh > /tmp/runner.sh && chmod +x /tmp/runner.sh && exec /tmp/runner.sh"]
+    depends_on:
+      web:
         condition: service_healthy
 
 volumes:
