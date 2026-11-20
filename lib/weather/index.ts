@@ -5,6 +5,7 @@ import { getSession, type SessionUser } from "../auth"
 import { can, RATE_LIMITS } from "../entitlements"
 import { checkRateLimit } from "../rate-limit"
 import { getServerTranslations } from "../i18n/server"
+import { logger } from "../logger"
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -76,7 +77,7 @@ export async function getWeatherForecast(
     }
   } catch (err) {
     // If DB cache check fails, proceed to rate limit + fetch
-    console.error("Weather cache lookup error:", err)
+    logger.warn({ err, cacheKey }, "Weather cache lookup error")
   }
 
   // 3. Per-account rate limit from config (20 uncached calls per day)
@@ -207,7 +208,7 @@ export async function getWeatherForecast(
           },
         })
     } catch (cacheWriteErr) {
-      console.error("Failed to write weather cache:", cacheWriteErr)
+      logger.warn({ err: cacheWriteErr, cacheKey }, "Failed to write weather cache")
     }
 
     return {
@@ -215,7 +216,7 @@ export async function getWeatherForecast(
       data: weatherData,
     }
   } catch (error) {
-    console.error("Open-Meteo fetch failed:", error)
+    logger.error({ err: error, lat, lon, date }, "Open-Meteo fetch failed")
     return {
       ok: false,
       error: {

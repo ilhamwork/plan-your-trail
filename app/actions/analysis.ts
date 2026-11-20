@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth"
 import { createRouteAnalysis } from "@/lib/db/queries/route-analysis"
 import type { ActionResult } from "@/lib/types"
 import { getServerTranslations } from "@/lib/i18n/server"
+import { logger } from "@/lib/logger"
 
 const RouteStatsSchema = z.object({
   totalDistance: z.number().nonnegative(),
@@ -80,6 +81,18 @@ export async function recordRouteAnalysisAction(
       pointCount: parsed.data.pointCount,
     })
 
+    logger.info(
+      {
+        action: "recordAnalysis",
+        userId,
+        analysisId: created.id,
+        fileName: parsed.data.fileName,
+        distanceKm: parsed.data.metrics.stats.totalDistance,
+        elevationGainM: parsed.data.metrics.stats.elevationGain,
+      },
+      "Route analysis recorded"
+    )
+
     return {
       ok: true,
       data: {
@@ -87,7 +100,7 @@ export async function recordRouteAnalysisAction(
       },
     }
   } catch (err) {
-    console.error("Failed to record route analysis:", err)
+    logger.error({ err }, "Failed to record route analysis")
     return {
       ok: false,
       error: {

@@ -2,6 +2,7 @@ import { db } from "../db"
 import { rateLimit } from "../db/schema"
 import { eq, sql } from "drizzle-orm"
 import { RATE_LIMITS } from "../entitlements/config"
+import { logger } from "../logger"
 
 export interface RateLimitResult {
   allowed: boolean
@@ -101,7 +102,7 @@ export async function checkRateLimit(
     }
   } catch (error) {
     // If DB is unreachable or in non-DB tests, allow with warning to avoid breaking flows
-    console.error(`Rate limit check error for key ${key}:`, error)
+    logger.error({ err: error, rateLimitKey: key }, "Rate limit check error")
     return {
       allowed: true,
       remaining: 1,

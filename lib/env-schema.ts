@@ -32,6 +32,13 @@ export const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+
+  // Logging & Error Tracking (Open source / Self-hosted)
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+  GLITCHTIP_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_GLITCHTIP_DSN: z.string().url().optional(),
+  GLITCHTIP_SECRET_KEY: z.string().optional(),
+  GLITCHTIP_DATABASE_URL: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
