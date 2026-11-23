@@ -25,6 +25,8 @@ const idMessages = {
     routes: "Rute",
     profile: "Profil",
     mobileNavAria: "Navigasi bawah seluler",
+    menu: "Menu",
+    menuAria: "Buka menu navigasi",
   },
   home: {
     tierBanner: {

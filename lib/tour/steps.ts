@@ -68,7 +68,7 @@ const REGISTERED_EMPTY_STEPS: TourStep[] = [
   },
   {
     id: "registered-routes",
-    targetSelector: '[data-tour="nav-routes"], [data-tour="mobile-nav-routes"]',
+    targetSelector: '[data-tour="nav-menu"], [data-tour="nav-routes"], [data-tour="mobile-nav-routes"]',
     titleKey: "tour.registered.empty.routes.title",
     descriptionKey: "tour.registered.empty.routes.desc",
     placement: "bottom",

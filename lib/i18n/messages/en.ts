@@ -27,6 +27,8 @@ const enMessages: TranslationSchema = {
     routes: "Routes",
     profile: "Profile",
     mobileNavAria: "Mobile bottom navigation",
+    menu: "Menu",
+    menuAria: "Open navigation menu",
   },
   home: {
     tierBanner: {
