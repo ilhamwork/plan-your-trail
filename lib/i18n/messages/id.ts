@@ -374,6 +374,8 @@ const idMessages = {
     deleteRouteAria: "Hapus Rute",
     toMyRoutes: "Ke Rute Saya",
     unsavedBanner: "Ada perubahan rute belum disimpan",
+    cancelChanges: "Batalkan",
+    cancelChangesAria: "Batalkan semua perubahan yang belum disimpan",
     saving: "Menyimpan...",
     saveSuccess: "Perubahan rute berhasil disimpan!",
     saveError: "Gagal menyimpan perubahan. Silakan coba lagi.",

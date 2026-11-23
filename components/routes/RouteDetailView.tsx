@@ -14,6 +14,7 @@ import {
   Save,
   AlertCircle,
   Loader2,
+  RotateCcw,
 } from "lucide-react"
 
 import type { GPXData, TrackPoint, Segment, WaypointSegment } from "@/lib/types"
@@ -133,6 +134,7 @@ export function RouteDetailView({
   // Waypoints management state
   const {
     waypoints,
+    setWaypoints,
     handleAddWaypoint,
     handleEditWaypoint,
     handleRemoveWaypoint,
@@ -269,6 +271,20 @@ export function RouteDetailView({
       setIsSavingChanges(false)
     }
   }
+
+  const handleCancelChanges = useCallback(() => {
+    try {
+      const originalWaypoints = JSON.parse(savedWaypointsJson)
+      setWaypoints(originalWaypoints)
+    } catch {
+      setWaypoints(gpxData.waypoints || [])
+    }
+    setRouteDetails({
+      raceName: savedDetails.raceName,
+      raceDate: savedDetails.raceDate,
+    })
+    setSaveError(null)
+  }, [savedWaypointsJson, savedDetails, gpxData.waypoints, setWaypoints])
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -459,32 +475,45 @@ export function RouteDetailView({
 
       {/* Sticky Save Bar when changes are unsaved (e.g. adding waypoints) */}
       {hasUnsavedChanges && (
-        <div className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-md animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md">
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-1000 mx-auto max-w-md animate-in fade-in slide-in-from-bottom-3 duration-200 sm:bottom-4">
+          <div className="flex items-center justify-between gap-2.5 rounded-2xl border border-amber-300 bg-white/95 px-3.5 py-2.5 shadow-xl backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3">
             <div className="flex items-center gap-2 min-w-0">
               <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
               <span className="truncate text-xs font-semibold text-amber-900">
                 {t("routeDetail.unsavedBanner")}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={handleSaveChanges}
-              disabled={isSavingChanges}
-              className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46] disabled:opacity-50"
-            >
-              {isSavingChanges ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>{t("routeDetail.saving")}</span>
-                </>
-              ) : (
-                <>
-                  <Save className="h-3.5 w-3.5" />
-                  <span>{t("common.save")}</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleCancelChanges}
+                disabled={isSavingChanges}
+                className="inline-flex min-h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-semibold text-[#2D3436] shadow-xs transition hover:border-[#1B4332] hover:bg-[#FAF6F1] hover:text-[#1B4332] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:translate-y-px disabled:opacity-50"
+                title={t("routeDetail.cancelChangesAria")}
+                aria-label={t("routeDetail.cancelChangesAria")}
+              >
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t("routeDetail.cancelChanges")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveChanges}
+                disabled={isSavingChanges}
+                className="inline-flex min-h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#1B4332] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2D5A46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332] active:translate-y-px disabled:opacity-50"
+              >
+                {isSavingChanges ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>{t("routeDetail.saving")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-3.5 w-3.5" />
+                    <span>{t("common.save")}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -515,8 +544,8 @@ export function RouteDetailView({
         onCancel={() => {
           setIsEditingDetails(false)
           setRouteDetails({
-            raceName: routeName,
-            raceDate: raceDate || "",
+            raceName: savedDetails.raceName,
+            raceDate: savedDetails.raceDate,
           })
         }}
       />

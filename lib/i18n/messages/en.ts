@@ -376,6 +376,8 @@ const enMessages: TranslationSchema = {
     deleteRouteAria: "Delete Route",
     toMyRoutes: "My Routes",
     unsavedBanner: "You have unsaved route changes",
+    cancelChanges: "Cancel",
+    cancelChangesAria: "Discard all unsaved changes",
     saving: "Saving...",
     saveSuccess: "Route changes saved successfully!",
     saveError: "Failed to save changes. Please try again.",
